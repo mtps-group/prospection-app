@@ -1,0 +1,77 @@
+export const PLANS = {
+  free: {
+    name: 'Gratuit',
+    slug: 'free' as const,
+    maxSearchesLifetime: 2,
+    maxResultsPerSearch: 20,
+    visibleResults: 5,
+    maxHistoryItems: 2,
+    canExport: false,
+    canExportCSV: false,
+    canExportGoogleSheets: false,
+    canExportNotion: false,
+    hasDetailedBusinessInfo: false,
+    hasEmailDraft: false,
+    priceMonthly: 0,
+  },
+  premium: {
+    name: 'Premium',
+    slug: 'premium' as const,
+    maxSearchesLifetime: Infinity,
+    maxResultsPerSearch: 60,
+    visibleResults: 60,
+    maxHistoryItems: Infinity,
+    canExport: true,
+    canExportCSV: true,
+    canExportGoogleSheets: true,
+    canExportNotion: true,
+    hasDetailedBusinessInfo: false,
+    hasEmailDraft: false,
+    priceMonthly: 39.99,
+  },
+  ultra: {
+    name: 'Ultra',
+    slug: 'ultra' as const,
+    maxSearchesLifetime: Infinity,
+    maxResultsPerSearch: 60,
+    visibleResults: 60,
+    maxHistoryItems: Infinity,
+    canExport: true,
+    canExportCSV: true,
+    canExportGoogleSheets: true,
+    canExportNotion: true,
+    hasDetailedBusinessInfo: true,
+    hasEmailDraft: true,
+    priceMonthly: 59.99,
+  },
+} as const;
+
+export type PlanSlug = keyof typeof PLANS;
+
+export function getPlanConfig(plan: PlanSlug) {
+  return PLANS[plan] || PLANS.free;
+}
+
+export const GOOGLE_PLACES_FIELD_MASK = [
+  'places.id',
+  'places.displayName',
+  'places.formattedAddress',
+  'places.nationalPhoneNumber',
+  'places.internationalPhoneNumber',
+  'places.websiteUri',
+  'places.googleMapsUri',
+  'places.types',
+  'places.rating',
+  'places.userRatingCount',
+  'places.location',
+].join(',');
+
+export const GOOGLE_PLACES_FIELD_MASK_DETAILED = [
+  ...GOOGLE_PLACES_FIELD_MASK.split(','),
+  'places.currentOpeningHours',
+  'places.regularOpeningHours',
+  'places.reviews',
+  'places.photos',
+  'places.editorialSummary',
+  'places.businessStatus',
+].join(',');
