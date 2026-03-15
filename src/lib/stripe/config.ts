@@ -1,7 +1,7 @@
 export const STRIPE_PLANS = {
   premium: {
     name: 'Premium',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PREMIUM_PRICE_ID || process.env.STRIPE_PREMIUM_PRICE_ID || '',
+    priceId: 'price_1TAViSHDs8WJU7EjvR0QSe5X',
     priceMonthly: 39.99,
     features: [
       'Recherches illimitees',
@@ -12,7 +12,7 @@ export const STRIPE_PLANS = {
   },
   ultra: {
     name: 'Ultra',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_ULTRA_PRICE_ID || process.env.STRIPE_ULTRA_PRICE_ID || '',
+    priceId: 'price_1TAVlGHDs8WJU7EjO2KSxbOK',
     priceMonthly: 79,
     features: [
       'Tout Premium inclus',
