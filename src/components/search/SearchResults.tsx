@@ -151,7 +151,7 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
           </span>
         </div>
 
-        {isPaid && (
+        {true && (
           <div className="flex items-center gap-2 flex-wrap">
             {onExportCSV && (
               <Button variant="outline" size="sm" onClick={onExportCSV}>
