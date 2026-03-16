@@ -17,6 +17,7 @@ import {
   Crown,
   Zap,
   User,
+  Home,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -70,6 +71,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 px-3 py-4">
+          {/* Lien page d'accueil */}
+          <Link
+            href="/"
+            onClick={onClose}
+            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary hover:bg-surface-secondary hover:text-text transition-colors mb-2 border-b border-border pb-3"
+          >
+            <Home className="h-5 w-5" />
+            Page d&apos;accueil
+          </Link>
+
           {navigation.map((item) => {
             const isActive =
               pathname === item.href || pathname.startsWith(item.href + '/');
