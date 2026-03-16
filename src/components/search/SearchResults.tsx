@@ -11,11 +11,30 @@ import { useSupabase } from '@/providers/SupabaseProvider';
 import Link from 'next/link';
 import {
   Download,
-  FileSpreadsheet,
-  BookOpen,
   AlertCircle,
   Crown,
 } from 'lucide-react';
+
+function GoogleSheetsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="#23A566"/>
+      <path d="M14 2v6h6" fill="#169E53"/>
+      <path d="M8 13h8M8 16h8M8 10h3" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function NotionIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.374.466l1.823 1.447z" fill="#000"/>
+      <path d="M5.19 6.575v13.682c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V5.414c0-.606-.233-.933-.748-.887l-15.177.887c-.56.047-.747.327-.747.16z" fill="#000"/>
+      <path d="M18.45 7.415l-3.41.233v5.603l3.41-.233V7.415z" fill="white"/>
+      <path d="M6.777 8.209l.047 1.12 2.567-.14v7.696l1.167-.07V9.19l2.567-.14V7.93l-6.348.28z" fill="white"/>
+    </svg>
+  );
+}
 
 interface SearchResultsProps {
   data: SearchResponse;
@@ -73,11 +92,11 @@ export function SearchResults({ data, onExportCSV }: SearchResultsProps) {
               </Button>
             )}
             <Button variant="outline" size="sm" disabled>
-              <FileSpreadsheet className="h-4 w-4" />
+              <GoogleSheetsIcon className="h-4 w-4" />
               Google Sheets
             </Button>
             <Button variant="outline" size="sm" disabled>
-              <BookOpen className="h-4 w-4" />
+              <NotionIcon className="h-4 w-4" />
               Notion
             </Button>
           </div>
