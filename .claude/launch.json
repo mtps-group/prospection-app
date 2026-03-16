@@ -2,8 +2,8 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "prospection-dev",
-      "runtimeExecutable": "C:\\Program Files\\nodejs\\npm.cmd",
+      "name": "prospection-app",
+      "runtimeExecutable": "npm.cmd",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
     }

@@ -126,9 +126,10 @@ export function BusinessCard({ result, onViewDetail }: BusinessCardProps) {
 
       {isClickable && (
         <div className="mt-3 pt-3 border-t border-border">
-          <p className="text-xs text-text-muted text-center">
-            Cliquer pour voir tous les détails
-          </p>
+          <button className="w-full text-xs font-medium text-primary flex items-center justify-center gap-1.5 hover:text-primary-hover transition-colors">
+            <ChevronRight className="h-3.5 w-3.5" />
+            Voir plus d&apos;informations
+          </button>
         </div>
       )}
     </div>

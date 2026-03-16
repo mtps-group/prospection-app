@@ -97,7 +97,7 @@ export function SearchResults({ data, onExportCSV }: SearchResultsProps) {
 
       </div>
 
-      {/* Detail panel (Ultra) */}
+      {/* Detail panel */}
       {detailPanel && (
         <BusinessDetailPanel
           placeId={detailPanel.placeId}
