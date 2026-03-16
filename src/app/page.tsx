@@ -28,7 +28,7 @@ export default function LandingPage() {
           <Link href="/" className="flex items-center gap-2">
             <Globe className="h-7 w-7 text-primary" />
             <span className="text-xl font-bold text-text">
-              Prospect<span className="text-primary">Web</span>
+              Prospect<span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Web</span>
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-8">
@@ -42,7 +42,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/signup"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors shadow-sm"
+              className="rounded-lg bg-gradient-to-r from-primary to-purple-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
             >
               Essayer gratuitement
             </Link>
@@ -61,7 +61,7 @@ export default function LandingPage() {
 
           <h1 className="text-4xl sm:text-5xl font-bold text-text leading-tight mb-5">
             Trouvez des entreprises{' '}
-            <span className="text-primary">sans site web</span>
+            <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">sans site web</span>
             {' '}en 30 secondes
           </h1>
 
@@ -73,7 +73,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-5">
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white hover:bg-primary-hover transition-all shadow-lg shadow-primary/30 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-purple-500 px-8 py-4 text-lg font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/30 hover:-translate-y-0.5"
             >
               Commencer gratuitement
               <ArrowRight className="h-5 w-5" />
@@ -97,7 +97,7 @@ export default function LandingPage() {
                 <Search className="h-4 w-4 text-gray-400" />
                 <span className="text-sm text-gray-500">Restaurant · Lyon</span>
               </div>
-              <div className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Rechercher</div>
+              <div className="rounded-lg bg-gradient-to-r from-primary to-purple-500 px-4 py-2 text-sm font-semibold text-white">Rechercher</div>
             </div>
             <div className="p-5 grid gap-3 sm:grid-cols-2">
               {[
@@ -114,21 +114,21 @@ export default function LandingPage() {
                   <p className="text-xs text-text-secondary flex items-center gap-1.5 mb-1">
                     <MapPin className="h-3 w-3" />{r.address}
                   </p>
-                  <p className="text-xs text-primary font-medium flex items-center gap-1.5">
-                    <Phone className="h-3 w-3" />{r.phone}
+                  <p className="text-xs font-medium flex items-center gap-1.5 bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
+                    <Phone className="h-3 w-3 text-primary" />{r.phone}
                   </p>
                 </div>
               ))}
             </div>
             <div className="px-5 pb-4 text-center">
-              <p className="text-sm font-semibold text-primary">🎯 47 entreprises sans site web trouvées en 28 secondes</p>
+              <p className="text-sm font-semibold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">🎯 47 entreprises sans site web trouvées en 28 secondes</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── Stats rapides ────────────────────────────── */}
-      <section className="py-10 px-4 bg-primary">
+      <section className="py-10 px-4 bg-gradient-to-r from-primary to-purple-600">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
           {[
             { value: '60', label: 'prospects par recherche' },
@@ -157,7 +157,7 @@ export default function LandingPage() {
               { number: '3', icon: Download, title: 'Exportez & décrochez des missions', desc: 'CSV, Google Sheets ou Notion. Contactez vos prospects immédiatement.' },
             ].map((step) => (
               <div key={step.number} className="bg-white rounded-2xl border border-gray-100 p-6 text-center">
-                <div className="h-12 w-12 rounded-xl bg-primary-light flex items-center justify-center mx-auto mb-4">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/10 to-purple-500/10 flex items-center justify-center mx-auto mb-4">
                   <step.icon className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="font-bold text-text mb-2">{step.title}</h3>
@@ -172,7 +172,7 @@ export default function LandingPage() {
       <section id="tarifs" className="py-20 px-4 bg-gray-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-3">Tarifs transparents</p>
+            <p className="text-sm font-semibold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent uppercase tracking-widest mb-3">Tarifs transparents</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-text mb-3">
               Commencez gratuitement,<br />évoluez quand vous êtes prêt
             </h2>
@@ -213,7 +213,7 @@ export default function LandingPage() {
             </div>
 
             {/* Premium — mis en avant */}
-            <div className="relative rounded-2xl bg-primary border border-primary p-8 shadow-2xl shadow-primary/25 flex flex-col scale-105">
+            <div className="relative rounded-2xl bg-gradient-to-br from-primary to-purple-600 border border-transparent p-8 shadow-2xl shadow-primary/25 flex flex-col scale-105">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg">
                 ⭐ LE PLUS POPULAIRE
               </div>
@@ -268,10 +268,13 @@ export default function LandingPage() {
                 {[
                   'Recherches illimitées',
                   '60 résultats par recherche',
-                  'Export CSV / Google Sheets / Notion',
+                  'Coordonnées complètes',
+                  'Recherche email (PagesJaunes)',
+                  'Export CSV',
+                  'Export Google Sheets',
+                  'Export Notion',
                   'Historique illimité',
                   'Fiche entreprise détaillée',
-                  'Recherche email (PagesJaunes)',
                   'Génération de brouillon email',
                   'Support prioritaire',
                 ].map((f) => (
@@ -394,7 +397,7 @@ export default function LandingPage() {
       {/* ── CTA Final ───────────────────────────────── */}
       <section className="py-16 px-4">
         <div className="max-w-2xl mx-auto">
-          <div className="rounded-3xl bg-gradient-to-br from-primary to-primary-hover p-10 text-center text-white shadow-2xl shadow-primary/30">
+          <div className="rounded-3xl bg-gradient-to-br from-primary to-purple-600 p-10 text-center text-white shadow-2xl shadow-primary/30">
             <h2 className="text-2xl sm:text-3xl font-bold mb-3">
               Prêt à remplir votre pipeline ?
             </h2>
@@ -421,7 +424,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <Globe className="h-6 w-6 text-primary" />
             <span className="text-base font-bold text-text">
-              Prospect<span className="text-primary">Web</span>
+              Prospect<span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Web</span>
             </span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-text-muted">
