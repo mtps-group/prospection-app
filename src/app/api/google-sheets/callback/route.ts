@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     // Rediriger vers l'export
     return NextResponse.redirect(
-      `${appUrl}/api/google-sheets/export?exportId=${exportId}&access_token=${tokens.access_token}`
+      `${appUrl}/api/google-sheets/export?exportId=${exportId}&access_token=${encodeURIComponent(tokens.access_token!)}`
     );
   } catch (error) {
     console.error('Google Sheets callback error:', error);
