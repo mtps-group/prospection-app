@@ -2,66 +2,10 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { fr } from '@/i18n/fr';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useToast } from '@/providers/ToastProvider';
 import { STRIPE_PLANS } from '@/lib/stripe/config';
-import {
-  Check,
-  X,
-  Crown,
-  Zap,
-  Globe,
-} from 'lucide-react';
-
-const plans = [
-  {
-    slug: 'free',
-    name: fr.billing.gratuit,
-    price: '0',
-    icon: Globe,
-    features: [
-      { text: '2 recherches maximum', included: true },
-      { text: '5 resultats visibles par recherche', included: true },
-      { text: 'Export CSV', included: false },
-      { text: 'Export Google Sheets / Notion', included: false },
-      { text: 'Fiche entreprise detaillee', included: false },
-    ],
-  },
-  {
-    slug: 'premium',
-    name: fr.billing.premium,
-    price: '39,99',
-    icon: Crown,
-    popular: true,
-    features: [
-      { text: 'Recherches illimitees', included: true },
-      { text: 'Jusqu\'a 60 resultats par recherche', included: true },
-      { text: 'Export CSV', included: true },
-      { text: 'Export Google Sheets / Notion', included: true },
-      { text: 'Historique illimite', included: true },
-      { text: 'Fiche entreprise detaillee', included: false },
-    ],
-  },
-  {
-    slug: 'ultra',
-    name: fr.billing.ultra,
-    price: '59,99',
-    icon: Zap,
-    features: [
-      { text: 'Recherches illimitees', included: true },
-      { text: "Jusqu'a 60 resultats par recherche", included: true },
-      { text: 'Export CSV', included: true },
-      { text: 'Export Google Sheets / Notion', included: true },
-      { text: 'Historique illimite', included: true },
-      { text: 'Fiche entreprise detaillee', included: true },
-      { text: 'Recherche email (PagesJaunes)', included: true },
-      { text: 'Generation de brouillon email', included: true },
-      { text: 'Support prioritaire', included: true },
-    ],
-  },
-];
+import { CheckCircle, Crown, Loader2 } from 'lucide-react';
 
 export function PricingCards() {
   const { profile } = useSupabase();
@@ -73,20 +17,17 @@ export function PricingCards() {
     if (!stripePlan) return;
 
     setLoadingPlan(planSlug);
-
     try {
       const response = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceId: stripePlan.priceId }),
       });
-
       const data = await response.json();
-
       if (data.url) {
         window.location.href = data.url;
       } else {
-        addToast('Erreur lors de la creation du paiement', 'error');
+        addToast('Erreur lors de la création du paiement', 'error');
       }
     } catch {
       addToast('Erreur de connexion', 'error');
@@ -97,109 +38,159 @@ export function PricingCards() {
 
   const handleManageSubscription = async () => {
     try {
-      const response = await fetch('/api/stripe/create-portal', {
-        method: 'POST',
-      });
+      const response = await fetch('/api/stripe/create-portal', { method: 'POST' });
       const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
+      if (data.url) window.location.href = data.url;
     } catch {
       addToast('Erreur', 'error');
     }
   };
 
+  const currentPlan = profile?.plan || 'free';
+
   return (
     <div className="grid gap-6 md:grid-cols-3">
-      {plans.map((plan) => {
-        const isCurrentPlan = profile?.plan === plan.slug;
-        const Icon = plan.icon;
 
-        return (
-          <div
-            key={plan.slug}
-            className={`relative rounded-2xl border-2 bg-surface p-6 transition-shadow hover:shadow-lg ${
-              plan.popular
-                ? 'border-primary shadow-md'
-                : 'border-border'
-            }`}
-          >
-            {plan.popular && (
-              <Badge
-                variant="primary"
-                className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1"
-              >
-                {fr.billing.populaire}
-              </Badge>
-            )}
-
-            <div className="text-center mb-6">
-              <Icon
-                className={`mx-auto h-10 w-10 mb-3 ${
-                  plan.slug === 'ultra'
-                    ? 'text-amber-500'
-                    : plan.slug === 'premium'
-                    ? 'text-primary'
-                    : 'text-text-muted'
-                }`}
-              />
-              <h3 className="text-xl font-bold text-text">{plan.name}</h3>
-              <div className="mt-2">
-                <span className="text-3xl font-bold text-text">{plan.price}€</span>
-                {plan.slug !== 'free' && (
-                  <span className="text-text-muted">{fr.billing.parMois}</span>
-                )}
-              </div>
-            </div>
-
-            <ul className="space-y-3 mb-6">
-              {plan.features.map((feature, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm">
-                  {feature.included ? (
-                    <Check className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                  ) : (
-                    <X className="h-4 w-4 text-gray-300 flex-shrink-0 mt-0.5" />
-                  )}
-                  <span
-                    className={
-                      feature.included ? 'text-text' : 'text-text-muted'
-                    }
-                  >
-                    {feature.text}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            {isCurrentPlan ? (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={
-                  plan.slug !== 'free' ? handleManageSubscription : undefined
-                }
-              >
-                {plan.slug === 'free' ? 'Plan actuel' : fr.billing.gererAbonnement}
-              </Button>
-            ) : plan.slug === 'free' ? (
-              <Button variant="ghost" className="w-full" disabled>
-                Plan gratuit
-              </Button>
-            ) : (
-              <Button
-                variant={plan.popular ? 'primary' : 'outline'}
-                className={`w-full ${plan.popular ? 'animate-pulse-glow' : ''}`}
-                loading={loadingPlan === plan.slug}
-                onClick={() => handleSubscribe(plan.slug)}
-              >
-                {plan.slug === 'premium'
-                  ? fr.billing.passerAPremium
-                  : fr.billing.passerAUltra}
-              </Button>
-            )}
+      {/* Gratuit */}
+      <div className="rounded-2xl bg-white border border-gray-200 p-8 flex flex-col">
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-text mb-1">Gratuit</h3>
+          <p className="text-sm text-text-muted">Pour tester sans risque</p>
+        </div>
+        <div className="mb-6">
+          <span className="text-4xl font-black text-text">0€</span>
+          <span className="text-text-muted ml-1 text-sm">/ mois</span>
+        </div>
+        <ul className="space-y-3 mb-8 flex-1">
+          {[
+            '2 recherches maximum',
+            '5 résultats visibles',
+            'Coordonnées de base',
+            'Aucune carte requise',
+          ].map((f) => (
+            <li key={f} className="flex items-center gap-2 text-sm text-text-secondary">
+              <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+              {f}
+            </li>
+          ))}
+        </ul>
+        {currentPlan === 'free' ? (
+          <div className="block text-center rounded-xl border-2 border-primary/30 bg-primary-light py-3 font-semibold text-primary text-sm">
+            ✓ Plan actuel
           </div>
-        );
-      })}
+        ) : (
+          <div className="block text-center rounded-xl border-2 border-gray-200 py-3 font-semibold text-text-muted text-sm">
+            Plan gratuit
+          </div>
+        )}
+      </div>
+
+      {/* Premium — mis en avant */}
+      <div className="relative rounded-2xl bg-gradient-to-br from-primary to-purple-600 border border-transparent p-8 shadow-2xl shadow-primary/25 flex flex-col scale-105">
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg">
+          ⭐ LE PLUS POPULAIRE
+        </div>
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-white mb-1">Premium</h3>
+          <p className="text-sm text-white/70">Pour les créateurs actifs</p>
+        </div>
+        <div className="mb-2">
+          <span className="text-4xl font-black text-white">39,99€</span>
+          <span className="text-white/70 ml-1 text-sm">/ mois</span>
+        </div>
+        <p className="text-xs text-white/60 mb-6">Sans engagement · Résiliez à tout moment</p>
+        <ul className="space-y-3 mb-8 flex-1">
+          {[
+            'Recherches illimitées',
+            '60 résultats par recherche',
+            'Coordonnées complètes',
+            'Export CSV, Google Sheets, Notion',
+            'Historique illimité',
+          ].map((f) => (
+            <li key={f} className="flex items-center gap-2 text-sm text-white/90">
+              <CheckCircle className="h-4 w-4 text-white flex-shrink-0" />
+              {f}
+            </li>
+          ))}
+        </ul>
+        {currentPlan === 'premium' ? (
+          <button
+            onClick={handleManageSubscription}
+            className="block w-full text-center rounded-xl bg-white/20 border border-white/30 py-3 font-semibold text-white hover:bg-white/30 transition-colors text-sm"
+          >
+            ✓ Plan actuel · Gérer
+          </button>
+        ) : currentPlan === 'ultra' ? (
+          <div className="block text-center rounded-xl bg-white/10 py-3 font-semibold text-white/60 text-sm">
+            Plan inférieur
+          </div>
+        ) : (
+          <button
+            onClick={() => handleSubscribe('premium')}
+            disabled={loadingPlan === 'premium'}
+            className="block w-full text-center rounded-xl bg-white py-3.5 font-bold text-primary hover:bg-gray-50 transition-colors text-base disabled:opacity-70"
+          >
+            {loadingPlan === 'premium' ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Chargement...
+              </span>
+            ) : 'Passer à Premium →'}
+          </button>
+        )}
+      </div>
+
+      {/* Ultra */}
+      <div className="rounded-2xl bg-white border border-gray-200 p-8 flex flex-col relative">
+        <div className="absolute top-4 right-4">
+          <Crown className="h-5 w-5 text-amber-400" />
+        </div>
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-text mb-1">Ultra</h3>
+          <p className="text-sm text-text-muted">Pour les agences & freelances pro</p>
+        </div>
+        <div className="mb-6">
+          <span className="text-4xl font-black text-text">59,99€</span>
+          <span className="text-text-muted ml-1 text-sm">/ mois</span>
+        </div>
+        <ul className="space-y-3 mb-8 flex-1">
+          {[
+            'Recherches illimitées',
+            '60 résultats par recherche',
+            'Coordonnées complètes',
+            'Export CSV, Google Sheets, Notion',
+            'Historique illimité',
+            'Fiche entreprise détaillée',
+            'Recherche email automatique',
+            'Support prioritaire',
+          ].map((f) => (
+            <li key={f} className="flex items-center gap-2 text-sm text-text-secondary">
+              <CheckCircle className="h-4 w-4 text-amber-400 flex-shrink-0" />
+              {f}
+            </li>
+          ))}
+        </ul>
+        {currentPlan === 'ultra' ? (
+          <button
+            onClick={handleManageSubscription}
+            className="block w-full text-center rounded-xl border-2 border-amber-400/40 bg-amber-50 py-3 font-semibold text-amber-700 hover:bg-amber-100 transition-colors text-sm"
+          >
+            ✓ Plan actuel · Gérer
+          </button>
+        ) : (
+          <button
+            onClick={() => handleSubscribe('ultra')}
+            disabled={loadingPlan === 'ultra'}
+            className="block w-full text-center rounded-xl bg-gray-900 py-3 font-bold text-white hover:bg-gray-800 transition-colors disabled:opacity-70"
+          >
+            {loadingPlan === 'ultra' ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Chargement...
+              </span>
+            ) : 'Passer à Ultra'}
+          </button>
+        )}
+      </div>
+
     </div>
   );
 }
