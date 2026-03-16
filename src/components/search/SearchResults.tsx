@@ -13,6 +13,8 @@ import {
   Download,
   AlertCircle,
   Crown,
+  Loader2,
+  ExternalLink,
 } from 'lucide-react';
 
 function GoogleSheetsIcon({ className }: { className?: string }) {
@@ -38,10 +40,11 @@ function NotionIcon({ className }: { className?: string }) {
 
 interface SearchResultsProps {
   data: SearchResponse;
+  query?: string;
   onExportCSV?: () => void;
 }
 
-export function SearchResults({ data, onExportCSV }: SearchResultsProps) {
+export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) {
   const { profile } = useSupabase();
   const isPaid = profile?.plan === 'premium' || profile?.plan === 'ultra';
   const isUltra = profile?.plan === 'ultra';
@@ -52,8 +55,73 @@ export function SearchResults({ data, onExportCSV }: SearchResultsProps) {
     city?: string;
   } | null>(null);
 
+  const [sheetsLoading, setSheetsLoading] = useState(false);
+  const [notionLoading, setNotionLoading] = useState(false);
+  const [sheetsUrl, setSheetsUrl] = useState<string | null>(null);
+  const [notionUrl, setNotionUrl] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [showNotionSetup, setShowNotionSetup] = useState(false);
+
   const handleViewDetail = (placeId: string, businessName: string, city?: string) => {
     setDetailPanel({ placeId, businessName, city });
+  };
+
+  const handleExportSheets = async () => {
+    setSheetsLoading(true);
+    setExportError(null);
+    try {
+      const res = await fetch('/api/google-sheets/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ results: data.results, query: query || '' }),
+      });
+      const json = await res.json();
+
+      if (json.needsAuth) {
+        // Rediriger vers OAuth Google avec le Sheets scope
+        window.location.href = `/api/google-sheets/auth?exportId=${json.exportId}`;
+        return;
+      }
+
+      if (json.sheetUrl) {
+        setSheetsUrl(json.sheetUrl);
+        window.open(json.sheetUrl, '_blank');
+      }
+    } catch {
+      setExportError('Erreur lors de l\'export Google Sheets');
+    } finally {
+      setSheetsLoading(false);
+    }
+  };
+
+  const handleExportNotion = async () => {
+    setNotionLoading(true);
+    setExportError(null);
+    try {
+      const res = await fetch('/api/notion/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ results: data.results, query: query || '' }),
+      });
+      const json = await res.json();
+
+      if (json.needsSetup) {
+        setShowNotionSetup(true);
+        setNotionLoading(false);
+        return;
+      }
+
+      if (json.success) {
+        setNotionUrl(json.databaseUrl);
+        window.open(json.databaseUrl, '_blank');
+      } else {
+        setExportError(json.error || 'Erreur export Notion');
+      }
+    } catch {
+      setExportError('Erreur lors de l\'export Notion');
+    } finally {
+      setNotionLoading(false);
+    }
   };
 
   if (data.results.length === 0) {
@@ -84,24 +152,99 @@ export function SearchResults({ data, onExportCSV }: SearchResultsProps) {
         </div>
 
         {isPaid && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {onExportCSV && (
               <Button variant="outline" size="sm" onClick={onExportCSV}>
                 <Download className="h-4 w-4" />
                 CSV
               </Button>
             )}
-            <Button variant="outline" size="sm" disabled>
-              <GoogleSheetsIcon className="h-4 w-4" />
-              Google Sheets
-            </Button>
-            <Button variant="outline" size="sm" disabled>
-              <NotionIcon className="h-4 w-4" />
-              Notion
-            </Button>
+
+            {/* Google Sheets */}
+            {sheetsUrl ? (
+              <a href={sheetsUrl} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm" className="text-green-700 border-green-300">
+                  <GoogleSheetsIcon className="h-4 w-4" />
+                  Ouvrir le Sheet
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              </a>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportSheets}
+                disabled={sheetsLoading}
+              >
+                {sheetsLoading
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <GoogleSheetsIcon className="h-4 w-4" />
+                }
+                Google Sheets
+              </Button>
+            )}
+
+            {/* Notion */}
+            {notionUrl ? (
+              <a href={notionUrl} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm" className="border-gray-400">
+                  <NotionIcon className="h-4 w-4" />
+                  Ouvrir Notion
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              </a>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportNotion}
+                disabled={notionLoading}
+              >
+                {notionLoading
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <NotionIcon className="h-4 w-4" />
+                }
+                Notion
+              </Button>
+            )}
           </div>
         )}
       </div>
+
+      {/* Erreur export */}
+      {exportError && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          {exportError}
+        </div>
+      )}
+
+      {/* Setup Notion */}
+      {showNotionSetup && (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
+          <h3 className="font-semibold text-text mb-2 flex items-center gap-2">
+            <NotionIcon className="h-5 w-5" />
+            Configurer l&apos;export Notion
+          </h3>
+          <p className="text-sm text-text-secondary mb-4">
+            Pour exporter vers Notion, configurez votre intégration dans vos{' '}
+            <Link href="/compte" className="text-primary underline">paramètres de compte</Link>.
+          </p>
+          <ol className="text-sm text-text-secondary space-y-1 list-decimal list-inside">
+            <li>Créez une intégration sur <a href="https://www.notion.so/my-integrations" target="_blank" rel="noopener noreferrer" className="text-primary underline">notion.so/my-integrations</a></li>
+            <li>Copiez le token d&apos;intégration</li>
+            <li>Partagez votre base de données avec l&apos;intégration</li>
+            <li>Collez le token et l&apos;ID de la base dans vos paramètres</li>
+          </ol>
+          <div className="mt-4 flex gap-2">
+            <Link href="/compte">
+              <Button size="sm">Aller aux paramètres</Button>
+            </Link>
+            <Button variant="outline" size="sm" onClick={() => setShowNotionSetup(false)}>
+              Fermer
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Results grid */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -113,7 +256,6 @@ export function SearchResults({ data, onExportCSV }: SearchResultsProps) {
             onViewDetail={handleViewDetail}
           />
         ))}
-
       </div>
 
       {/* Detail panel */}

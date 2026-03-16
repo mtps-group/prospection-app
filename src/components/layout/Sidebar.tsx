@@ -16,6 +16,7 @@ import {
   X,
   Crown,
   Zap,
+  User,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +30,7 @@ const navigation = [
   { name: fr.nav.exports, href: '/exports', icon: Download },
   { name: fr.nav.parametres, href: '/parametres', icon: Settings },
   { name: fr.nav.abonnement, href: '/abonnement', icon: CreditCard },
+  { name: 'Mon compte', href: '/compte', icon: User },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
