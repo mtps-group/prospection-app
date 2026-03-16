@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { SearchForm } from '@/components/search/SearchForm';
 import { SearchResults } from '@/components/search/SearchResults';
@@ -10,13 +11,49 @@ import { getPlanConfig } from '@/lib/constants';
 import { fr } from '@/i18n/fr';
 import type { SearchResponse } from '@/types';
 import type { PlanSlug } from '@/lib/constants';
-import { Search, Sparkles } from 'lucide-react';
+import { Search, Sparkles, ExternalLink, AlertCircle } from 'lucide-react';
+
+function GoogleSheetsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="#23A566"/>
+      <path d="M14 2v6h6" fill="#169E53"/>
+      <path d="M8 13h8M8 16h8M8 10h3" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  );
+}
 
 export default function RecherchePage() {
   const [loading, setLoading] = useState(false);
   const [searchData, setSearchData] = useState<SearchResponse | null>(null);
+  const [currentQuery, setCurrentQuery] = useState('');
   const { profile, refreshProfile } = useSupabase();
   const { addToast } = useToast();
+  const searchParams = useSearchParams();
+
+  const sheetsUrlParam = searchParams.get('sheets_url');
+  const exportErrorParam = searchParams.get('export_error');
+
+  const [sheetsUrlFromOAuth, setSheetsUrlFromOAuth] = useState<string | null>(null);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (sheetsUrlParam) {
+      setSheetsUrlFromOAuth(decodeURIComponent(sheetsUrlParam));
+      window.open(decodeURIComponent(sheetsUrlParam), '_blank');
+      // Clean URL
+      window.history.replaceState({}, '', '/recherche');
+    }
+    if (exportErrorParam) {
+      const messages: Record<string, string> = {
+        params_missing: 'Paramètres manquants lors de l\'export Google Sheets.',
+        expired: 'La session d\'export a expiré. Veuillez réessayer.',
+        failed: 'Erreur lors de la création du Google Sheet. Veuillez réessayer.',
+      };
+      setOauthError(messages[exportErrorParam] || 'Erreur lors de l\'export Google Sheets.');
+      window.history.replaceState({}, '', '/recherche');
+    }
+  }, [sheetsUrlParam, exportErrorParam]);
 
   const plan = getPlanConfig((profile?.plan || 'free') as PlanSlug);
   const searchesRemaining =
@@ -27,6 +64,7 @@ export default function RecherchePage() {
   const handleSearch = async (businessType: string, city: string) => {
     setLoading(true);
     setSearchData(null);
+    setCurrentQuery(`${businessType} ${city}`);
 
     try {
       const response = await fetch('/api/search', {
@@ -50,7 +88,7 @@ export default function RecherchePage() {
       setSearchData(data);
       await refreshProfile();
       addToast(
-        `${data.noWebsiteCount} entreprises sans site web trouvees !`,
+        `${data.noWebsiteCount} entreprises sans site web trouvées !`,
         'success'
       );
     } catch {
@@ -86,7 +124,7 @@ export default function RecherchePage() {
     link.click();
     URL.revokeObjectURL(url);
 
-    addToast('Export CSV telecharge !', 'success');
+    addToast('Export CSV téléchargé !', 'success');
   };
 
   const isLimitReached =
@@ -104,6 +142,32 @@ export default function RecherchePage() {
         <p className="text-text-secondary mt-1">{fr.search.sousTitre}</p>
       </div>
 
+      {/* Google Sheets OAuth success banner */}
+      {sheetsUrlFromOAuth && (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+          <div className="flex items-center gap-2">
+            <GoogleSheetsIcon className="h-5 w-5 flex-shrink-0" />
+            <span>Votre Google Sheet a été créé avec succès !</span>
+          </div>
+          <a
+            href={sheetsUrlFromOAuth}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 font-semibold underline whitespace-nowrap hover:text-green-900"
+          >
+            Ouvrir le Sheet <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      )}
+
+      {/* Google Sheets OAuth error banner */}
+      {oauthError && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span>{oauthError}</span>
+        </div>
+      )}
+
       {/* Search usage indicator for free plan */}
       {searchesRemaining !== null && (
         <div
@@ -116,9 +180,9 @@ export default function RecherchePage() {
           <Sparkles className="h-4 w-4" />
           {isLimitReached ? (
             <span>
-              Vous avez utilise toutes vos recherches gratuites.{' '}
+              Vous avez utilisé toutes vos recherches gratuites.{' '}
               <a href="/abonnement" className="font-semibold underline">
-                Passer a Premium
+                Passer à Premium
               </a>
             </span>
           ) : (
@@ -142,9 +206,8 @@ export default function RecherchePage() {
       {searchData && (
         <SearchResults
           data={searchData}
-          onExportCSV={
-            profile?.plan !== 'free' ? handleExportCSV : undefined
-          }
+          query={currentQuery}
+          onExportCSV={handleExportCSV}
         />
       )}
     </div>
