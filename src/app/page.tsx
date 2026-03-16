@@ -193,7 +193,7 @@ export default function LandingPage() {
               </div>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  '2 recherches à vie',
+                  '2 recherches maximum',
                   '5 résultats visibles',
                   'Coordonnées de base',
                   'Aucune carte requise',
@@ -266,12 +266,13 @@ export default function LandingPage() {
               </div>
               <ul className="space-y-3 mb-8 flex-1">
                 {[
-                  'Tout le plan Premium',
+                  'Recherches illimitées',
+                  '60 résultats par recherche',
+                  'Export CSV / Google Sheets / Notion',
+                  'Historique illimité',
                   'Fiche entreprise détaillée',
-                  'Photos de l\'établissement',
-                  'Avis clients Google',
-                  'Horaires d\'ouverture',
-                  'Génération d\'emails IA',
+                  'Recherche email (PagesJaunes)',
+                  'Génération de brouillon email',
                   'Support prioritaire',
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-text-secondary">

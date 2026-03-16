@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "prospection-app",
-      "runtimeExecutable": "npm.cmd",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "cmd.exe",
+      "runtimeArgs": ["/c", "npm run dev"],
       "port": 3000
     }
   ]
