@@ -1,16 +1,14 @@
 'use client';
 
 import { Card, CardTitle, CardDescription } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { fr } from '@/i18n/fr';
-import { Download, FileSpreadsheet, BookOpen, ExternalLink, Lock } from 'lucide-react';
+import { Download, FileSpreadsheet, BookOpen, FileText, Info } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ExportsPage() {
   const { profile } = useSupabase();
-  const isPaid = profile?.plan === 'premium' || profile?.plan === 'ultra';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -22,22 +20,35 @@ export default function ExportsPage() {
         <p className="text-text-secondary mt-1">{fr.exports.sousTitre}</p>
       </div>
 
-      {!isPaid && (
-        <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary-light/30 p-6 text-center">
-          <Lock className="mx-auto h-8 w-8 text-primary mb-2" />
-          <h3 className="font-semibold text-text mb-1">
-            Fonctionnalite Premium
-          </h3>
-          <p className="text-sm text-text-secondary mb-4">
-            Les exports sont disponibles a partir du plan Premium.
-          </p>
-          <Link href="/abonnement">
-            <Button>{fr.billing.passerAPremium}</Button>
-          </Link>
-        </div>
-      )}
+      {/* Info banner */}
+      <div className="flex items-start gap-3 rounded-xl bg-primary-light/40 border border-primary/20 px-4 py-3 text-sm text-primary">
+        <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
+        <span>
+          Les exports sont disponibles pour <strong>tous les plans</strong>, y compris le plan gratuit.
+          Faites une recherche depuis la page <Link href="/recherche" className="underline font-semibold">Recherche</Link> puis cliquez sur le bouton d&apos;export souhaité.
+        </span>
+      </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
+
+        {/* CSV */}
+        <Card>
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
+              <FileText className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <CardTitle>Export CSV</CardTitle>
+              <CardDescription>
+                Téléchargez vos résultats en fichier CSV, compatible avec Excel
+              </CardDescription>
+              <div className="mt-3">
+                <Badge variant="success">Disponible</Badge>
+              </div>
+            </div>
+          </div>
+        </Card>
+
         {/* Google Sheets */}
         <Card>
           <div className="flex items-start gap-4">
@@ -47,24 +58,12 @@ export default function ExportsPage() {
             <div className="flex-1">
               <CardTitle>{fr.exports.googleSheets}</CardTitle>
               <CardDescription>
-                Exportez vos resultats directement vers Google Sheets
+                Exportez vos résultats directement vers Google Sheets
               </CardDescription>
-              <div className="mt-3">
-                {isPaid ? (
-                  profile?.google_sheets_token ? (
-                    <Badge variant="success">{fr.exports.connecte}</Badge>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.location.href = '/api/integrations/google/connect'}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      {fr.exports.connecter}
-                    </Button>
-                  )
-                ) : (
-                  <Badge variant="default">Premium requis</Badge>
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                <Badge variant="success">Disponible</Badge>
+                {profile?.google_sheets_refresh_token && (
+                  <Badge variant="success">{fr.exports.connecte}</Badge>
                 )}
               </div>
             </div>
@@ -80,30 +79,36 @@ export default function ExportsPage() {
             <div className="flex-1">
               <CardTitle>{fr.exports.notion}</CardTitle>
               <CardDescription>
-                Exportez vos resultats vers une base Notion
+                Exportez vos résultats vers une base Notion
               </CardDescription>
-              <div className="mt-3">
-                {isPaid ? (
-                  profile?.notion_access_token ? (
-                    <Badge variant="success">{fr.exports.connecte}</Badge>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.location.href = '/api/integrations/notion/connect'}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      {fr.exports.connecter}
-                    </Button>
-                  )
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                <Badge variant="success">Disponible</Badge>
+                {profile?.notion_token ? (
+                  <Badge variant="success">{fr.exports.connecte}</Badge>
                 ) : (
-                  <Badge variant="default">Premium requis</Badge>
+                  <Link href="/compte" className="text-xs text-primary underline font-medium">
+                    Configurer →
+                  </Link>
                 )}
               </div>
             </div>
           </div>
         </Card>
+
       </div>
+
+      {/* Comment utiliser */}
+      <Card>
+        <h3 className="font-semibold text-text mb-3">Comment exporter ?</h3>
+        <ol className="space-y-2 text-sm text-text-secondary list-decimal list-inside">
+          <li>Allez sur la page <Link href="/recherche" className="text-primary font-medium underline">Recherche</Link></li>
+          <li>Lancez une recherche (ex : &quot;plombier Paris&quot;)</li>
+          <li>Une fois les résultats affichés, cliquez sur <strong>CSV</strong>, <strong>Google Sheets</strong> ou <strong>Notion</strong></li>
+          <li>Pour Google Sheets : autorisez l&apos;accès à votre compte Google (une seule fois)</li>
+          <li>Pour Notion : configurez votre token dans <Link href="/compte" className="text-primary font-medium underline">Mon compte</Link></li>
+        </ol>
+      </Card>
+
     </div>
   );
 }
