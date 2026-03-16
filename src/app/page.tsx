@@ -414,10 +414,6 @@ export default function LandingPage() {
                 a: 'Oui. Les données (nom, adresse, téléphone) sont publiques. Vous pouvez les utiliser pour de la prospection B2B, en respectant le RGPD dans vos communications.',
               },
               {
-                q: 'La recherche d\'email fonctionne-t-elle à chaque fois ?',
-                a: 'Non, le taux de succès dépend des entreprises. PagesJaunes ne référence pas tous les emails. En moyenne, vous en trouverez pour 20 à 40% des prospects.',
-              },
-              {
                 q: 'Puis-je annuler à tout moment ?',
                 a: 'Oui, depuis votre espace "Abonnement". La résiliation prend effet à la fin de la période en cours. Aucun frais caché.',
               },
