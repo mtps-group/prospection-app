@@ -127,20 +127,45 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Stats rapides ────────────────────────────── */}
-      <section className="py-10 px-4 bg-gradient-to-r from-primary to-purple-600">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center text-white">
-          {[
-            { value: '60', label: 'prospects par recherche' },
-            { value: '30s', label: 'pour obtenir les résultats' },
-            { value: '800€', label: 'prix moyen d\'un site vitrine' },
-            { value: '×20', label: 'ROI moyen de l\'outil' },
-          ].map((stat) => (
-            <div key={stat.value}>
-              <p className="text-3xl font-black mb-1">{stat.value}</p>
-              <p className="text-sm text-white/70">{stat.label}</p>
+      {/* ── Compatibilité outils ─────────────────────── */}
+      <section className="py-8 px-4 bg-gradient-to-r from-primary to-purple-600">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-6 text-white">
+          <p className="text-sm font-semibold text-white/80 uppercase tracking-widest">Compatible avec</p>
+          <div className="flex items-center gap-8">
+
+            {/* Google Sheets */}
+            <div className="flex items-center gap-2.5">
+              <svg className="h-7 w-7 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="white" fillOpacity="0.9"/>
+                <path d="M14 2v6h6" fill="white" fillOpacity="0.6"/>
+                <path d="M8 13h8M8 16h8M8 10h3" stroke="#6366f1" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+              <span className="text-base font-bold text-white">Google Sheets</span>
             </div>
-          ))}
+
+            <div className="w-px h-8 bg-white/20" />
+
+            {/* Notion */}
+            <div className="flex items-center gap-2.5">
+              <svg className="h-7 w-7 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="white" fillOpacity="0.9"/>
+                <path d="M6.5 6.5h5l4.5 6V7h1.5v11H13l-4.5-6.5V18H6.5V6.5z" fill="#6366f1"/>
+              </svg>
+              <span className="text-base font-bold text-white">Notion</span>
+            </div>
+
+            <div className="w-px h-8 bg-white/20" />
+
+            {/* CSV */}
+            <div className="flex items-center gap-2.5">
+              <svg className="h-7 w-7 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24" rx="4" fill="white" fillOpacity="0.9"/>
+                <path d="M7 8h10M7 12h10M7 16h6" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span className="text-base font-bold text-white">Export CSV</span>
+            </div>
+
+          </div>
         </div>
       </section>
 
