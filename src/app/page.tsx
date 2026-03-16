@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useSupabase } from '@/providers/SupabaseProvider';
 import {
   Globe,
   Search,
@@ -16,9 +19,13 @@ import {
   BookOpen,
   TrendingUp,
   Clock,
+  LayoutDashboard,
 } from 'lucide-react';
 
 export default function LandingPage() {
+  const { profile } = useSupabase();
+  const isLoggedIn = !!profile;
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -37,15 +44,27 @@ export default function LandingPage() {
             <a href="#faq" className="text-sm font-medium text-text-secondary hover:text-text transition-colors">FAQ</a>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm font-medium text-text-secondary hover:text-text transition-colors">
-              Connexion
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-lg bg-gradient-to-r from-primary to-purple-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
-            >
-              Essayer gratuitement
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/recherche"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-purple-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Mon tableau de bord
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm font-medium text-text-secondary hover:text-text transition-colors">
+                  Connexion
+                </Link>
+                <Link
+                  href="/signup"
+                  className="rounded-lg bg-gradient-to-r from-primary to-purple-500 px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity shadow-sm"
+                >
+                  Essayer gratuitement
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -72,10 +91,10 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-5">
             <Link
-              href="/signup"
+              href={isLoggedIn ? '/recherche' : '/signup'}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-purple-500 px-8 py-4 text-lg font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/30 hover:-translate-y-0.5"
             >
-              Commencer gratuitement
+              {isLoggedIn ? 'Accéder à mon espace' : 'Commencer gratuitement'}
               <ArrowRight className="h-5 w-5" />
             </Link>
             <a
@@ -228,10 +247,10 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link
-                href="/signup"
+                href={isLoggedIn ? '/recherche' : '/signup'}
                 className="block text-center rounded-xl border-2 border-gray-200 py-3 font-semibold text-text hover:bg-gray-50 transition-colors"
               >
-                Commencer gratuitement
+                {isLoggedIn ? 'Accéder à mon espace' : 'Commencer gratuitement'}
               </Link>
             </div>
 
@@ -267,10 +286,10 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link
-                href="/signup"
+                href={isLoggedIn ? '/abonnement' : '/signup'}
                 className="block text-center rounded-xl bg-white py-3.5 font-bold text-primary hover:bg-gray-50 transition-colors text-base"
               >
-                Commencer avec Premium →
+                {isLoggedIn ? 'Passer à Premium →' : 'Commencer avec Premium →'}
               </Link>
             </div>
 
@@ -308,10 +327,10 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link
-                href="/signup"
+                href={isLoggedIn ? '/abonnement' : '/signup'}
                 className="block text-center rounded-xl bg-gray-900 py-3 font-bold text-white hover:bg-gray-800 transition-colors"
               >
-                Commencer avec Ultra
+                {isLoggedIn ? 'Passer à Ultra' : 'Commencer avec Ultra'}
               </Link>
             </div>
           </div>
