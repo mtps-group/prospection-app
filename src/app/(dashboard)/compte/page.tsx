@@ -15,8 +15,8 @@ export default function ComptePage() {
 
   useEffect(() => {
     if (profile) {
-      setNotionToken((profile as Record<string, unknown>).notion_token as string || '');
-      setNotionDatabaseId((profile as Record<string, unknown>).notion_database_id as string || '');
+      setNotionToken(profile.notion_token || '');
+      setNotionDatabaseId(profile.notion_database_id || '');
     }
   }, [profile]);
 

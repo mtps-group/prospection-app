@@ -12,8 +12,11 @@ export interface Profile {
   plan: PlanSlug;
   total_searches_used: number;
   google_sheets_token: GoogleSheetsToken | null;
+  google_sheets_refresh_token: string | null;
   notion_access_token: string | null;
   notion_workspace_name: string | null;
+  notion_token: string | null;
+  notion_database_id: string | null;
   created_at: string;
   updated_at: string;
 }
