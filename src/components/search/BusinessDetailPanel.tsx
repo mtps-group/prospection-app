@@ -377,7 +377,7 @@ export function BusinessDetailPanel({
                   {emailLoading && (
                     <span className="text-xs font-normal text-text-muted flex items-center gap-1">
                       <Loader2 className="h-3 w-3 animate-spin" />
-                      Recherche PagesJaunes...
+                      Recherche en cours...
                     </span>
                   )}
                 </h3>
@@ -385,7 +385,7 @@ export function BusinessDetailPanel({
                 {emailLoading ? (
                   <div className="flex items-center gap-2 text-sm text-text-muted rounded-lg bg-gray-50 px-3 py-2 animate-pulse">
                     <Mail className="h-4 w-4 flex-shrink-0" />
-                    <span>Recherche en cours...</span>
+                    <span>Recherche d&apos;email en cours...</span>
                   </div>
                 ) : emailSearched && emails.length > 0 ? (
                   <div className="space-y-2">
@@ -414,7 +414,7 @@ export function BusinessDetailPanel({
                         </button>
                       </div>
                     ))}
-                    <p className="text-xs text-text-muted">Source : PagesJaunes</p>
+                    <p className="text-xs text-text-muted">Source : annuaires professionnels</p>
                   </div>
                 ) : emailSearched ? (
                   <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2">
