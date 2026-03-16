@@ -81,23 +81,31 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    const { data: exportJob } = await supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log('[Sheets GET] user:', user?.id ?? 'NOT FOUND');
+
+    const { data: exportJob, error: jobError } = await supabase
       .from('export_jobs')
       .select('*')
       .eq('id', exportId)
       .single();
 
+    console.log('[Sheets GET] exportJob:', exportJob ? 'found' : 'not found', '| error:', jobError?.message);
+
     if (!exportJob) {
       return NextResponse.redirect(`${appUrl}/recherche?export_error=expired`);
     }
+
+    console.log('[Sheets GET] token length:', accessToken?.length, '| results:', exportJob.results?.length);
 
     const sheetUrl = await createSpreadsheet(accessToken, exportJob.results, exportJob.query);
 
     await supabase.from('export_jobs').delete().eq('id', exportId);
 
     return NextResponse.redirect(`${appUrl}/recherche?sheets_url=${encodeURIComponent(sheetUrl)}`);
-  } catch (error) {
-    console.error('Google Sheets export GET error:', error);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[Sheets GET] ERREUR:', msg);
     return NextResponse.redirect(`${appUrl}/recherche?export_error=failed`);
   }
 }
