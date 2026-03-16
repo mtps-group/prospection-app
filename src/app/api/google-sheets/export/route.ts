@@ -27,6 +27,7 @@ async function createSpreadsheet(accessToken: string, results: Array<{
   });
 
   const spreadsheetId = spreadsheet.data.spreadsheetId!;
+  const sheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId ?? 0;
 
   const rows = [
     ['Nom', 'Adresse', 'Téléphone', 'Type', 'Note Google'],
@@ -51,7 +52,7 @@ async function createSpreadsheet(accessToken: string, results: Array<{
     requestBody: {
       requests: [{
         repeatCell: {
-          range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1 },
+          range: { sheetId, startRowIndex: 0, endRowIndex: 1 },
           cell: {
             userEnteredFormat: {
               textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } },
