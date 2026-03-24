@@ -31,6 +31,8 @@ interface BusinessDetailPanelProps {
   placeId: string;
   businessName: string;
   city?: string;
+  hasWebsite?: boolean;
+  websiteUrl?: string;
   onClose: () => void;
 }
 
@@ -76,6 +78,8 @@ export function BusinessDetailPanel({
   placeId,
   businessName,
   city,
+  hasWebsite,
+  websiteUrl,
   onClose,
 }: BusinessDetailPanelProps) {
   const [loading, setLoading] = useState(true);
@@ -544,16 +548,32 @@ export function BusinessDetailPanel({
                 </section>
               )}
 
-              {/* No website badge */}
-              <div className="rounded-lg border-2 border-dashed border-red-200 bg-red-50 p-4 text-center">
-                <Globe className="mx-auto h-8 w-8 text-red-400 mb-2" />
-                <p className="text-sm font-semibold text-red-700">
-                  {fr.results.pasDeSiteWeb}
-                </p>
-                <p className="text-xs text-red-500 mt-1">
-                  Cette entreprise n&apos;a pas de site internet — un prospect idéal !
-                </p>
-              </div>
+              {/* Website status */}
+              {hasWebsite ? (
+                <div className="rounded-lg border-2 border-dashed border-green-200 bg-green-50 p-4 text-center">
+                  <Globe className="mx-auto h-8 w-8 text-green-500 mb-2" />
+                  <p className="text-sm font-semibold text-green-700">Cette entreprise a un site web</p>
+                  {(websiteUrl || detail?.websiteUri) && (
+                    <a
+                      href={websiteUrl || detail?.websiteUri}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 underline mt-1"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      {(websiteUrl || detail?.websiteUri)?.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-lg border-2 border-dashed border-red-200 bg-red-50 p-4 text-center">
+                  <Globe className="mx-auto h-8 w-8 text-red-400 mb-2" />
+                  <p className="text-sm font-semibold text-red-700">{fr.results.pasDeSiteWeb}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    Cette entreprise n&apos;a pas de site internet — un prospect idéal !
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>

@@ -16,7 +16,7 @@ interface BusinessCardProps {
   result: SearchResultClient;
   isUltra?: boolean;
   showWebsiteUrl?: boolean;
-  onViewDetail?: (placeId: string, name: string, city?: string) => void;
+  onViewDetail?: (placeId: string, name: string, city?: string, hasWebsite?: boolean, websiteUrl?: string) => void;
 }
 
 export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessCardProps) {
@@ -64,7 +64,7 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessC
       onClick={isClickable ? () => {
         // Extraire la ville depuis l'adresse formatée
         const city = result.formatted_address?.split(',').slice(-2, -1)[0]?.trim().replace(/^\d{5}\s*/, '') || '';
-        onViewDetail(result.google_place_id, result.business_name, city);
+        onViewDetail(result.google_place_id, result.business_name, city, result.has_website, result.website_url || undefined);
       } : undefined}
     >
       <div className="flex items-start justify-between gap-3">

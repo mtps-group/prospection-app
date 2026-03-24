@@ -53,6 +53,8 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
     placeId: string;
     businessName: string;
     city?: string;
+    hasWebsite?: boolean;
+    websiteUrl?: string;
   } | null>(null);
 
   const [activeTab, setActiveTab] = useState<'no-website' | 'with-website'>('no-website');
@@ -63,8 +65,8 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
   const [exportError, setExportError] = useState<string | null>(null);
   const [showNotionSetup, setShowNotionSetup] = useState(false);
 
-  const handleViewDetail = (placeId: string, businessName: string, city?: string) => {
-    setDetailPanel({ placeId, businessName, city });
+  const handleViewDetail = (placeId: string, businessName: string, city?: string, hasWebsite?: boolean, websiteUrl?: string) => {
+    setDetailPanel({ placeId, businessName, city, hasWebsite, websiteUrl });
   };
 
   const handleExportSheets = async () => {
@@ -310,6 +312,8 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
           placeId={detailPanel.placeId}
           businessName={detailPanel.businessName}
           city={detailPanel.city}
+          hasWebsite={detailPanel.hasWebsite}
+          websiteUrl={detailPanel.websiteUrl}
           onClose={() => setDetailPanel(null)}
         />
       )}
