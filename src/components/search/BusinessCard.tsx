@@ -15,10 +15,11 @@ import {
 interface BusinessCardProps {
   result: SearchResultClient;
   isUltra?: boolean;
+  showWebsiteUrl?: boolean;
   onViewDetail?: (placeId: string, name: string, city?: string) => void;
 }
 
-export function BusinessCard({ result, onViewDetail }: BusinessCardProps) {
+export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessCardProps) {
   if (result.is_blurred) {
     return (
       <div className="relative rounded-xl border border-border bg-surface p-5 overflow-hidden">
@@ -76,10 +77,17 @@ export function BusinessCard({ result, onViewDetail }: BusinessCardProps) {
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Badge variant="error">
-            <Globe className="h-3 w-3 mr-1" />
-            {fr.results.pasDeSiteWeb}
-          </Badge>
+          {showWebsiteUrl ? (
+            <Badge variant="success">
+              <Globe className="h-3 w-3 mr-1" />
+              Site web
+            </Badge>
+          ) : (
+            <Badge variant="error">
+              <Globe className="h-3 w-3 mr-1" />
+              {fr.results.pasDeSiteWeb}
+            </Badge>
+          )}
           {isClickable && (
             <ChevronRight className="h-4 w-4 text-text-muted" />
           )}
@@ -106,6 +114,21 @@ export function BusinessCard({ result, onViewDetail }: BusinessCardProps) {
             >
               {result.phone_national}
             </span>
+          </div>
+        )}
+
+        {showWebsiteUrl && result.website_url && (
+          <div className="flex items-center gap-2 text-sm">
+            <Globe className="h-4 w-4 flex-shrink-0 text-text-muted" />
+            <a
+              href={result.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary font-medium truncate hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {result.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+            </a>
           </div>
         )}
 

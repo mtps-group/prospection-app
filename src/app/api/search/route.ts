@@ -121,22 +121,22 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id);
 
     // 10. Build client response
-    // For free plan: only send first 5 visible, rest as placeholders
-    const { data: savedResults } = await supabase
+    const visibleCount = plan.visibleResults;
+
+    // Entreprises SANS site web
+    const { data: noWebsiteResults } = await supabase
       .from('search_results')
       .select('*')
       .eq('search_id', search.id)
       .eq('has_website', false)
       .order('rating', { ascending: false, nullsFirst: false });
 
-    const results = savedResults || [];
-    const visibleCount = plan.visibleResults;
+    const noWebsiteList = noWebsiteResults || [];
 
-    const clientResults: SearchResultClient[] = results.map((r, index) => {
+    const clientResults: SearchResultClient[] = noWebsiteList.map((r, index) => {
       if (index < visibleCount) {
         return { ...r, is_blurred: false };
       }
-      // Blurred placeholder - don't send real data
       return {
         ...r,
         business_name: 'Entreprise masquee',
@@ -150,12 +150,42 @@ export async function POST(request: NextRequest) {
       };
     });
 
+    // Entreprises AVEC site web
+    const { data: withWebsiteResults } = await supabase
+      .from('search_results')
+      .select('*')
+      .eq('search_id', search.id)
+      .eq('has_website', true)
+      .order('rating', { ascending: false, nullsFirst: false });
+
+    const withWebsiteList = withWebsiteResults || [];
+
+    const clientWithWebsite: SearchResultClient[] = withWebsiteList.map((r, index) => {
+      if (index < visibleCount) {
+        return { ...r, is_blurred: false };
+      }
+      return {
+        ...r,
+        business_name: 'Entreprise masquee',
+        formatted_address: '*** Adresse masquee ***',
+        phone_national: '** ** ** ** **',
+        phone_international: null,
+        google_maps_uri: null,
+        website_url: null,
+        rating: r.rating,
+        user_rating_count: null,
+        is_blurred: true,
+      };
+    });
+
     return NextResponse.json({
       searchId: search.id,
       totalFound: allPlaces.length,
       noWebsiteCount: noWebsitePlaces.length,
       results: clientResults,
-      blurredCount: Math.max(0, results.length - visibleCount),
+      blurredCount: Math.max(0, noWebsiteList.length - visibleCount),
+      withWebsiteResults: clientWithWebsite,
+      withWebsiteCount: withWebsiteList.length,
     });
   } catch (error) {
     console.error('Search error:', error);

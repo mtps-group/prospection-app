@@ -79,6 +79,8 @@ export interface SearchResponse {
   noWebsiteCount: number;
   results: SearchResultClient[];
   blurredCount: number;
+  withWebsiteResults: SearchResultClient[];
+  withWebsiteCount: number;
 }
 
 // ============================================

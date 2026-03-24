@@ -55,6 +55,7 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
     city?: string;
   } | null>(null);
 
+  const [activeTab, setActiveTab] = useState<'no-website' | 'with-website'>('no-website');
   const [sheetsLoading, setSheetsLoading] = useState(false);
   const [notionLoading, setNotionLoading] = useState(false);
   const [sheetsUrl, setSheetsUrl] = useState<string | null>(null);
@@ -138,13 +139,50 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
     );
   }
 
+  const activeResults = activeTab === 'no-website' ? data.results : (data.withWebsiteResults || []);
+
   return (
     <div className="space-y-6">
+
+      {/* Onglets */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+        <button
+          onClick={() => setActiveTab('no-website')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === 'no-website'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-text-muted hover:text-text'
+          }`}
+        >
+          Sans site web
+          <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+            activeTab === 'no-website' ? 'bg-primary text-white' : 'bg-gray-200 text-text-muted'
+          }`}>
+            {data.noWebsiteCount}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('with-website')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            activeTab === 'with-website'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-text-muted hover:text-text'
+          }`}
+        >
+          Avec site web
+          <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+            activeTab === 'with-website' ? 'bg-primary text-white' : 'bg-gray-200 text-text-muted'
+          }`}>
+            {data.withWebsiteCount || 0}
+          </span>
+        </button>
+      </div>
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Badge variant="primary" className="text-sm px-3 py-1">
-            {data.noWebsiteCount} {fr.results.entreprisesTrouvees}
+            {activeTab === 'no-website' ? data.noWebsiteCount : (data.withWebsiteCount || 0)} {fr.results.entreprisesTrouvees}
           </Badge>
           <span className="text-sm text-text-muted">
             {fr.results.surTotal} {data.totalFound} {fr.results.entreprises}
@@ -246,17 +284,25 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
         </div>
       )}
 
-      {/* Results grid */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {data.results.map((result) => (
-          <BusinessCard
-            key={result.id}
-            result={result}
-            isUltra={isUltra}
-            onViewDetail={handleViewDetail}
-          />
-        ))}
-      </div>
+      {/* Résultats */}
+      {activeResults.length === 0 ? (
+        <div className="text-center py-12">
+          <AlertCircle className="mx-auto h-10 w-10 text-text-muted mb-3" />
+          <p className="text-text-secondary text-sm">Aucun résultat dans cet onglet.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {activeResults.map((result) => (
+            <BusinessCard
+              key={result.id}
+              result={result}
+              isUltra={isUltra}
+              onViewDetail={handleViewDetail}
+              showWebsiteUrl={activeTab === 'with-website'}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Detail panel */}
       {detailPanel && (
