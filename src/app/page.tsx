@@ -273,10 +273,7 @@ export default function LandingPage() {
                   'Recherches illimitées',
                   '60 résultats par recherche',
                   'Coordonnées complètes',
-                  'Recherche email (PagesJaunes)',
-                  'Export CSV',
-                  'Export Google Sheets',
-                  'Export Notion',
+                  'Export CSV, Google Sheets, Notion',
                   'Historique illimité',
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-white/90">
@@ -311,13 +308,10 @@ export default function LandingPage() {
                   'Recherches illimitées',
                   '60 résultats par recherche',
                   'Coordonnées complètes',
-                  'Recherche email (PagesJaunes)',
-                  'Export CSV',
-                  'Export Google Sheets',
-                  'Export Notion',
+                  'Export CSV, Google Sheets, Notion',
                   'Historique illimité',
                   'Fiche entreprise détaillée',
-                  'Génération de brouillon email',
+                  'Recherche email automatique',
                   'Support prioritaire',
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-text-secondary">
