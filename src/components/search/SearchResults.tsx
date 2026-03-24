@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { BusinessCard } from './BusinessCard';
 import { BusinessDetailPanel } from './BusinessDetailPanel';
 import { Badge } from '@/components/ui/Badge';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { fr } from '@/i18n/fr';
 import type { SearchResponse } from '@/types';
 import { useSupabase } from '@/providers/SupabaseProvider';
+import { computeScore } from '@/lib/scoring';
 import Link from 'next/link';
 import {
   Download,
@@ -15,6 +16,7 @@ import {
   Crown,
   Loader2,
   ExternalLink,
+  ArrowUpDown,
 } from 'lucide-react';
 
 function GoogleSheetsIcon({ className }: { className?: string }) {
@@ -55,9 +57,11 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
     city?: string;
     hasWebsite?: boolean;
     websiteUrl?: string;
+    result?: import('@/types').SearchResultClient;
   } | null>(null);
 
   const [activeTab, setActiveTab] = useState<'no-website' | 'with-website'>('no-website');
+  const [sortBy, setSortBy] = useState<'score' | 'rating' | 'reviews'>('score');
   const [sheetsLoading, setSheetsLoading] = useState(false);
   const [notionLoading, setNotionLoading] = useState(false);
   const [sheetsUrl, setSheetsUrl] = useState<string | null>(null);
@@ -66,7 +70,8 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
   const [showNotionSetup, setShowNotionSetup] = useState(false);
 
   const handleViewDetail = (placeId: string, businessName: string, city?: string, hasWebsite?: boolean, websiteUrl?: string) => {
-    setDetailPanel({ placeId, businessName, city, hasWebsite, websiteUrl });
+    const result = activeResults.find(r => r.google_place_id === placeId);
+    setDetailPanel({ placeId, businessName, city, hasWebsite, websiteUrl, result });
   };
 
   const handleExportSheets = async () => {
@@ -141,7 +146,19 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
     );
   }
 
-  const activeResults = activeTab === 'no-website' ? data.results : (data.withWebsiteResults || []);
+  const rawResults = activeTab === 'no-website' ? data.results : (data.withWebsiteResults || []);
+
+  const activeResults = useMemo(() => {
+    const visible = rawResults.filter(r => !r.is_blurred);
+    const blurred = rawResults.filter(r => r.is_blurred);
+    const sorted = [...visible].sort((a, b) => {
+      if (sortBy === 'score') return computeScore(b).total - computeScore(a).total;
+      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+      if (sortBy === 'reviews') return (b.user_rating_count || 0) - (a.user_rating_count || 0);
+      return 0;
+    });
+    return [...sorted, ...blurred];
+  }, [rawResults, sortBy]);
 
   return (
     <div className="space-y-6">
@@ -182,13 +199,26 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Badge variant="primary" className="text-sm px-3 py-1">
             {activeTab === 'no-website' ? data.noWebsiteCount : (data.withWebsiteCount || 0)} {fr.results.entreprisesTrouvees}
           </Badge>
           <span className="text-sm text-text-muted">
             {fr.results.surTotal} {data.totalFound} {fr.results.entreprises}
           </span>
+          {/* Tri */}
+          <div className="flex items-center gap-1.5 text-sm">
+            <ArrowUpDown className="h-3.5 w-3.5 text-text-muted" />
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value as 'score' | 'rating' | 'reviews')}
+              className="text-sm border border-gray-200 rounded-lg px-2 py-1 text-text-secondary bg-white focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="score">Par score</option>
+              <option value="rating">Par note</option>
+              <option value="reviews">Par avis</option>
+            </select>
+          </div>
         </div>
 
         {true && (
@@ -314,6 +344,7 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
           city={detailPanel.city}
           hasWebsite={detailPanel.hasWebsite}
           websiteUrl={detailPanel.websiteUrl}
+          result={detailPanel.result}
           onClose={() => setDetailPanel(null)}
         />
       )}

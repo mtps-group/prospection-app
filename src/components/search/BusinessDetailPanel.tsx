@@ -25,7 +25,10 @@ import {
   Mail,
   Loader2,
   Search,
+  TrendingUp,
 } from 'lucide-react';
+import { computeScore } from '@/lib/scoring';
+import type { SearchResultClient } from '@/types';
 
 interface BusinessDetailPanelProps {
   placeId: string;
@@ -33,6 +36,7 @@ interface BusinessDetailPanelProps {
   city?: string;
   hasWebsite?: boolean;
   websiteUrl?: string;
+  result?: SearchResultClient;
   onClose: () => void;
 }
 
@@ -80,6 +84,7 @@ export function BusinessDetailPanel({
   city,
   hasWebsite,
   websiteUrl,
+  result,
   onClose,
 }: BusinessDetailPanelProps) {
   const [loading, setLoading] = useState(true);
@@ -211,6 +216,39 @@ export function BusinessDetailPanel({
               <AlertTriangle className="mx-auto h-10 w-10 text-amber-500 mb-3" />
               <p className="text-text-secondary">{error}</p>
             </div>
+          )}
+
+          {/* Score de priorité */}
+          {result && !hasWebsite && (
+            (() => {
+              const score = computeScore(result);
+              return (
+                <section className={`rounded-xl border p-4 ${score.color}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold">
+                      <TrendingUp className="h-4 w-4" />
+                      Score de priorité
+                    </h3>
+                    <div className="flex items-center gap-1.5 font-bold text-lg">
+                      <span>{score.emoji}</span>
+                      <span>{score.total}/100</span>
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold mb-3">{score.label}</p>
+                  <div className="space-y-2">
+                    {score.details.map((d) => (
+                      <div key={d.label} className="flex items-center justify-between text-xs">
+                        <span className="opacity-80">{d.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="opacity-60 text-right max-w-[140px] truncate">{d.description}</span>
+                          <span className="font-bold w-10 text-right">{d.points}/{d.maxPoints}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()
           )}
 
           {detail && !loading && (

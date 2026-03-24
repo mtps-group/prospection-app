@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { fr } from '@/i18n/fr';
 import type { SearchResultClient } from '@/types';
+import { computeScore } from '@/lib/scoring';
 import {
   Phone,
   MapPin,
@@ -23,18 +24,11 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessC
   if (result.is_blurred) {
     return (
       <div className="relative rounded-xl border border-border bg-surface p-5 overflow-hidden">
-        {/* Blurred overlay */}
         <div className="absolute inset-0 backdrop-blur-md bg-white/60 z-10 flex flex-col items-center justify-center p-4">
           <Lock className="h-8 w-8 text-primary mb-2" />
-          <p className="text-sm font-semibold text-text text-center">
-            {fr.blur.titre}
-          </p>
-          <p className="text-xs text-text-secondary text-center mt-1">
-            {fr.blur.description}
-          </p>
+          <p className="text-sm font-semibold text-text text-center">{fr.blur.titre}</p>
+          <p className="text-xs text-text-secondary text-center mt-1">{fr.blur.description}</p>
         </div>
-
-        {/* Fake content behind blur */}
         <div className="space-y-3">
           <div className="flex items-start justify-between">
             <div>
@@ -52,6 +46,7 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessC
     );
   }
 
+  const score = computeScore(result);
   const isClickable = !!onViewDetail && !!result.google_place_id;
 
   return (
@@ -62,16 +57,13 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessC
           : 'hover:shadow-md'
       }`}
       onClick={isClickable ? () => {
-        // Extraire la ville depuis l'adresse formatée
         const city = result.formatted_address?.split(',').slice(-2, -1)[0]?.trim().replace(/^\d{5}\s*/, '') || '';
         onViewDetail(result.google_place_id, result.business_name, city, result.has_website, result.website_url || undefined);
       } : undefined}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-text truncate">
-            {result.business_name}
-          </h3>
+          <h3 className="font-semibold text-text truncate">{result.business_name}</h3>
           {result.business_type && (
             <p className="text-sm text-text-muted mt-0.5">{result.business_type}</p>
           )}
@@ -88,11 +80,18 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessC
               {fr.results.pasDeSiteWeb}
             </Badge>
           )}
-          {isClickable && (
-            <ChevronRight className="h-4 w-4 text-text-muted" />
-          )}
+          {isClickable && <ChevronRight className="h-4 w-4 text-text-muted" />}
         </div>
       </div>
+
+      {/* Score badge */}
+      {!showWebsiteUrl && (
+        <div className={`mt-3 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${score.color}`}>
+          <span>{score.emoji}</span>
+          <span>{score.label}</span>
+          <span className="opacity-60">· {score.total}/100</span>
+        </div>
+      )}
 
       <div className="mt-3 space-y-2">
         {result.formatted_address && (
@@ -138,9 +137,7 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessC
             <span>
               {result.rating.toFixed(1)}{' '}
               {result.user_rating_count && (
-                <span className="text-text-muted">
-                  ({result.user_rating_count} {fr.results.avis})
-                </span>
+                <span className="text-text-muted">({result.user_rating_count} {fr.results.avis})</span>
               )}
             </span>
           </div>
