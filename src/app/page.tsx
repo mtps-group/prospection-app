@@ -274,7 +274,10 @@ export default function LandingPage() {
                   '60 résultats par recherche',
                   'Coordonnées complètes',
                   'Export CSV, Google Sheets, Notion',
-                  'Historique illimité',
+                  'Historique illimité & cliquable',
+                  'Score de priorité des prospects',
+                  'Mini-CRM intégré (suivi prospects)',
+                  'Onglet entreprises avec site web',
                 ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-white/90">
                     <CheckCircle className="h-4 w-4 text-white flex-shrink-0" />
@@ -309,7 +312,10 @@ export default function LandingPage() {
                   '60 résultats par recherche',
                   'Coordonnées complètes',
                   'Export CSV, Google Sheets, Notion',
-                  'Historique illimité',
+                  'Historique illimité & cliquable',
+                  'Score de priorité des prospects',
+                  'Mini-CRM intégré (suivi prospects)',
+                  'Onglet entreprises avec site web',
                   'Fiche entreprise détaillée',
                   'Recherche email automatique',
                   'Support prioritaire',
