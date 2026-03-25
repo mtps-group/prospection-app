@@ -10,11 +10,13 @@ interface SearchFormProps {
   onSearch: (businessType: string, city: string) => void;
   loading: boolean;
   disabled?: boolean;
+  initialBusinessType?: string;
+  initialCity?: string;
 }
 
-export function SearchForm({ onSearch, loading, disabled }: SearchFormProps) {
-  const [businessType, setBusinessType] = useState('');
-  const [city, setCity] = useState('');
+export function SearchForm({ onSearch, loading, disabled, initialBusinessType = '', initialCity = '' }: SearchFormProps) {
+  const [businessType, setBusinessType] = useState(initialBusinessType);
+  const [city, setCity] = useState(initialCity);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

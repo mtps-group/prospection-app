@@ -37,11 +37,14 @@ export default function RecherchePage() {
   const [sheetsUrlFromOAuth, setSheetsUrlFromOAuth] = useState<string | null>(null);
   const [oauthError, setOauthError] = useState<string | null>(null);
 
+  // Auto-lancer la recherche depuis l'historique
+  const businessTypeParam = searchParams.get('businessType');
+  const cityParam = searchParams.get('city');
+
   useEffect(() => {
     if (sheetsUrlParam) {
       setSheetsUrlFromOAuth(decodeURIComponent(sheetsUrlParam));
       window.open(decodeURIComponent(sheetsUrlParam), '_blank');
-      // Clean URL
       window.history.replaceState({}, '', '/recherche');
     }
     if (exportErrorParam) {
@@ -53,7 +56,12 @@ export default function RecherchePage() {
       setOauthError(messages[exportErrorParam] || 'Erreur lors de l\'export Google Sheets.');
       window.history.replaceState({}, '', '/recherche');
     }
-  }, [sheetsUrlParam, exportErrorParam]);
+    if (businessTypeParam && cityParam) {
+      handleSearch(businessTypeParam, cityParam);
+      window.history.replaceState({}, '', '/recherche');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const plan = getPlanConfig((profile?.plan || 'free') as PlanSlug);
   const searchesRemaining =
@@ -199,6 +207,8 @@ export default function RecherchePage() {
           onSearch={handleSearch}
           loading={loading}
           disabled={isLimitReached}
+          initialBusinessType={businessTypeParam || ''}
+          initialCity={cityParam || ''}
         />
       </Card>
 

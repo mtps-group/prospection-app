@@ -65,30 +65,36 @@ export default function HistoriquePage() {
       ) : (
         <div className="space-y-3">
           {searches.map((search) => (
-            <Card key={search.id} className="hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-text truncate capitalize">
-                    {search.query_business_type} - {search.query_city}
-                  </h3>
-                  <div className="flex items-center gap-3 mt-1.5 text-sm text-text-secondary">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {formatDateTime(search.created_at)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Globe className="h-3.5 w-3.5" />
-                      {search.no_website_count} {fr.history.sansWebsite}
-                    </span>
+            <Link
+              key={search.id}
+              href={`/recherche?businessType=${encodeURIComponent(search.query_business_type)}&city=${encodeURIComponent(search.query_city)}`}
+            >
+              <Card className="hover:shadow-md hover:border-primary/40 cursor-pointer transition-all active:scale-[0.99]">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-text truncate capitalize">
+                      {search.query_business_type} - {search.query_city}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1.5 text-sm text-text-secondary">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {formatDateTime(search.created_at)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Globe className="h-3.5 w-3.5" />
+                        {search.no_website_count} {fr.history.sansWebsite}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="primary">
+                      {search.no_website_count}/{search.total_results}
+                    </Badge>
+                    <SearchIcon className="h-4 w-4 text-text-muted" />
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant="primary">
-                    {search.no_website_count}/{search.total_results}
-                  </Badge>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </Link>
           ))}
         </div>
       )}
