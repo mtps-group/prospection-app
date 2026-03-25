@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { BusinessCard } from './BusinessCard';
 import { BusinessDetailPanel } from './BusinessDetailPanel';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { fr } from '@/i18n/fr';
-import type { SearchResponse } from '@/types';
+import type { SearchResponse, SearchResultClient } from '@/types';
 import { useSupabase } from '@/providers/SupabaseProvider';
+import { useToast } from '@/providers/ToastProvider';
 import { computeScore } from '@/lib/scoring';
 import Link from 'next/link';
 import {
@@ -48,8 +49,31 @@ interface SearchResultsProps {
 
 export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) {
   const { profile } = useSupabase();
+  const { addToast } = useToast();
   const isPaid = profile?.plan === 'premium' || profile?.plan === 'ultra';
   const isUltra = profile?.plan === 'ultra';
+  const [prospectIds, setProspectIds] = useState<Set<string>>(new Set());
+
+  const handleAddProspect = useCallback(async (result: SearchResultClient) => {
+    if (prospectIds.has(result.google_place_id)) return;
+    const res = await fetch('/api/prospects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        google_place_id: result.google_place_id,
+        business_name: result.business_name,
+        business_type: result.business_type,
+        formatted_address: result.formatted_address,
+        phone_national: result.phone_national,
+        website_url: result.website_url,
+        status: 'a_contacter',
+      }),
+    });
+    if (res.ok) {
+      setProspectIds(prev => new Set([...prev, result.google_place_id]));
+      addToast(`${result.business_name} ajouté aux prospects !`, 'success');
+    }
+  }, [prospectIds, addToast]);
 
   const [detailPanel, setDetailPanel] = useState<{
     placeId: string;
@@ -331,6 +355,8 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
               isUltra={isUltra}
               onViewDetail={handleViewDetail}
               showWebsiteUrl={activeTab === 'with-website'}
+              onAddProspect={handleAddProspect}
+              isProspect={prospectIds.has(result.google_place_id)}
             />
           ))}
         </div>

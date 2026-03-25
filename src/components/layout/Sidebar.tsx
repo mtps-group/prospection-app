@@ -18,6 +18,7 @@ import {
   Zap,
   User,
   Home,
+  Users,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -27,6 +28,7 @@ interface SidebarProps {
 
 const navigation = [
   { name: fr.nav.recherche, href: '/recherche', icon: Search },
+  { name: 'Mes Prospects', href: '/prospects', icon: Users },
   { name: fr.nav.historique, href: '/historique', icon: History },
   { name: fr.nav.exports, href: '/exports', icon: Download },
   { name: fr.nav.parametres, href: '/parametres', icon: Settings },

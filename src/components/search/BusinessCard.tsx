@@ -11,6 +11,8 @@ import {
   Globe,
   Lock,
   ChevronRight,
+  UserPlus,
+  Check,
 } from 'lucide-react';
 
 interface BusinessCardProps {
@@ -18,9 +20,11 @@ interface BusinessCardProps {
   isUltra?: boolean;
   showWebsiteUrl?: boolean;
   onViewDetail?: (placeId: string, name: string, city?: string, hasWebsite?: boolean, websiteUrl?: string) => void;
+  onAddProspect?: (result: SearchResultClient) => void;
+  isProspect?: boolean;
 }
 
-export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessCardProps) {
+export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspect, isProspect }: BusinessCardProps) {
   if (result.is_blurred) {
     return (
       <div className="relative rounded-xl border border-border bg-surface p-5 overflow-hidden">
@@ -79,6 +83,19 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail }: BusinessC
               <Globe className="h-3 w-3 mr-1" />
               {fr.results.pasDeSiteWeb}
             </Badge>
+          )}
+          {onAddProspect && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onAddProspect(result); }}
+              title={isProspect ? 'Déjà dans vos prospects' : 'Ajouter aux prospects'}
+              className={`rounded-full p-1.5 transition-all border ${
+                isProspect
+                  ? 'bg-green-100 border-green-300 text-green-600'
+                  : 'bg-white border-gray-200 text-text-muted hover:bg-primary-light hover:border-primary hover:text-primary'
+              }`}
+            >
+              {isProspect ? <Check className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
+            </button>
           )}
           {isClickable && <ChevronRight className="h-4 w-4 text-text-muted" />}
         </div>
