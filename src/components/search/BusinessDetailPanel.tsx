@@ -26,9 +26,25 @@ import {
   Loader2,
   Search,
   TrendingUp,
+  UserCircle,
+  Briefcase,
+  Hash,
+  CalendarDays,
+  Users,
 } from 'lucide-react';
 import { computeScore } from '@/lib/scoring';
 import type { SearchResultClient } from '@/types';
+
+interface PappersData {
+  dirigeant: string | null;
+  siret: string | null;
+  siren: string | null;
+  formeJuridique: string | null;
+  dateCreation: string | null;
+  trancheEffectif: string | null;
+  codeNaf: string | null;
+  libelleNaf: string | null;
+}
 
 interface BusinessDetailPanelProps {
   placeId: string;
@@ -94,6 +110,8 @@ export function BusinessDetailPanel({
   const [emails, setEmails] = useState<string[]>([]);
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailSearched, setEmailSearched] = useState(false);
+  const [pappersData, setPappersData] = useState<PappersData | null>(null);
+  const [pappersLoading, setPappersLoading] = useState(false);
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -132,45 +150,83 @@ export function BusinessDetailPanel({
   }
 
   useEffect(() => {
-    async function fetchDetails() {
+    async function fetchAll() {
       setLoading(true);
       setError(null);
+      setEmailLoading(true);
+      setEmailSearched(true);
+      setPappersLoading(true);
+      setPappersData(null);
+
+      // Lancer les 3 requêtes EN PARALLÈLE
+      const detailPromise = fetch(`/api/place-details?placeId=${encodeURIComponent(placeId)}`)
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Erreur lors du chargement');
+          return data;
+        });
+
+      const cityForEmail = city || '';
+      const emailPromise = cityForEmail
+        ? fetch(`/api/find-email?name=${encodeURIComponent(businessName)}&city=${encodeURIComponent(cityForEmail)}`)
+            .then(async (res) => {
+              const data = await res.json();
+              return data.emails || [];
+            })
+            .catch(() => [] as string[])
+        : Promise.resolve(null);
+
+      // Pappers en parallèle
+      const pappersPromise = fetch(
+        `/api/pappers?name=${encodeURIComponent(businessName)}${city ? `&city=${encodeURIComponent(city)}` : ''}`
+      )
+        .then(async (res) => {
+          const data = await res.json();
+          return data as PappersData;
+        })
+        .catch(() => null);
+
       try {
-        const response = await fetch(`/api/place-details?placeId=${encodeURIComponent(placeId)}`);
-        const data = await response.json();
+        const [detailData, emailResult, pappersResult] = await Promise.all([
+          detailPromise,
+          emailPromise,
+          pappersPromise,
+        ]);
 
-        if (!response.ok) {
-          setError(data.error || 'Erreur lors du chargement');
-          return;
-        }
-
-        setDetail(data);
-
-        // Lancer la recherche email automatiquement
-        const cityToUse = city || extractCityFromAddress(data.formattedAddress || '');
-        if (cityToUse) {
-          setEmailLoading(true);
-          setEmailSearched(true);
-          try {
-            const emailRes = await fetch(
-              `/api/find-email?name=${encodeURIComponent(businessName)}&city=${encodeURIComponent(cityToUse)}`
-            );
-            const emailData = await emailRes.json();
-            setEmails(emailData.emails || []);
-          } catch {
-            setEmails([]);
-          } finally {
-            setEmailLoading(false);
-          }
-        }
-      } catch {
-        setError('Erreur de connexion');
-      } finally {
+        setDetail(detailData);
         setLoading(false);
+
+        // Pappers
+        if (pappersResult) setPappersData(pappersResult);
+        setPappersLoading(false);
+
+        if (emailResult !== null) {
+          setEmails(emailResult);
+          setEmailLoading(false);
+        } else {
+          const extractedCity = extractCityFromAddress(detailData.formattedAddress || '');
+          if (extractedCity) {
+            try {
+              const emailRes = await fetch(
+                `/api/find-email?name=${encodeURIComponent(businessName)}&city=${encodeURIComponent(extractedCity)}`
+              );
+              const emailData = await emailRes.json();
+              setEmails(emailData.emails || []);
+            } catch {
+              setEmails([]);
+            }
+          }
+          setEmailLoading(false);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur de connexion');
+        setLoading(false);
+        setEmailLoading(false);
+        setPappersLoading(false);
       }
     }
 
-    fetchDetails();
+    fetchAll();
   }, [placeId, businessName, city]);
 
   const getBusinessStatusLabel = (status: string | undefined) => {
@@ -409,6 +465,94 @@ export function BusinessDetailPanel({
                     </a>
                   )}
                 </div>
+              </section>
+
+              {/* Dirigeant & infos légales (Pappers) */}
+              <section>
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
+                  <UserCircle className="h-4 w-4 text-text-muted" />
+                  Dirigeant & infos légales
+                  {pappersLoading && (
+                    <span className="text-xs font-normal text-text-muted flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Recherche...
+                    </span>
+                  )}
+                </h3>
+
+                {pappersLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-10 rounded-lg" />
+                    <Skeleton className="h-10 rounded-lg" />
+                  </div>
+                ) : pappersData?.dirigeant ? (
+                  <div className="space-y-2">
+                    {/* Dirigeant */}
+                    <div className="flex items-center justify-between gap-2 rounded-lg bg-indigo-50 border border-indigo-200 px-3 py-2.5">
+                      <div className="flex items-center gap-2 text-sm min-w-0">
+                        <UserCircle className="h-4 w-4 flex-shrink-0 text-indigo-500" />
+                        <div className="min-w-0">
+                          <span className="font-semibold text-indigo-800 block truncate">{pappersData.dirigeant}</span>
+                          <span className="text-xs text-indigo-500">Dirigeant</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(pappersData.dirigeant!, 'dirigeant')}
+                        className="flex-shrink-0 p-1 rounded hover:bg-indigo-100 transition-colors"
+                        title="Copier"
+                      >
+                        {copiedField === 'dirigeant'
+                          ? <Check className="h-3.5 w-3.5 text-green-600" />
+                          : <Copy className="h-3.5 w-3.5 text-indigo-400" />}
+                      </button>
+                    </div>
+
+                    {/* Infos complémentaires */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {pappersData.siret && (
+                        <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs">
+                          <Hash className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+                          <div>
+                            <span className="text-text-muted block">SIRET</span>
+                            <span className="font-medium text-text">{pappersData.siret}</span>
+                          </div>
+                        </div>
+                      )}
+                      {pappersData.formeJuridique && (
+                        <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs">
+                          <Briefcase className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+                          <div>
+                            <span className="text-text-muted block">Forme</span>
+                            <span className="font-medium text-text">{pappersData.formeJuridique}</span>
+                          </div>
+                        </div>
+                      )}
+                      {pappersData.dateCreation && (
+                        <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs">
+                          <CalendarDays className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+                          <div>
+                            <span className="text-text-muted block">Création</span>
+                            <span className="font-medium text-text">{pappersData.dateCreation}</span>
+                          </div>
+                        </div>
+                      )}
+                      {pappersData.libelleNaf && (
+                        <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs">
+                          <Building2 className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+                          <div>
+                            <span className="text-text-muted block">Activité (NAF)</span>
+                            <span className="font-medium text-text truncate block">{pappersData.libelleNaf}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : !pappersLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-text-muted rounded-lg bg-gray-50 px-3 py-2">
+                    <UserCircle className="h-4 w-4 flex-shrink-0" />
+                    <span>Aucune information trouvée sur Pappers.fr</span>
+                  </div>
+                ) : null}
               </section>
 
               {/* Section Email via PagesJaunes */}

@@ -19,6 +19,7 @@ import {
   User,
   Home,
   Users,
+  ArrowUpRight,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,11 +27,14 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const navigation = [
-  { name: fr.nav.recherche, href: '/recherche', icon: Search },
-  { name: 'Mes Prospects', href: '/prospects', icon: Users },
-  { name: fr.nav.historique, href: '/historique', icon: History },
-  { name: fr.nav.exports, href: '/exports', icon: Download },
+const mainNav = [
+  { name: fr.nav.recherche, href: '/recherche', icon: Search, gradient: 'from-blue-500 to-cyan-500' },
+  { name: 'Mes Prospects', href: '/prospects', icon: Users, gradient: 'from-purple-500 to-pink-500' },
+  { name: fr.nav.historique, href: '/historique', icon: History, gradient: 'from-amber-500 to-orange-500' },
+  { name: fr.nav.exports, href: '/exports', icon: Download, gradient: 'from-green-500 to-emerald-500' },
+];
+
+const bottomNav = [
   { name: fr.nav.parametres, href: '/parametres', icon: Settings },
   { name: fr.nav.abonnement, href: '/abonnement', icon: CreditCard },
   { name: 'Mon compte', href: '/compte', icon: User },
@@ -43,62 +47,98 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Overlay mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
           onClick={onClose}
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-surface transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto',
+          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white border-r border-gray-100 transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         {/* Logo */}
-        <div className="flex h-16 items-center justify-between border-b border-border px-6">
-          <Link href="/recherche" className="flex items-center gap-2">
-            <Globe className="h-7 w-7 text-primary" />
+        <div className="flex h-16 items-center justify-between px-6">
+          <Link href="/recherche" className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-lg shadow-primary/20">
+              <Globe className="h-5 w-5 text-white" />
+            </div>
             <span className="text-lg font-bold text-text">
-              Prospect<span className="text-primary">Web</span>
+              Prospect<span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Web</span>
             </span>
           </Link>
-          <button onClick={onClose} className="lg:hidden text-text-secondary hover:text-text">
+          <button onClick={onClose} className="lg:hidden text-text-secondary hover:text-text rounded-lg p-1.5 hover:bg-gray-100">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {/* Lien page d'accueil */}
+        {/* Main nav */}
+        <nav className="flex-1 px-4 py-3 space-y-1">
+          {/* Page accueil */}
           <Link
             href="/"
             onClick={onClose}
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary hover:bg-surface-secondary hover:text-text transition-colors mb-2 border-b border-border pb-3"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-muted hover:bg-gray-50 hover:text-text transition-all mb-3"
           >
-            <Home className="h-5 w-5" />
+            <Home className="h-4.5 w-4.5" />
             Page d&apos;accueil
+            <ArrowUpRight className="h-3.5 w-3.5 ml-auto opacity-50" />
           </Link>
 
-          {navigation.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(item.href + '/');
+          <div className="h-px bg-gray-100 mb-3" />
+
+          <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted/60 mb-2">Prospection</p>
+
+          {mainNav.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-primary-light text-primary'
-                    : 'text-text-secondary hover:bg-surface-secondary hover:text-text'
+                    ? 'bg-gradient-to-r from-primary/10 to-purple-500/10 text-primary shadow-sm'
+                    : 'text-text-secondary hover:bg-gray-50 hover:text-text'
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <div className={cn(
+                  'h-8 w-8 rounded-lg flex items-center justify-center transition-all',
+                  isActive
+                    ? `bg-gradient-to-br ${item.gradient} shadow-md`
+                    : 'bg-gray-100 group-hover:bg-gray-200'
+                )}>
+                  <item.icon className={cn('h-4 w-4', isActive ? 'text-white' : 'text-text-muted group-hover:text-text-secondary')} />
+                </div>
+                {item.name}
+                {isActive && <div className="ml-auto h-2 w-2 rounded-full bg-primary animate-pulse-glow" />}
+              </Link>
+            );
+          })}
+
+          <div className="h-px bg-gray-100 my-3" />
+
+          <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted/60 mb-2">Compte</p>
+
+          {bottomNav.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={onClose}
+                className={cn(
+                  'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all',
+                  isActive
+                    ? 'bg-gray-100 text-text'
+                    : 'text-text-muted hover:bg-gray-50 hover:text-text-secondary'
+                )}
+              >
+                <item.icon className="h-4 w-4" />
                 {item.name}
               </Link>
             );
@@ -106,47 +146,54 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* Plan indicator */}
-        <div className="border-t border-border p-4">
-          <div className="rounded-lg bg-surface-secondary p-3">
-            <div className="flex items-center gap-2 mb-2">
-              {profile?.plan === 'ultra' ? (
-                <Zap className="h-4 w-4 text-amber-500" />
-              ) : profile?.plan === 'premium' ? (
-                <Crown className="h-4 w-4 text-primary" />
-              ) : (
-                <Globe className="h-4 w-4 text-text-muted" />
-              )}
-              <span className="text-sm font-semibold text-text">
-                Plan {plan.name}
-              </span>
-            </div>
-
-            {profile?.plan === 'free' && (
-              <>
-                <p className="text-xs text-text-secondary mb-2">
-                  {profile.total_searches_used}/{plan.maxSearchesLifetime} {fr.billing.rechercheUtilisees}
-                </p>
-                <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-primary transition-all"
-                    style={{
-                      width: `${Math.min(
-                        (profile.total_searches_used / plan.maxSearchesLifetime) * 100,
-                        100
-                      )}%`,
-                    }}
-                  />
+        <div className="p-4">
+          {profile?.plan === 'free' ? (
+            <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-purple-500/5 border border-primary/10 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
+                  <Zap className="h-3.5 w-3.5 text-white" />
                 </div>
-                <Link
-                  href="/abonnement"
-                  onClick={onClose}
-                  className="mt-3 block w-full rounded-lg bg-primary py-2 text-center text-xs font-semibold text-white hover:bg-primary-hover transition-colors animate-pulse-glow"
-                >
-                  {fr.billing.passerAPremium}
-                </Link>
-              </>
-            )}
-          </div>
+                <div>
+                  <p className="text-xs font-bold text-text">Plan Gratuit</p>
+                  <p className="text-[10px] text-text-muted">
+                    {profile.total_searches_used}/{plan.maxSearchesLifetime} recherches
+                  </p>
+                </div>
+              </div>
+              <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden mb-3">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-purple-500 transition-all"
+                  style={{
+                    width: `${Math.min(
+                      (profile.total_searches_used / plan.maxSearchesLifetime) * 100,
+                      100
+                    )}%`,
+                  }}
+                />
+              </div>
+              <Link
+                href="/abonnement"
+                onClick={onClose}
+                className="block w-full rounded-xl bg-gradient-to-r from-primary to-purple-500 py-2.5 text-center text-xs font-bold text-white hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
+              >
+                {fr.billing.passerAPremium} →
+              </Link>
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-purple-500/5 border border-primary/10 p-4 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-md">
+                {profile?.plan === 'ultra' ? (
+                  <Crown className="h-4.5 w-4.5 text-white" />
+                ) : (
+                  <Zap className="h-4.5 w-4.5 text-white" />
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-bold text-text">Plan {plan.name}</p>
+                <p className="text-[10px] text-text-muted">Recherches illimitées</p>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
     </>

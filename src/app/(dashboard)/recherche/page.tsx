@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
 import { SearchForm } from '@/components/search/SearchForm';
 import { SearchResults } from '@/components/search/SearchResults';
 import { useSupabase } from '@/providers/SupabaseProvider';
@@ -11,7 +10,8 @@ import { getPlanConfig } from '@/lib/constants';
 import { fr } from '@/i18n/fr';
 import type { SearchResponse } from '@/types';
 import type { PlanSlug } from '@/lib/constants';
-import { Search, Sparkles, ExternalLink, AlertCircle } from 'lucide-react';
+import { Search, Sparkles, ExternalLink, AlertCircle, Zap, ArrowRight, TrendingUp } from 'lucide-react';
+import Link from 'next/link';
 
 function GoogleSheetsIcon({ className }: { className?: string }) {
   return (
@@ -142,56 +142,68 @@ export default function RecherchePage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-text flex items-center gap-2">
-          <Search className="h-6 w-6 text-primary" />
-          {fr.search.titre}
-        </h1>
-        <p className="text-text-secondary mt-1">{fr.search.sousTitre}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-text flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-lg shadow-primary/20">
+              <Search className="h-5 w-5 text-white" />
+            </div>
+            {fr.search.titre}
+          </h1>
+          <p className="text-text-secondary mt-2">{fr.search.sousTitre}</p>
+        </div>
       </div>
 
       {/* Google Sheets OAuth success banner */}
       {sheetsUrlFromOAuth && (
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
-          <div className="flex items-center gap-2">
-            <GoogleSheetsIcon className="h-5 w-5 flex-shrink-0" />
-            <span>Votre Google Sheet a été créé avec succès !</span>
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 px-5 py-4 text-sm text-green-800">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
+              <GoogleSheetsIcon className="h-4 w-4" />
+            </div>
+            <span className="font-medium">Votre Google Sheet a été créé avec succès !</span>
           </div>
           <a
             href={sheetsUrlFromOAuth}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 font-semibold underline whitespace-nowrap hover:text-green-900"
+            className="flex items-center gap-1.5 font-bold text-green-700 hover:text-green-800 whitespace-nowrap bg-white rounded-lg px-3 py-1.5 border border-green-200 hover:border-green-300 transition-colors"
           >
-            Ouvrir le Sheet <ExternalLink className="h-3 w-3" />
+            Ouvrir le Sheet <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
       )}
 
       {/* Google Sheets OAuth error banner */}
       {oauthError && (
-        <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" />
-          <span>{oauthError}</span>
+        <div className="flex items-center gap-3 rounded-2xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700">
+          <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          </div>
+          <span className="font-medium">{oauthError}</span>
         </div>
       )}
 
       {/* Search usage indicator for free plan */}
       {searchesRemaining !== null && (
         <div
-          className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm ${
+          className={`flex items-center gap-3 rounded-2xl px-5 py-4 text-sm ${
             isLimitReached
-              ? 'bg-red-50 text-red-700 border border-red-200'
-              : 'bg-blue-50 text-blue-700 border border-blue-200'
+              ? 'bg-gradient-to-r from-red-50 to-orange-50 text-red-700 border border-red-200'
+              : 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200'
           }`}
         >
-          <Sparkles className="h-4 w-4" />
+          <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+            isLimitReached ? 'bg-red-100' : 'bg-blue-100'
+          }`}>
+            <Sparkles className={`h-4 w-4 ${isLimitReached ? 'text-red-500' : 'text-blue-500'}`} />
+          </div>
           {isLimitReached ? (
             <span>
               Vous avez utilisé toutes vos recherches gratuites.{' '}
-              <a href="/abonnement" className="font-semibold underline">
-                Passer à Premium
-              </a>
+              <Link href="/abonnement" className="font-bold underline inline-flex items-center gap-1">
+                Passer à Premium <ArrowRight className="h-3 w-3" />
+              </Link>
             </span>
           ) : (
             <span>
@@ -202,7 +214,7 @@ export default function RecherchePage() {
       )}
 
       {/* Search form */}
-      <Card>
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
         <SearchForm
           onSearch={handleSearch}
           loading={loading}
@@ -210,7 +222,44 @@ export default function RecherchePage() {
           initialBusinessType={businessTypeParam || ''}
           initialCity={cityParam || ''}
         />
-      </Card>
+      </div>
+
+      {/* Quick tips when no results yet */}
+      {!searchData && !loading && (
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            {
+              icon: Search,
+              title: 'Recherche intelligente',
+              desc: 'Tapez un métier et une ville pour trouver les entreprises sans site web',
+              gradient: 'from-blue-500 to-cyan-500',
+              bgLight: 'from-blue-50 to-cyan-50',
+            },
+            {
+              icon: TrendingUp,
+              title: 'Score de priorité',
+              desc: 'Chaque résultat est noté pour vous aider à cibler les meilleurs prospects',
+              gradient: 'from-orange-500 to-amber-500',
+              bgLight: 'from-orange-50 to-amber-50',
+            },
+            {
+              icon: Zap,
+              title: 'Export en 1 clic',
+              desc: 'Téléchargez vos résultats en CSV, Google Sheets ou Notion instantanément',
+              gradient: 'from-green-500 to-emerald-500',
+              bgLight: 'from-green-50 to-emerald-50',
+            },
+          ].map((tip) => (
+            <div key={tip.title} className="group rounded-2xl border border-gray-100 bg-white p-5 hover:shadow-lg hover:border-gray-200 transition-all duration-300">
+              <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${tip.gradient} flex items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform`}>
+                <tip.icon className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="font-bold text-text text-sm mb-1">{tip.title}</h3>
+              <p className="text-xs text-text-secondary leading-relaxed">{tip.desc}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Results */}
       {searchData && (

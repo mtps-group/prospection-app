@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+// Cache en mémoire (TTL 10 min)
+const emailCache = new Map<string, { data: { emails: string[]; found: boolean; source: string }; timestamp: number }>();
+const EMAIL_CACHE_TTL = 10 * 60 * 1000;
+
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
 
 const EMAIL_BLACKLIST = [
@@ -47,7 +51,7 @@ function extractEmails(html: string): string[] {
     .slice(0, 3);
 }
 
-async function fetchPage(url: string, timeout = 7000): Promise<string> {
+async function fetchPage(url: string, timeout = 4000): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
@@ -148,13 +152,27 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
   }
 
+  // Vérifier le cache
+  const cacheKey = `${businessName.toLowerCase()}:${city.toLowerCase()}`;
+  const cached = emailCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < EMAIL_CACHE_TTL) {
+    return NextResponse.json(cached.data);
+  }
+
   try {
-    // Lancer toutes les sources en parallèle
-    const [societeEmails, verifEmails, emails118000, kompassEmails] = await Promise.all([
-      searchSociete(businessName, city),
-      searchVerif(businessName, city),
-      search118000(businessName, city),
-      searchKompass(businessName, city),
+    // Lancer toutes les sources en parallèle avec un timeout global de 8s
+    const globalTimeout = new Promise<[string[], string[], string[], string[]]>((resolve) =>
+      setTimeout(() => resolve([[], [], [], []]), 8000)
+    );
+
+    const [societeEmails, verifEmails, emails118000, kompassEmails] = await Promise.race([
+      Promise.all([
+        searchSociete(businessName, city),
+        searchVerif(businessName, city),
+        search118000(businessName, city),
+        searchKompass(businessName, city),
+      ]),
+      globalTimeout,
     ]);
 
     // Fusionner et dédupliquer
@@ -176,11 +194,20 @@ export async function GET(request: NextRequest) {
         ].filter(Boolean).join(', ')
       : 'aucune';
 
-    return NextResponse.json({
+    const result = {
       emails: allEmails,
       found: allEmails.length > 0,
       source,
-    });
+    };
+
+    // Mettre en cache
+    if (emailCache.size > 300) {
+      const firstKey = emailCache.keys().next().value;
+      if (firstKey) emailCache.delete(firstKey);
+    }
+    emailCache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('find-email error:', error);
     return NextResponse.json({ emails: [], found: false });
