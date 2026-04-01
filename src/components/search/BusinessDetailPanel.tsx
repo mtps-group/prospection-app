@@ -819,7 +819,7 @@ export function BusinessDetailPanel({
                       <div className="w-5 h-5 rounded-md bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
                         <Sparkles className="h-3 w-3 text-white" />
                       </div>
-                      <span>IA Ultra</span>
+                      <span>Outils Ultra</span>
                     </div>
                     <span className="text-xs font-normal text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">Exclusif Ultra</span>
                   </h3>
@@ -864,7 +864,7 @@ export function BusinessDetailPanel({
                       ) : aiProfile ? (
                         <p className="text-sm text-amber-900 leading-relaxed">{aiProfile}</p>
                       ) : (
-                        <p className="text-xs text-amber-600 opacity-70">Génère une présentation IA de l&apos;entreprise basée sur ses données.</p>
+                        <p className="text-xs text-amber-600 opacity-70">Génère une présentation de l&apos;entreprise basée sur ses données.</p>
                       )}
                     </div>
 
@@ -873,7 +873,7 @@ export function BusinessDetailPanel({
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <AtSign className="h-4 w-4 text-violet-600" />
-                          <span className="text-sm font-semibold text-violet-800">Email via IA</span>
+                          <span className="text-sm font-semibold text-violet-800">Recherche email</span>
                         </div>
                         {!aiEmailLoading && !aiEmail && (
                           <Button
@@ -902,12 +902,12 @@ export function BusinessDetailPanel({
                       {aiEmailLoading ? (
                         <div className="flex items-center gap-2 text-sm text-violet-600 animate-pulse">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Recherche IA en cours (~20s)...</span>
+                          <span>Recherche en cours (~20s)...</span>
                         </div>
                       ) : aiEmail ? (
                         aiEmail === 'non trouvé' ? (
                           <div className="flex items-center gap-2">
-                            <p className="text-sm text-violet-600 opacity-70">Aucun email trouvé par l&apos;IA</p>
+                            <p className="text-sm text-violet-600 opacity-70">Aucun email trouvé</p>
                             <button
                               onClick={() => { setAiEmail(null); }}
                               className="text-xs text-violet-500 hover:text-violet-700 underline"
