@@ -31,6 +31,10 @@ import {
   Hash,
   CalendarDays,
   Users,
+  Sparkles,
+  FileText,
+  Send,
+  AtSign,
 } from 'lucide-react';
 import { computeScore } from '@/lib/scoring';
 import type { SearchResultClient } from '@/types';
@@ -113,6 +117,14 @@ export function BusinessDetailPanel({
   const [pappersData, setPappersData] = useState<PappersData | null>(null);
   const [pappersLoading, setPappersLoading] = useState(false);
 
+  // Ultra AI states
+  const [aiProfile, setAiProfile] = useState<string | null>(null);
+  const [aiProfileLoading, setAiProfileLoading] = useState(false);
+  const [aiEmail, setAiEmail] = useState<string | null>(null);
+  const [aiEmailLoading, setAiEmailLoading] = useState(false);
+  const [aiMail, setAiMail] = useState<string | null>(null);
+  const [aiMailLoading, setAiMailLoading] = useState(false);
+
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
@@ -134,6 +146,75 @@ export function BusinessDetailPanel({
       setEmails([]);
     } finally {
       setEmailLoading(false);
+    }
+  };
+
+  // ── Ultra AI functions ────────────────────────────────────────────────────
+  const buildAiPayload = () => ({
+    businessName,
+    city: city || extractCityFromAddress(detail?.formattedAddress || ''),
+    activite: detail?.types?.[0] || '',
+    rating: detail?.rating || result?.rating,
+    userRatingCount: detail?.userRatingCount || result?.user_rating_count,
+    dirigeant: pappersData?.dirigeant || undefined,
+    formeJuridique: pappersData?.formeJuridique || undefined,
+    dateCreation: pappersData?.dateCreation || undefined,
+    libelleNaf: pappersData?.libelleNaf || undefined,
+    address: detail?.formattedAddress || undefined,
+    phone: detail?.nationalPhoneNumber || undefined,
+  });
+
+  const generateProfile = async () => {
+    setAiProfileLoading(true);
+    try {
+      const res = await fetch('/api/ai-enrichment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'profile', ...buildAiPayload() }),
+      });
+      const data = await res.json();
+      if (res.ok) setAiProfile(data.content);
+      else console.error('ai-enrichment profile error:', data.error);
+    } catch (e) {
+      console.error('generateProfile error:', e);
+    } finally {
+      setAiProfileLoading(false);
+    }
+  };
+
+  const searchAiEmail = async () => {
+    setAiEmailLoading(true);
+    try {
+      const res = await fetch('/api/ai-enrichment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'email', ...buildAiPayload() }),
+      });
+      const data = await res.json();
+      if (res.ok) setAiEmail(data.content);
+      else console.error('ai-enrichment email error:', data.error);
+    } catch (e) {
+      console.error('searchAiEmail error:', e);
+    } finally {
+      setAiEmailLoading(false);
+    }
+  };
+
+  const generateMail = async () => {
+    setAiMailLoading(true);
+    try {
+      const res = await fetch('/api/ai-enrichment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'mail', ...buildAiPayload() }),
+      });
+      const data = await res.json();
+      if (res.ok) setAiMail(data.content);
+      else console.error('ai-enrichment mail error:', data.error);
+    } catch (e) {
+      console.error('generateMail error:', e);
+    } finally {
+      setAiMailLoading(false);
     }
   };
 
@@ -726,6 +807,182 @@ export function BusinessDetailPanel({
                         </p>
                       </div>
                     ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Section Ultra IA */}
+              {detail.isUltra && (
+                <section>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-md bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="h-3 w-3 text-white" />
+                      </div>
+                      <span>IA Ultra</span>
+                    </div>
+                    <span className="text-xs font-normal text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">Exclusif Ultra</span>
+                  </h3>
+
+                  <div className="space-y-3">
+                    {/* ── FICHE ENTREPRISE ── */}
+                    <div className="rounded-xl border border-amber-100 bg-gradient-to-br from-amber-50 to-orange-50 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-amber-600" />
+                          <span className="text-sm font-semibold text-amber-800">Fiche entreprise</span>
+                        </div>
+                        {!aiProfileLoading && !aiProfile && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={generateProfile}
+                            className="border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-400"
+                          >
+                            <Sparkles className="h-3.5 w-3.5 mr-1" />
+                            Analyser
+                          </Button>
+                        )}
+                        {aiProfile && (
+                          <button
+                            onClick={() => copyToClipboard(aiProfile, 'ai-profile')}
+                            className="p-1.5 rounded-lg hover:bg-amber-100 transition-colors"
+                            title="Copier"
+                          >
+                            {copiedField === 'ai-profile'
+                              ? <Check className="h-4 w-4 text-green-600" />
+                              : <Copy className="h-4 w-4 text-amber-500" />}
+                          </button>
+                        )}
+                      </div>
+
+                      {aiProfileLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-amber-600 animate-pulse">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Analyse en cours...</span>
+                        </div>
+                      ) : aiProfile ? (
+                        <p className="text-sm text-amber-900 leading-relaxed">{aiProfile}</p>
+                      ) : (
+                        <p className="text-xs text-amber-600 opacity-70">Génère une présentation IA de l&apos;entreprise basée sur ses données.</p>
+                      )}
+                    </div>
+
+                    {/* ── RECHERCHE EMAIL IA ── */}
+                    <div className="rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-purple-50 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <AtSign className="h-4 w-4 text-violet-600" />
+                          <span className="text-sm font-semibold text-violet-800">Email via IA</span>
+                        </div>
+                        {!aiEmailLoading && !aiEmail && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={searchAiEmail}
+                            className="border-violet-300 text-violet-700 hover:bg-violet-100 hover:border-violet-400"
+                          >
+                            <Search className="h-3.5 w-3.5 mr-1" />
+                            Chercher
+                          </Button>
+                        )}
+                        {aiEmail && aiEmail !== 'non trouvé' && (
+                          <button
+                            onClick={() => copyToClipboard(aiEmail, 'ai-email')}
+                            className="p-1.5 rounded-lg hover:bg-violet-100 transition-colors"
+                            title="Copier"
+                          >
+                            {copiedField === 'ai-email'
+                              ? <Check className="h-4 w-4 text-green-600" />
+                              : <Copy className="h-4 w-4 text-violet-500" />}
+                          </button>
+                        )}
+                      </div>
+
+                      {aiEmailLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-violet-600 animate-pulse">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Recherche IA en cours (~20s)...</span>
+                        </div>
+                      ) : aiEmail ? (
+                        aiEmail === 'non trouvé' ? (
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-violet-600 opacity-70">Aucun email trouvé par l&apos;IA</p>
+                            <button
+                              onClick={() => { setAiEmail(null); }}
+                              className="text-xs text-violet-500 hover:text-violet-700 underline"
+                            >
+                              Réessayer
+                            </button>
+                          </div>
+                        ) : (
+                          <a
+                            href={`mailto:${aiEmail}`}
+                            className="text-sm font-medium text-violet-700 hover:text-violet-900 underline"
+                          >
+                            {aiEmail}
+                          </a>
+                        )
+                      ) : (
+                        <p className="text-xs text-violet-600 opacity-70">Recherche l&apos;email sur Pages Jaunes, Facebook et annuaires.</p>
+                      )}
+                    </div>
+
+                    {/* ── GÉNÉRATION EMAIL PROSPECTION ── */}
+                    <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Send className="h-4 w-4 text-emerald-600" />
+                          <span className="text-sm font-semibold text-emerald-800">Email de prospection</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {!aiMailLoading && !aiMail && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={generateMail}
+                              className="border-emerald-300 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-400"
+                            >
+                              <Sparkles className="h-3.5 w-3.5 mr-1" />
+                              Générer
+                            </Button>
+                          )}
+                          {aiMail && (
+                            <>
+                              <button
+                                onClick={() => copyToClipboard(aiMail, 'ai-mail')}
+                                className="p-1.5 rounded-lg hover:bg-emerald-100 transition-colors"
+                                title="Copier"
+                              >
+                                {copiedField === 'ai-mail'
+                                  ? <Check className="h-4 w-4 text-green-600" />
+                                  : <Copy className="h-4 w-4 text-emerald-500" />}
+                              </button>
+                              <button
+                                onClick={() => { setAiMail(null); generateMail(); }}
+                                className="p-1.5 rounded-lg hover:bg-emerald-100 transition-colors"
+                                title="Régénérer"
+                              >
+                                <Sparkles className="h-4 w-4 text-emerald-500" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {aiMailLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-emerald-600 animate-pulse">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Rédaction en cours...</span>
+                        </div>
+                      ) : aiMail ? (
+                        <div className="rounded-lg bg-white/60 border border-emerald-200 p-3">
+                          <pre className="text-xs text-emerald-900 whitespace-pre-wrap leading-relaxed font-sans">{aiMail}</pre>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-emerald-600 opacity-70">Génère un email de prospection personnalisé (méthode PAS) pour vendre un site web.</p>
+                      )}
+                    </div>
                   </div>
                 </section>
               )}
