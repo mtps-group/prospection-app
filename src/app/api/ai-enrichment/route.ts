@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Cache en mémoire (TTL 30 min)
 const cache = new Map<string, { data: AiEnrichmentResult; timestamp: number }>();
 const CACHE_TTL = 30 * 60 * 1000;
+
+const EMAIL_BLACKLIST = [
+  'noreply', 'no-reply', 'donotreply', 'example', 'sentry',
+  'w3.org', 'schema.org', 'googleapis', 'privacy', 'dpo@',
+  'rgpd@', 'webmaster@', '.png', '.jpg', '.svg', '.css', '.js',
+];
 
 interface AiEnrichmentResult {
   type: string;
@@ -26,6 +32,26 @@ interface RequestBody {
   phone?: string;
 }
 
+function isValidEmail(email: string): boolean {
+  const lower = email.toLowerCase();
+  if (EMAIL_BLACKLIST.some((b) => lower.includes(b))) return false;
+  if (!email.includes('.')) return false;
+  return true;
+}
+
+function extractEmailFromText(text: string): string {
+  // Chercher le pattern EMAIL: d'abord
+  const labeled = text.match(/EMAIL:\s*([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/i);
+  if (labeled && isValidEmail(labeled[1])) return labeled[1].toLowerCase().trim();
+
+  // Puis chercher un email brut dans le texte
+  const all = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || [];
+  const valid = all.filter(isValidEmail);
+  if (valid.length > 0) return valid[0].toLowerCase().trim();
+
+  return '';
+}
+
 export async function POST(request: NextRequest) {
   // Auth check
   const supabase = await createClient();
@@ -45,9 +71,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Fonctionnalité réservée au plan Ultra' }, { status: 403 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: 'Anthropic API non configurée' }, { status: 500 });
+    return NextResponse.json({ error: 'Gemini API non configurée' }, { status: 500 });
   }
 
   let body: RequestBody;
@@ -57,7 +83,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
   }
 
-  const { type, businessName, city, activite, rating, userRatingCount, dirigeant, formeJuridique, dateCreation, libelleNaf, address, phone } = body;
+  const {
+    type, businessName, city, activite, rating, userRatingCount,
+    dirigeant, formeJuridique, dateCreation, libelleNaf, address,
+  } = body;
 
   if (!type || !businessName || !city) {
     return NextResponse.json({ error: 'type, businessName et city requis' }, { status: 400 });
@@ -70,13 +99,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(cached.data);
   }
 
-  const client = new Anthropic({ apiKey });
+  const genAI = new GoogleGenerativeAI(apiKey);
 
   try {
     let result: AiEnrichmentResult;
 
     // ── TYPE: PROFILE ──────────────────────────────────────────────────────────
     if (type === 'profile') {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
       const prompt = `Tu es un expert en analyse d'entreprises. Génère une fiche de présentation concise et professionnelle pour cette entreprise.
 
 DONNÉES :
@@ -98,63 +129,47 @@ INSTRUCTIONS :
 - PAS de formule creuse, PAS de phrase d'accroche marketing
 - Réponds uniquement avec le texte de la fiche, sans titre ni préambule`;
 
-      const response = await client.messages.create({
-        model: 'claude-haiku-4-5',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: prompt }],
-      });
-
-      const text = response.content[0]?.type === 'text' ? response.content[0].text : '';
+      const response = await model.generateContent(prompt);
+      const text = response.response.text();
       result = { type: 'profile', content: text.trim() };
     }
 
-    // ── TYPE: EMAIL ────────────────────────────────────────────────────────────
+    // ── TYPE: EMAIL (Google Search Grounding) ─────────────────────────────────
     else if (type === 'email') {
-      const response = await client.messages.create({
-        model: 'claude-haiku-4-5',
-        max_tokens: 500,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        tools: [{ type: 'web_search_20260209', name: 'web_search' }] as any,
-        messages: [
-          {
-            role: 'user',
-            content: `Cherche l'adresse email professionnelle de l'entreprise "${businessName}" située à ${city}, France.
-
-Stratégie de recherche :
-1. Cherche sur Pages Jaunes : "${businessName} ${city}"
-2. Si pas trouvé, essaie : "${businessName} ${city} email contact"
-3. Si pas trouvé, essaie sur Facebook ou Google Business
-
-RÈGLES STRICTES :
-- Si tu trouves un email, réponds UNIQUEMENT avec : EMAIL: adresse@email.com
-- Si tu ne trouves pas d'email, réponds UNIQUEMENT avec : EMAIL: non trouvé
-- Ne donne aucune explication, aucun autre texte
-- L'email doit être une vraie adresse professionnelle (pas noreply, pas admin@)`,
-          },
-        ],
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-2.0-flash',
+        // @ts-expect-error — googleSearch est bien supporté à runtime
+        tools: [{ googleSearch: {} }],
       });
 
-      // Extraire l'email de la réponse finale
-      const lastMessage = response.content.find(b => b.type === 'text');
-      const rawText = lastMessage?.type === 'text' ? lastMessage.text : '';
+      const prompt = `Cherche l'adresse email professionnelle de l'entreprise "${businessName}" située à ${city}, France.
 
-      const emailMatch = rawText.match(/EMAIL:\s*([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/i);
-      const notFound = rawText.toLowerCase().includes('non trouvé') || rawText.toLowerCase().includes('not found');
+Stratégie :
+1. Pages Jaunes : "${businessName} ${city} email"
+2. "${businessName} ${city} contact mail"
+3. Facebook Business ou Google Business
 
-      let foundEmail = '';
-      if (emailMatch) {
-        foundEmail = emailMatch[1].toLowerCase().trim();
-      } else if (!notFound) {
-        // Chercher un email directement dans le texte
-        const directMatch = rawText.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-        if (directMatch) foundEmail = directMatch[0].toLowerCase().trim();
-      }
+RÈGLES STRICTES :
+- Si tu trouves un email : réponds UNIQUEMENT "EMAIL: adresse@email.com"
+- Si tu ne trouves rien : réponds UNIQUEMENT "EMAIL: non trouvé"
+- Aucune explication, aucun autre texte
+- L'email doit être une vraie adresse pro (pas noreply, pas admin@)`;
 
-      result = { type: 'email', content: foundEmail || 'non trouvé' };
+      const response = await model.generateContent(prompt);
+      const rawText = response.response.text();
+      const foundEmail = extractEmailFromText(rawText);
+      const notFound = !foundEmail && (
+        rawText.toLowerCase().includes('non trouvé') ||
+        rawText.toLowerCase().includes('not found') ||
+        rawText.toLowerCase().includes('aucun email')
+      );
+
+      result = { type: 'email', content: foundEmail || (notFound ? 'non trouvé' : 'non trouvé') };
     }
 
     // ── TYPE: MAIL ─────────────────────────────────────────────────────────────
     else if (type === 'mail') {
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       const prenom = dirigeant ? dirigeant.split(' ')[0] : null;
 
       const prompt = `Tu es un expert en copywriting et prospection B2B. Écris un email de prospection ultra-persuasif pour vendre un site web vitrine à un artisan qui n'en a pas.
@@ -168,7 +183,7 @@ ${prenom ? `- Prénom dirigeant : ${prenom}` : ''}
 
 STRUCTURE OBLIGATOIRE (méthode PAS) :
 1. Objet (ligne 1) : court, personnel, crée urgence ou curiosité — commence par "Objet : "
-2. Séparateur : une ligne vide
+2. Ligne vide
 3. Corps du mail :
    - Accroche : stat choc sur ce que coûte l'absence de site web
    - Agitation : ce qu'il perd MAINTENANT (clients chez concurrent avec site)
@@ -184,13 +199,8 @@ RÈGLES STRICTES :
 - Terminer par une vraie question qui appelle OUI ou NON
 - Ton direct, presque agressif commercialement, mais respectueux`;
 
-      const response = await client.messages.create({
-        model: 'claude-haiku-4-5',
-        max_tokens: 500,
-        messages: [{ role: 'user', content: prompt }],
-      });
-
-      const text = response.content[0]?.type === 'text' ? response.content[0].text : '';
+      const response = await model.generateContent(prompt);
+      const text = response.response.text();
       result = { type: 'mail', content: text.trim() };
     }
 
