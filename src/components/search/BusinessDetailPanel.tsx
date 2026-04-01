@@ -211,14 +211,21 @@ export function BusinessDetailPanel({
   }
 
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
     async function fetchAll() {
       setLoading(true);
       setError(null);
       setPappersLoading(true);
       setPappersData(null);
+      setDetail(null);
+      // Réinitialiser les résultats IA au changement de fiche
+      setAiProfile(null);
+      setAiEmail(null);
+      setAiMail(null);
 
-      // Lancer les 2 requêtes EN PARALLÈLE
-      const detailPromise = fetch(`/api/place-details?placeId=${encodeURIComponent(placeId)}`)
+      const detailPromise = fetch(`/api/place-details?placeId=${encodeURIComponent(placeId)}`, { signal })
         .then(async (res) => {
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Erreur lors du chargement');
@@ -226,7 +233,8 @@ export function BusinessDetailPanel({
         });
 
       const pappersPromise = fetch(
-        `/api/pappers?name=${encodeURIComponent(businessName)}${city ? `&city=${encodeURIComponent(city)}` : ''}`
+        `/api/pappers?name=${encodeURIComponent(businessName)}${city ? `&city=${encodeURIComponent(city)}` : ''}`,
+        { signal }
       )
         .then(async (res) => {
           const data = await res.json();
@@ -235,17 +243,14 @@ export function BusinessDetailPanel({
         .catch(() => null);
 
       try {
-        const [detailData, pappersResult] = await Promise.all([
-          detailPromise,
-          pappersPromise,
-        ]);
-
+        const [detailData, pappersResult] = await Promise.all([detailPromise, pappersPromise]);
+        if (signal.aborted) return;
         setDetail(detailData);
         setLoading(false);
-
         if (pappersResult) setPappersData(pappersResult);
         setPappersLoading(false);
       } catch (err) {
+        if (signal.aborted) return;
         setError(err instanceof Error ? err.message : 'Erreur de connexion');
         setLoading(false);
         setPappersLoading(false);
@@ -253,6 +258,9 @@ export function BusinessDetailPanel({
     }
 
     fetchAll();
+
+    // Annule les requêtes en cours si placeId change ou si le composant est démonté
+    return () => controller.abort();
   }, [placeId, businessName, city]);
 
   const getBusinessStatusLabel = (status: string | undefined) => {
