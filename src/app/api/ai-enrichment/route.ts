@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+export const maxDuration = 60; // secondes (Vercel Pro requis au-delà de 10s)
+
 // Cache en mémoire (TTL 30 min)
 const cache = new Map<string, { data: AiEnrichmentResult; timestamp: number }>();
 const CACHE_TTL = 30 * 60 * 1000;

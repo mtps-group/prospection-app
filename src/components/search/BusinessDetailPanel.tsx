@@ -153,16 +153,18 @@ export function BusinessDetailPanel({
       });
       const data = await res.json();
       if (res.ok) setAiProfile(data.content);
-      else setAiProfile('ERREUR: ' + data.error);
-    } catch (e) {
-      setAiProfile('ERREUR: ' + String(e));
+    } catch {
+      // silencieux
     } finally {
       setAiProfileLoading(false);
     }
   };
 
   const searchAiEmail = async () => {
+    setAiEmail(null);
     setAiEmailLoading(true);
+    // Timeout client 45s pour éviter le spinner infini
+    const timeout = setTimeout(() => setAiEmailLoading(false), 45000);
     try {
       const res = await fetch('/api/ai-enrichment', {
         method: 'POST',
@@ -174,6 +176,7 @@ export function BusinessDetailPanel({
     } catch {
       // silencieux
     } finally {
+      clearTimeout(timeout);
       setAiEmailLoading(false);
     }
   };
@@ -565,6 +568,14 @@ export function BusinessDetailPanel({
                           </Button>
                         )}
                         {aiEmail && aiEmail !== 'non trouvé' && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setAiEmail(null)}
+                              className="p-1.5 rounded-lg hover:bg-violet-100 transition-colors"
+                              title="Nouvelle recherche"
+                            >
+                              <Search className="h-4 w-4 text-violet-400" />
+                            </button>
                           <button
                             onClick={() => copyToClipboard(aiEmail, 'ai-email')}
                             className="p-1.5 rounded-lg hover:bg-violet-100 transition-colors"
@@ -574,6 +585,7 @@ export function BusinessDetailPanel({
                               ? <Check className="h-4 w-4 text-green-600" />
                               : <Copy className="h-4 w-4 text-violet-500" />}
                           </button>
+                          </div>
                         )}
                       </div>
                       {aiEmailLoading ? (
