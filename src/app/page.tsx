@@ -419,9 +419,9 @@ export default function LandingPage() {
                   'Tout le plan Premium',
                   'Fiche entreprise (photos, avis, horaires)',
                   'Nom du dirigeant via Pappers.fr',
-                  '✨ Fiche détaillée de l\'entreprise',
-                  '✨ Recherche email automatique',
-                  '✨ Email de prospection personnalisé',
+                  'Fiche détaillée de l\'entreprise',
+                  'Recherche email automatique',
+                  'Email de prospection personnalisé',
                   'Support prioritaire',
                 ].map((f, i) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-text-secondary">

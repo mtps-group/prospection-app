@@ -165,9 +165,9 @@ export function PricingCards() {
             'Onglet entreprises avec site web',
             'Fiche entreprise détaillée (photos, avis, horaires)',
             'Nom du dirigeant via Pappers.fr',
-            '✨ Fiche détaillée de l\'entreprise',
-            '✨ Recherche email automatique',
-            '✨ Email de prospection personnalisé',
+            'Fiche détaillée de l\'entreprise',
+            'Recherche email automatique',
+            'Email de prospection personnalisé',
             'Support prioritaire',
           ].map((f) => (
             <li key={f} className="flex items-center gap-2 text-sm text-text-secondary">
