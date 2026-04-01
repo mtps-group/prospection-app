@@ -32,6 +32,8 @@ interface RequestBody {
   libelleNaf?: string;
   address?: string;
   phone?: string;
+  hasWebsite?: boolean;
+  websiteUrl?: string;
 }
 
 function isValidEmail(email: string): boolean {
@@ -88,6 +90,7 @@ export async function POST(request: NextRequest) {
   const {
     type, businessName, city, activite, rating, userRatingCount,
     dirigeant, formeJuridique, dateCreation, libelleNaf, address,
+    hasWebsite, websiteUrl,
   } = body;
 
   if (!type || !businessName || !city) {
@@ -174,7 +177,34 @@ RÈGLES STRICTES :
       const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const prenom = dirigeant ? dirigeant.split(' ')[0] : null;
 
-      const prompt = `Tu es un expert en copywriting et prospection B2B. Écris un email de prospection ultra-persuasif pour vendre un site web vitrine à un artisan qui n'en a pas.
+      const prompt = hasWebsite
+        ? `Tu es un expert en copywriting et prospection B2B. Écris un email de prospection ultra-persuasif pour proposer une refonte ou amélioration du site web existant d'un professionnel.
+
+ENTREPRISE CIBLÉE :
+- Nom entreprise : ${businessName}
+${prenom ? `- Prénom dirigeant : ${prenom}` : ''}
+- Métier : ${activite || libelleNaf || 'professionnel'} à ${city}
+- Note Google : ${rating ? `${rating}/5 (${userRatingCount || 0} avis)` : 'non disponible'}
+- Site web actuel : ${websiteUrl || 'oui, existe'}
+
+STRUCTURE OBLIGATOIRE (méthode PAS) :
+1. Objet (ligne 1) : court, crée curiosité sur l'amélioration possible — commence par "Objet : "
+2. Ligne vide
+3. Corps du mail :
+   - Accroche : ce qu'un site mal optimisé coûte en clients perdus
+   - Agitation : les vrais problèmes d'un site vieillissant ou non optimisé (pas de référencement, pas mobile, lent)
+   - Solution : ce qu'une refonte moderne changerait concrètement pour lui
+   - Preuve : sa note Google comme levier${rating ? ` ("${rating}/5 mais site non optimisé")` : ''}
+   - CTA : UNE seule question fermée (réponse OUI/NON)
+
+RÈGLES STRICTES :
+- Phrases très courtes (style SMS professionnel)
+- Parler uniquement d'argent et de clients perdus, JAMAIS de "fonctionnalités"
+- Zéro formule creuse ("j'espère que vous allez bien", "je me permets de...")
+- Corps MAX 120 mots
+- Terminer par une vraie question qui appelle OUI ou NON
+- Ton direct, presque agressif commercialement, mais respectueux`
+        : `Tu es un expert en copywriting et prospection B2B. Écris un email de prospection ultra-persuasif pour vendre un site web vitrine à un artisan qui n'en a pas.
 
 ENTREPRISE CIBLÉE :
 - Nom entreprise : ${businessName}

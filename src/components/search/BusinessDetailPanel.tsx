@@ -141,6 +141,8 @@ export function BusinessDetailPanel({
     libelleNaf: pappersData?.libelleNaf || undefined,
     address: detail?.formattedAddress || undefined,
     phone: detail?.nationalPhoneNumber || undefined,
+    hasWebsite: hasWebsite ?? false,
+    websiteUrl: websiteUrl || detail?.websiteUri || undefined,
   });
 
   const generateProfile = async () => {
