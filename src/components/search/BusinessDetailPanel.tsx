@@ -111,9 +111,6 @@ export function BusinessDetailPanel({
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<PlaceDetail | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [emails, setEmails] = useState<string[]>([]);
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [emailSearched, setEmailSearched] = useState(false);
   const [pappersData, setPappersData] = useState<PappersData | null>(null);
   const [pappersLoading, setPappersLoading] = useState(false);
 
@@ -129,24 +126,6 @@ export function BusinessDetailPanel({
     navigator.clipboard.writeText(text);
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
-  };
-
-  const findEmails = async (overrideCity?: string) => {
-    const cityToUse = overrideCity || city || extractCityFromAddress(detail?.formattedAddress || '');
-    if (!cityToUse) return;
-    setEmailLoading(true);
-    setEmailSearched(true);
-    try {
-      const res = await fetch(
-        `/api/find-email?name=${encodeURIComponent(businessName)}&city=${encodeURIComponent(cityToUse)}`
-      );
-      const data = await res.json();
-      setEmails(data.emails || []);
-    } catch {
-      setEmails([]);
-    } finally {
-      setEmailLoading(false);
-    }
   };
 
   // ── Ultra AI functions ────────────────────────────────────────────────────
@@ -234,12 +213,10 @@ export function BusinessDetailPanel({
     async function fetchAll() {
       setLoading(true);
       setError(null);
-      setEmailLoading(true);
-      setEmailSearched(true);
       setPappersLoading(true);
       setPappersData(null);
 
-      // Lancer les 3 requêtes EN PARALLÈLE
+      // Lancer les 2 requêtes EN PARALLÈLE
       const detailPromise = fetch(`/api/place-details?placeId=${encodeURIComponent(placeId)}`)
         .then(async (res) => {
           const data = await res.json();
@@ -247,17 +224,6 @@ export function BusinessDetailPanel({
           return data;
         });
 
-      const cityForEmail = city || '';
-      const emailPromise = cityForEmail
-        ? fetch(`/api/find-email?name=${encodeURIComponent(businessName)}&city=${encodeURIComponent(cityForEmail)}`)
-            .then(async (res) => {
-              const data = await res.json();
-              return data.emails || [];
-            })
-            .catch(() => [] as string[])
-        : Promise.resolve(null);
-
-      // Pappers en parallèle
       const pappersPromise = fetch(
         `/api/pappers?name=${encodeURIComponent(businessName)}${city ? `&city=${encodeURIComponent(city)}` : ''}`
       )
@@ -268,41 +234,19 @@ export function BusinessDetailPanel({
         .catch(() => null);
 
       try {
-        const [detailData, emailResult, pappersResult] = await Promise.all([
+        const [detailData, pappersResult] = await Promise.all([
           detailPromise,
-          emailPromise,
           pappersPromise,
         ]);
 
         setDetail(detailData);
         setLoading(false);
 
-        // Pappers
         if (pappersResult) setPappersData(pappersResult);
         setPappersLoading(false);
-
-        if (emailResult !== null) {
-          setEmails(emailResult);
-          setEmailLoading(false);
-        } else {
-          const extractedCity = extractCityFromAddress(detailData.formattedAddress || '');
-          if (extractedCity) {
-            try {
-              const emailRes = await fetch(
-                `/api/find-email?name=${encodeURIComponent(businessName)}&city=${encodeURIComponent(extractedCity)}`
-              );
-              const emailData = await emailRes.json();
-              setEmails(emailData.emails || []);
-            } catch {
-              setEmails([]);
-            }
-          }
-          setEmailLoading(false);
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur de connexion');
         setLoading(false);
-        setEmailLoading(false);
         setPappersLoading(false);
       }
     }
@@ -636,71 +580,6 @@ export function BusinessDetailPanel({
                 ) : null}
               </section>
 
-              {/* Section Email via PagesJaunes */}
-              <section>
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
-                  <Mail className="h-4 w-4 text-text-muted" />
-                  Email
-                  {emailLoading && (
-                    <span className="text-xs font-normal text-text-muted flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Recherche en cours...
-                    </span>
-                  )}
-                </h3>
-
-                {emailLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-text-muted rounded-lg bg-gray-50 px-3 py-2 animate-pulse">
-                    <Mail className="h-4 w-4 flex-shrink-0" />
-                    <span>Recherche d&apos;email en cours...</span>
-                  </div>
-                ) : emailSearched && emails.length > 0 ? (
-                  <div className="space-y-2">
-                    {emails.map((email, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2"
-                      >
-                        <div className="flex items-center gap-2 text-sm min-w-0">
-                          <Mail className="h-4 w-4 flex-shrink-0 text-green-600" />
-                          <a
-                            href={`mailto:${email}`}
-                            className="text-green-700 hover:text-green-800 font-medium truncate"
-                          >
-                            {email}
-                          </a>
-                        </div>
-                        <button
-                          onClick={() => copyToClipboard(email, `email-${idx}`)}
-                          className="flex-shrink-0 p-1 rounded hover:bg-green-200 transition-colors"
-                          title="Copier"
-                        >
-                          {copiedField === `email-${idx}`
-                            ? <Check className="h-3.5 w-3.5 text-green-600" />
-                            : <Copy className="h-3.5 w-3.5 text-green-600" />}
-                        </button>
-                      </div>
-                    ))}
-                    <p className="text-xs text-text-muted">Source : annuaires professionnels</p>
-                  </div>
-                ) : emailSearched ? (
-                  <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2">
-                    <div className="flex items-center gap-2 text-sm text-text-muted">
-                      <Mail className="h-4 w-4 flex-shrink-0" />
-                      <span>Aucun email trouvé</span>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => findEmails()}>
-                      <Search className="h-3.5 w-3.5" />
-                      Réessayer
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-text-muted rounded-lg bg-gray-50 px-3 py-2">
-                    <Mail className="h-4 w-4 flex-shrink-0" />
-                    <span>—</span>
-                  </div>
-                )}
-              </section>
 
               {/* Rating */}
               {detail.rating && (
