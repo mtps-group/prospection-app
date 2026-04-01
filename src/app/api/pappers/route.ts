@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// Cache en mémoire (TTL 30 min — les données de dirigeant changent rarement)
+// Cache en mémoire (TTL 30 min)
 const cache = new Map<string, { data: PappersResult; timestamp: number }>();
 const CACHE_TTL = 30 * 60 * 1000;
 
@@ -14,6 +14,32 @@ interface PappersResult {
   trancheEffectif: string | null;
   codeNaf: string | null;
   libelleNaf: string | null;
+}
+
+const EMPTY: PappersResult = {
+  dirigeant: null, siret: null, siren: null,
+  formeJuridique: null, dateCreation: null,
+  trancheEffectif: null, codeNaf: null, libelleNaf: null,
+};
+
+function extractDirigeant(representants: Record<string, string>[]): string | null {
+  if (!representants || representants.length === 0) return null;
+
+  // Priorité : gérant, président, directeur général, puis premier représentant
+  const priority = ['gérant', 'président', 'directeur général', 'associé gérant'];
+  let rep = representants.find(r =>
+    priority.some(p => (r.qualite || '').toLowerCase().includes(p))
+  ) || representants[0];
+
+  if (!rep) return null;
+
+  const prenom = rep.prenom ? rep.prenom.charAt(0).toUpperCase() + rep.prenom.slice(1).toLowerCase() : '';
+  const nom = rep.nom_complet || rep.nom || '';
+  const qualite = rep.qualite || '';
+
+  if (prenom && nom) return `${prenom} ${nom}${qualite ? ` (${qualite})` : ''}`;
+  if (nom) return `${nom}${qualite ? ` (${qualite})` : ''}`;
+  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -36,7 +62,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Pappers API non configurée' }, { status: 500 });
   }
 
-  // Vérifier le cache
+  // Cache
   const cacheKey = `${businessName.toLowerCase()}:${(city || '').toLowerCase()}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -44,55 +70,63 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Rechercher l'entreprise par nom + ville
-    const query = encodeURIComponent(businessName);
-    const cityParam = city ? `&code_postal=${encodeURIComponent(city)}` : '';
-    const url = `https://api.pappers.fr/v2/recherche?api_token=${apiKey}&q=${query}${cityParam}&page=1&par_page=1`;
-
-    const response = await fetch(url, {
-      headers: { 'Accept': 'application/json' },
+    // ── ÉTAPE 1 : Recherche par nom (+ ville si dispo) ──────────────────────
+    const params = new URLSearchParams({
+      api_token: apiKey,
+      q: businessName,
+      page: '1',
+      par_page: '3',
     });
+    // On passe la ville comme paramètre texte libre, pas comme code postal
+    if (city) params.set('q', `${businessName} ${city}`);
 
-    if (!response.ok) {
-      console.error('Pappers API error:', response.status, await response.text());
-      return NextResponse.json({ dirigeant: null });
+    const searchUrl = `https://api.pappers.fr/v2/recherche?${params.toString()}`;
+    const searchRes = await fetch(searchUrl, { headers: { Accept: 'application/json' } });
+
+    if (!searchRes.ok) {
+      console.error('Pappers search error:', searchRes.status);
+      return NextResponse.json(EMPTY);
     }
 
-    const data = await response.json();
+    const searchData = await searchRes.json();
 
-    if (!data.resultats || data.resultats.length === 0) {
-      const result: PappersResult = {
-        dirigeant: null, siret: null, siren: null,
-        formeJuridique: null, dateCreation: null,
-        trancheEffectif: null, codeNaf: null, libelleNaf: null,
-      };
-      cache.set(cacheKey, { data: result, timestamp: Date.now() });
-      return NextResponse.json(result);
+    if (!searchData.resultats || searchData.resultats.length === 0) {
+      cache.set(cacheKey, { data: EMPTY, timestamp: Date.now() });
+      return NextResponse.json(EMPTY);
     }
 
-    const entreprise = data.resultats[0];
+    const entreprise = searchData.resultats[0];
+    const siren = entreprise.siren;
 
-    // Extraire le dirigeant principal (le premier représentant)
+    // ── ÉTAPE 2 : Détail par SIREN pour avoir les représentants ────────────
     let dirigeant: string | null = null;
-    if (entreprise.representants && entreprise.representants.length > 0) {
-      const rep = entreprise.representants[0];
-      if (rep.prenom && rep.nom) {
-        dirigeant = `${rep.prenom} ${rep.nom}`;
-        if (rep.qualite) {
-          dirigeant += ` (${rep.qualite})`;
-        }
-      } else if (rep.nom) {
-        dirigeant = rep.nom;
-        if (rep.qualite) {
-          dirigeant += ` (${rep.qualite})`;
+
+    if (siren) {
+      const detailUrl = `https://api.pappers.fr/v2/entreprise?api_token=${apiKey}&siren=${siren}&representants=true`;
+      const detailRes = await fetch(detailUrl, { headers: { Accept: 'application/json' } });
+
+      if (detailRes.ok) {
+        const detailData = await detailRes.json();
+        const reps = detailData.representants || detailData.dirigeants || [];
+        dirigeant = extractDirigeant(reps);
+
+        // Compléter avec les infos du détail si disponibles
+        if (!dirigeant && detailData.beneficiaires_effectifs?.length > 0) {
+          const b = detailData.beneficiaires_effectifs[0];
+          if (b.prenom && b.nom) dirigeant = `${b.prenom} ${b.nom}`;
         }
       }
+    }
+
+    // Fallback : essayer representants depuis la recherche
+    if (!dirigeant && entreprise.representants?.length > 0) {
+      dirigeant = extractDirigeant(entreprise.representants);
     }
 
     const result: PappersResult = {
       dirigeant,
       siret: entreprise.siege?.siret || null,
-      siren: entreprise.siren || null,
+      siren: siren || null,
       formeJuridique: entreprise.forme_juridique || null,
       dateCreation: entreprise.date_creation || null,
       trancheEffectif: entreprise.tranche_effectif || null,
@@ -100,7 +134,6 @@ export async function GET(request: NextRequest) {
       libelleNaf: entreprise.siege?.libelle_code_naf || null,
     };
 
-    // Mettre en cache
     if (cache.size > 500) {
       const firstKey = cache.keys().next().value;
       if (firstKey) cache.delete(firstKey);
@@ -110,6 +143,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Pappers error:', error);
-    return NextResponse.json({ dirigeant: null });
+    return NextResponse.json(EMPTY);
   }
 }
