@@ -217,7 +217,8 @@ RÈGLES STRICTES :
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('ai-enrichment error:', error);
-    return NextResponse.json({ error: 'Erreur lors de la génération' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('ai-enrichment error:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
