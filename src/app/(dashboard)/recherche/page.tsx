@@ -94,7 +94,7 @@ export default function RecherchePage() {
       }
 
       setSearchData(data);
-      await refreshProfile();
+      refreshProfile(); // fire and forget, ne bloque pas le loading
       addToast(
         `${data.noWebsiteCount} entreprises sans site web trouvées !`,
         'success'
