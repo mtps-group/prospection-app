@@ -417,10 +417,11 @@ export default function LandingPage() {
               <ul className="space-y-3 mb-8 flex-1">
                 {[
                   'Tout le plan Premium',
-                  'Fiche entreprise détaillée',
-                  'Nom du dirigeant (Pappers)',
-                  'Recherche email automatique',
-                  'Génération de brouillon email IA',
+                  'Fiche entreprise (photos, avis, horaires)',
+                  'Nom du dirigeant via Pappers.fr',
+                  '✨ Fiche IA de l\'entreprise',
+                  '✨ Recherche email par IA',
+                  '✨ Email de prospection IA (méthode PAS)',
                   'Support prioritaire',
                 ].map((f, i) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-text-secondary">

@@ -163,8 +163,11 @@ export function PricingCards() {
             'Score de priorité des prospects',
             'Mini-CRM intégré (suivi prospects)',
             'Onglet entreprises avec site web',
-            'Fiche entreprise détaillée',
-            'Recherche email automatique',
+            'Fiche entreprise détaillée (photos, avis, horaires)',
+            'Nom du dirigeant via Pappers.fr',
+            '✨ Fiche IA de l\'entreprise (Gemini)',
+            '✨ Recherche email par IA',
+            '✨ Email de prospection IA (méthode PAS)',
             'Support prioritaire',
           ].map((f) => (
             <li key={f} className="flex items-center gap-2 text-sm text-text-secondary">
