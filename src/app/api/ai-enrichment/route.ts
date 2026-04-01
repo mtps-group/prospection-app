@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     // ── TYPE: PROFILE ──────────────────────────────────────────────────────────
     if (type === 'profile') {
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `Tu es un expert en analyse d'entreprises. Génère une fiche de présentation concise et professionnelle pour cette entreprise.
 
@@ -137,7 +137,7 @@ INSTRUCTIONS :
     // ── TYPE: EMAIL (Google Search Grounding) ─────────────────────────────────
     else if (type === 'email') {
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash',
         // @ts-expect-error — googleSearch est bien supporté à runtime
         tools: [{ googleSearch: {} }],
       });
@@ -169,7 +169,7 @@ RÈGLES STRICTES :
 
     // ── TYPE: MAIL ─────────────────────────────────────────────────────────────
     else if (type === 'mail') {
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const prenom = dirigeant ? dirigeant.split(' ')[0] : null;
 
       const prompt = `Tu es un expert en copywriting et prospection B2B. Écris un email de prospection ultra-persuasif pour vendre un site web vitrine à un artisan qui n'en a pas.
