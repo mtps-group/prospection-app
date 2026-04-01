@@ -153,8 +153,9 @@ export function BusinessDetailPanel({
       });
       const data = await res.json();
       if (res.ok) setAiProfile(data.content);
-    } catch {
-      // silencieux
+      else setAiProfile('ERREUR: ' + data.error);
+    } catch (e) {
+      setAiProfile('ERREUR: ' + String(e));
     } finally {
       setAiProfileLoading(false);
     }
