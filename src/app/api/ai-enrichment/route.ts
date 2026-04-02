@@ -12,6 +12,7 @@ const EMAIL_BLACKLIST = [
   'noreply', 'no-reply', 'donotreply', 'example', 'sentry',
   'w3.org', 'schema.org', 'googleapis', 'privacy', 'dpo@',
   'rgpd@', 'webmaster@', '.png', '.jpg', '.svg', '.css', '.js',
+  'font', 'icon', 'image', 'bootstrap', 'jquery',
 ];
 
 interface AiEnrichmentResult {
@@ -26,10 +27,6 @@ interface RequestBody {
   activite?: string;
   rating?: number;
   userRatingCount?: number;
-  dirigeant?: string;
-  formeJuridique?: string;
-  dateCreation?: string;
-  libelleNaf?: string;
   address?: string;
   phone?: string;
   hasWebsite?: boolean;
@@ -40,20 +37,109 @@ function isValidEmail(email: string): boolean {
   const lower = email.toLowerCase();
   if (EMAIL_BLACKLIST.some((b) => lower.includes(b))) return false;
   if (!email.includes('.')) return false;
+  if (email.length > 100) return false;
   return true;
 }
 
 function extractEmailFromText(text: string): string {
-  // Chercher le pattern EMAIL: d'abord
   const labeled = text.match(/EMAIL:\s*([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/i);
   if (labeled && isValidEmail(labeled[1])) return labeled[1].toLowerCase().trim();
 
-  // Puis chercher un email brut dans le texte
   const all = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || [];
   const valid = all.filter(isValidEmail);
   if (valid.length > 0) return valid[0].toLowerCase().trim();
 
   return '';
+}
+
+// ── Scraping email depuis le site web de l'entreprise ─────────────────────────
+async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null> {
+  const urlsToTry: string[] = [];
+  try {
+    const base = new URL(websiteUrl);
+    urlsToTry.push(
+      websiteUrl,
+      `${base.origin}/contact`,
+      `${base.origin}/nous-contacter`,
+      `${base.origin}/contactez-nous`,
+      `${base.origin}/contact.html`,
+      `${base.origin}/contact.php`,
+    );
+  } catch {
+    return null;
+  }
+
+  for (const url of urlsToTry) {
+    try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+      });
+      clearTimeout(tid);
+      if (!res.ok) continue;
+
+      const html = await res.text();
+      // Décoder les entités HTML courantes pour les emails obfusqués
+      const decoded = html
+        .replace(/&#64;/g, '@')
+        .replace(/&#x40;/gi, '@')
+        .replace(/&amp;/g, '&')
+        .replace(/&#46;/g, '.')
+        .replace(/\[at\]/gi, '@')
+        .replace(/\(at\)/gi, '@')
+        .replace(/\s*\[\s*at\s*\]\s*/gi, '@')
+        .replace(/\s*\(\s*at\s*\)\s*/gi, '@');
+
+      const emails = decoded.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || [];
+      const valid = emails.filter(isValidEmail);
+      if (valid.length > 0) return valid[0].toLowerCase().trim();
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+// ── Appel REST Gemini avec Google Search Grounding ────────────────────────────
+async function geminiGrounding(apiKey: string, prompt: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      tools: [{ google_search: {} }],
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    // Essayer avec gemini-1.5-flash + googleSearchRetrieval comme fallback
+    const url2 = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const res2 = await fetch(url2, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        tools: [{ google_search_retrieval: {} }],
+      }),
+    });
+    if (!res2.ok) {
+      const errText2 = await res2.text().catch(() => '');
+      throw new Error(`Grounding indisponible (${res.status}: ${errText.slice(0, 100)} / ${res2.status}: ${errText2.slice(0, 100)})`);
+    }
+    const data2 = await res2.json();
+    return data2.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 export async function POST(request: NextRequest) {
@@ -87,11 +173,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Corps de requête invalide' }, { status: 400 });
   }
 
-  const {
-    type, businessName, city, activite, rating, userRatingCount,
-    dirigeant, formeJuridique, dateCreation, libelleNaf, address,
-    hasWebsite, websiteUrl,
-  } = body;
+  const { type, businessName, city, activite, rating, userRatingCount, address, hasWebsite, websiteUrl } = body;
 
   if (!type || !businessName || !city) {
     return NextResponse.json({ error: 'type, businessName et city requis' }, { status: 400 });
@@ -105,9 +187,9 @@ export async function POST(request: NextRequest) {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
+  let result: AiEnrichmentResult = { type, content: '' };
 
   try {
-    let result: AiEnrichmentResult;
 
     // ── TYPE: PROFILE ──────────────────────────────────────────────────────────
     if (type === 'profile') {
@@ -118,72 +200,64 @@ export async function POST(request: NextRequest) {
 DONNÉES :
 - Nom : ${businessName}
 - Ville : ${city}
-- Activité : ${activite || libelleNaf || 'non précisée'}
-- Dirigeant : ${dirigeant || 'inconnu'}
-- Forme juridique : ${formeJuridique || 'inconnue'}
-- Créée le : ${dateCreation || 'inconnue'}
+- Activité : ${activite || 'non précisée'}
 - Note Google : ${rating ? `${rating}/5 (${userRatingCount || 0} avis)` : 'non disponible'}
 - Adresse : ${address || city}
 
 INSTRUCTIONS :
 - Rédige 3 à 4 phrases maximum
 - Commence par présenter l'activité principale
-- Mentionne le dirigeant si connu
 - Intègre la note Google comme indicateur de réputation si disponible
 - Ton professionnel et factuel
 - PAS de formule creuse, PAS de phrase d'accroche marketing
 - Réponds uniquement avec le texte de la fiche, sans titre ni préambule`;
 
       const response = await model.generateContent(prompt);
-      const text = response.response.text();
-      result = { type: 'profile', content: text.trim() };
+      result = { type: 'profile', content: response.response.text().trim() };
     }
 
-    // ── TYPE: EMAIL (Google Search Grounding) ─────────────────────────────────
+    // ── TYPE: EMAIL ────────────────────────────────────────────────────────────
     else if (type === 'email') {
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
-        // @ts-expect-error — googleSearch est bien supporté à runtime
-        tools: [{ googleSearch: {} }],
-      });
+      // Étape 1 : scraping direct du site si disponible (rapide + fiable)
+      if (websiteUrl) {
+        const scraped = await scrapeEmailFromWebsite(websiteUrl);
+        if (scraped) {
+          result = { type: 'email', content: scraped };
+          // Mettre en cache et retourner immédiatement
+          if (cache.size > 500) cache.delete(cache.keys().next().value!);
+          cache.set(cacheKey, { data: result, timestamp: Date.now() });
+          return NextResponse.json(result);
+        }
+      }
 
-      const prompt = `Cherche l'adresse email professionnelle de l'entreprise "${businessName}" située à ${city}, France.
+      // Étape 2 : Gemini grounding via REST
+      const emailPrompt = `Cherche l'adresse email professionnelle de l'entreprise "${businessName}" à ${city}, France.
 
 Stratégie :
-1. Pages Jaunes : "${businessName} ${city} email"
-2. "${businessName} ${city} contact mail"
-3. Facebook Business ou Google Business
+1. Recherche sur pagesjaunes.fr : "${businessName} ${city}"
+2. Recherche directe : "${businessName} ${city} email contact"
+3. Recherche sur societe.com ou annuaires pro
 
 RÈGLES STRICTES :
-- Si tu trouves un email : réponds UNIQUEMENT "EMAIL: adresse@email.com"
-- Si tu ne trouves rien : réponds UNIQUEMENT "EMAIL: non trouvé"
-- Aucune explication, aucun autre texte
-- L'email doit être une vraie adresse pro (pas noreply, pas admin@)`;
+- Si tu trouves un email : réponds UNIQUEMENT avec la ligne "EMAIL: adresse@domaine.fr"
+- Si tu ne trouves rien de certain : réponds UNIQUEMENT "EMAIL: non trouvé"
+- Zéro explication, zéro autre texte`;
 
-      const response = await model.generateContent(prompt);
-      const rawText = response.response.text();
+      const rawText = await geminiGrounding(apiKey, emailPrompt);
       const foundEmail = extractEmailFromText(rawText);
-      const notFound = !foundEmail && (
-        rawText.toLowerCase().includes('non trouvé') ||
-        rawText.toLowerCase().includes('not found') ||
-        rawText.toLowerCase().includes('aucun email')
-      );
-
-      result = { type: 'email', content: foundEmail || (notFound ? 'non trouvé' : 'non trouvé') };
+      result = { type: 'email', content: foundEmail || 'non trouvé' };
     }
 
     // ── TYPE: MAIL ─────────────────────────────────────────────────────────────
     else if (type === 'mail') {
       const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-      const prenom = dirigeant ? dirigeant.split(' ')[0] : null;
 
       const prompt = hasWebsite
         ? `Tu es un expert en copywriting et prospection B2B. Écris un email de prospection ultra-persuasif pour proposer une refonte ou amélioration du site web existant d'un professionnel.
 
 ENTREPRISE CIBLÉE :
 - Nom entreprise : ${businessName}
-${prenom ? `- Prénom dirigeant : ${prenom}` : ''}
-- Métier : ${activite || libelleNaf || 'professionnel'} à ${city}
+- Métier : ${activite || 'professionnel'} à ${city}
 - Note Google : ${rating ? `${rating}/5 (${userRatingCount || 0} avis)` : 'non disponible'}
 - Site web actuel : ${websiteUrl || 'oui, existe'}
 
@@ -208,8 +282,7 @@ RÈGLES STRICTES :
 
 ENTREPRISE CIBLÉE :
 - Nom entreprise : ${businessName}
-${prenom ? `- Prénom dirigeant : ${prenom}` : ''}
-- Métier : ${activite || libelleNaf || 'artisan'} à ${city}
+- Métier : ${activite || 'artisan'} à ${city}
 - Note Google : ${rating ? `${rating}/5 (${userRatingCount || 0} avis)` : 'non disponible'}
 - Site web : aucun
 
@@ -232,41 +305,30 @@ RÈGLES STRICTES :
 - Ton direct, presque agressif commercialement, mais respectueux`;
 
       const response = await model.generateContent(prompt);
-      const text = response.response.text();
-      result = { type: 'mail', content: text.trim() };
+      result = { type: 'mail', content: response.response.text().trim() };
     }
 
-    // ── TYPE: DIRIGEANT (Google Search Grounding) ────────────────────────────
+    // ── TYPE: DIRIGEANT ────────────────────────────────────────────────────────
     else if (type === 'dirigeant') {
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
-        // @ts-expect-error — googleSearch est bien supporté à runtime
-        tools: [{ googleSearch: {} }],
-      });
+      const dirigeantPrompt = `Cherche le nom du dirigeant (gérant, président ou directeur général) de l'entreprise "${businessName}" à ${city}, France.
 
-      const prompt = `Cherche le nom du dirigeant (gérant, président ou directeur général) de l'entreprise "${businessName}" située à ${city}, France.
-
-Stratégie de recherche :
-1. societe.com : "${businessName} ${city} dirigeant"
-2. infogreffe.fr : "${businessName} ${city}"
-3. pappers.fr : "${businessName} ${city}"
-4. linkedin.com : "${businessName} ${city} gérant"
+Stratégie :
+1. societe.com : recherche "${businessName} ${city}"
+2. infogreffe.fr : recherche "${businessName} ${city}"
+3. pappers.fr : recherche "${businessName} ${city}"
 
 RÈGLES STRICTES :
-- Si tu trouves un dirigeant : réponds UNIQUEMENT "DIRIGEANT: Prénom Nom (qualité)"
-- Si tu ne trouves rien : réponds UNIQUEMENT "DIRIGEANT: non trouvé"
-- Aucune explication, aucun autre texte
-- La qualité peut être : Gérant, Président, Directeur général, etc.`;
+- Si tu trouves un dirigeant : réponds UNIQUEMENT avec la ligne "DIRIGEANT: Prénom Nom (Gérant)" ou "DIRIGEANT: Prénom Nom (Président)" etc.
+- Si tu ne trouves rien de certain : réponds UNIQUEMENT "DIRIGEANT: non trouvé"
+- Zéro explication, zéro autre texte`;
 
-      const response = await model.generateContent(prompt);
-      const rawText = response.response.text();
+      const rawText = await geminiGrounding(apiKey, dirigeantPrompt);
 
-      // Extraire le pattern DIRIGEANT:
       const match = rawText.match(/DIRIGEANT:\s*(.+)/i);
-      const dirigeant = match ? match[1].trim() : null;
-      const notFound = !dirigeant || dirigeant.toLowerCase().includes('non trouvé');
+      const found = match ? match[1].trim() : '';
+      const notFound = !found || found.toLowerCase().includes('non trouvé') || found.length > 80;
 
-      result = { type: 'dirigeant', content: notFound ? 'non trouvé' : dirigeant };
+      result = { type: 'dirigeant', content: notFound ? 'non trouvé' : found };
     }
 
     else {
@@ -274,16 +336,14 @@ RÈGLES STRICTES :
     }
 
     // Mettre en cache
-    if (cache.size > 500) {
-      const firstKey = cache.keys().next().value;
-      if (firstKey) cache.delete(firstKey);
-    }
+    if (cache.size > 500) cache.delete(cache.keys().next().value!);
     cache.set(cacheKey, { data: result, timestamp: Date.now() });
 
     return NextResponse.json(result);
+
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error('ai-enrichment error:', msg);
+    console.error(`ai-enrichment [${type}] error:`, msg);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -100,12 +100,16 @@ export function BusinessDetailPanel({
   // Ultra AI states
   const [aiProfile, setAiProfile] = useState<string | null>(null);
   const [aiProfileLoading, setAiProfileLoading] = useState(false);
+  const [aiProfileError, setAiProfileError] = useState<string | null>(null);
   const [aiEmail, setAiEmail] = useState<string | null>(null);
   const [aiEmailLoading, setAiEmailLoading] = useState(false);
+  const [aiEmailError, setAiEmailError] = useState<string | null>(null);
   const [aiMail, setAiMail] = useState<string | null>(null);
   const [aiMailLoading, setAiMailLoading] = useState(false);
+  const [aiMailError, setAiMailError] = useState<string | null>(null);
   const [aiDirigeant, setAiDirigeant] = useState<string | null>(null);
   const [aiDirigeantLoading, setAiDirigeantLoading] = useState(false);
+  const [aiDirigeantError, setAiDirigeantError] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -128,6 +132,7 @@ export function BusinessDetailPanel({
 
   const generateProfile = async () => {
     setAiProfileLoading(true);
+    setAiProfileError(null);
     try {
       const res = await fetch('/api/ai-enrichment', {
         method: 'POST',
@@ -136,8 +141,9 @@ export function BusinessDetailPanel({
       });
       const data = await res.json();
       if (res.ok) setAiProfile(data.content);
+      else setAiProfileError(data.error || 'Erreur lors de la génération');
     } catch {
-      // silencieux
+      setAiProfileError('Erreur de connexion');
     } finally {
       setAiProfileLoading(false);
     }
@@ -145,9 +151,12 @@ export function BusinessDetailPanel({
 
   const searchAiEmail = async () => {
     setAiEmail(null);
+    setAiEmailError(null);
     setAiEmailLoading(true);
-    // Timeout client 45s pour éviter le spinner infini
-    const timeout = setTimeout(() => setAiEmailLoading(false), 45000);
+    const timeout = setTimeout(() => {
+      setAiEmailLoading(false);
+      setAiEmailError('Délai dépassé (> 45s). Réessayez.');
+    }, 45000);
     try {
       const res = await fetch('/api/ai-enrichment', {
         method: 'POST',
@@ -156,8 +165,9 @@ export function BusinessDetailPanel({
       });
       const data = await res.json();
       if (res.ok) setAiEmail(data.content);
+      else setAiEmailError(data.error || 'Erreur lors de la recherche');
     } catch {
-      // silencieux
+      setAiEmailError('Erreur de connexion');
     } finally {
       clearTimeout(timeout);
       setAiEmailLoading(false);
@@ -166,6 +176,7 @@ export function BusinessDetailPanel({
 
   const generateMail = async () => {
     setAiMailLoading(true);
+    setAiMailError(null);
     try {
       const res = await fetch('/api/ai-enrichment', {
         method: 'POST',
@@ -174,8 +185,9 @@ export function BusinessDetailPanel({
       });
       const data = await res.json();
       if (res.ok) setAiMail(data.content);
+      else setAiMailError(data.error || 'Erreur lors de la génération');
     } catch {
-      // silencieux
+      setAiMailError('Erreur de connexion');
     } finally {
       setAiMailLoading(false);
     }
@@ -183,8 +195,12 @@ export function BusinessDetailPanel({
 
   const searchDirigeant = async () => {
     setAiDirigeant(null);
+    setAiDirigeantError(null);
     setAiDirigeantLoading(true);
-    const timeout = setTimeout(() => setAiDirigeantLoading(false), 45000);
+    const timeout = setTimeout(() => {
+      setAiDirigeantLoading(false);
+      setAiDirigeantError('Délai dépassé (> 45s). Réessayez.');
+    }, 45000);
     try {
       const res = await fetch('/api/ai-enrichment', {
         method: 'POST',
@@ -193,8 +209,9 @@ export function BusinessDetailPanel({
       });
       const data = await res.json();
       if (res.ok) setAiDirigeant(data.content);
+      else setAiDirigeantError(data.error || 'Erreur lors de la recherche');
     } catch {
-      // silencieux
+      setAiDirigeantError('Erreur de connexion');
     } finally {
       clearTimeout(timeout);
       setAiDirigeantLoading(false);
@@ -223,9 +240,13 @@ export function BusinessDetailPanel({
       setDetail(null);
       // Réinitialiser les résultats IA au changement de fiche
       setAiProfile(null);
+      setAiProfileError(null);
       setAiEmail(null);
+      setAiEmailError(null);
       setAiMail(null);
+      setAiMailError(null);
       setAiDirigeant(null);
+      setAiDirigeantError(null);
 
       try {
         const res = await fetch(`/api/place-details?placeId=${encodeURIComponent(placeId)}`, { signal });
@@ -534,6 +555,11 @@ export function BusinessDetailPanel({
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span>Analyse en cours...</span>
                         </div>
+                      ) : aiProfileError ? (
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-red-500">{aiProfileError}</p>
+                          <button onClick={() => { setAiProfileError(null); generateProfile(); }} className="text-xs text-amber-600 underline hover:text-amber-800">Réessayer</button>
+                        </div>
                       ) : aiProfile ? (
                         <p className="text-sm text-amber-900 leading-relaxed">{aiProfile}</p>
                       ) : (
@@ -548,7 +574,7 @@ export function BusinessDetailPanel({
                           <AtSign className="h-4 w-4 text-violet-600" />
                           <span className="text-sm font-semibold text-violet-800">Recherche email</span>
                         </div>
-                        {!aiEmailLoading && !aiEmail && (
+                        {!aiEmailLoading && !aiEmail && !aiEmailError && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -558,6 +584,9 @@ export function BusinessDetailPanel({
                             <Search className="h-3.5 w-3.5 mr-1" />
                             Chercher
                           </Button>
+                        )}
+                        {aiEmailError && (
+                          <button onClick={() => { setAiEmailError(null); searchAiEmail(); }} className="text-xs text-violet-500 hover:text-violet-700 underline">Réessayer</button>
                         )}
                         {aiEmail && aiEmail !== 'non trouvé' && (
                           <div className="flex items-center gap-1">
@@ -585,6 +614,8 @@ export function BusinessDetailPanel({
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span>Recherche en cours (~20s)...</span>
                         </div>
+                      ) : aiEmailError ? (
+                        <p className="text-xs text-red-500">{aiEmailError}</p>
                       ) : aiEmail ? (
                         aiEmail === 'non trouvé' ? (
                           <div className="flex items-center gap-2">
@@ -595,7 +626,7 @@ export function BusinessDetailPanel({
                           <a href={`mailto:${aiEmail}`} className="text-sm font-medium text-violet-700 hover:text-violet-900 underline">{aiEmail}</a>
                         )
                       ) : (
-                        <p className="text-xs text-violet-600 opacity-70">Recherche l&apos;email sur Pages Jaunes, Facebook et annuaires.</p>
+                        <p className="text-xs text-violet-600 opacity-70">Recherche l&apos;email sur le site web, Pages Jaunes et annuaires.</p>
                       )}
                     </div>
 
@@ -607,7 +638,7 @@ export function BusinessDetailPanel({
                           <span className="text-sm font-semibold text-emerald-800">Email de prospection</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          {!aiMailLoading && !aiMail && (
+                          {!aiMailLoading && !aiMail && !aiMailError && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -617,6 +648,9 @@ export function BusinessDetailPanel({
                               <Sparkles className="h-3.5 w-3.5 mr-1" />
                               Générer
                             </Button>
+                          )}
+                          {aiMailError && (
+                            <button onClick={() => { setAiMailError(null); generateMail(); }} className="text-xs text-emerald-600 underline hover:text-emerald-800">Réessayer</button>
                           )}
                           {aiMail && (
                             <>
@@ -635,6 +669,8 @@ export function BusinessDetailPanel({
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span>Rédaction en cours...</span>
                         </div>
+                      ) : aiMailError ? (
+                        <p className="text-xs text-red-500">{aiMailError}</p>
                       ) : aiMail ? (
                         <div className="rounded-lg bg-white/60 border border-emerald-200 p-3">
                           <pre className="text-xs text-emerald-900 whitespace-pre-wrap leading-relaxed font-sans">{aiMail}</pre>
@@ -651,7 +687,7 @@ export function BusinessDetailPanel({
                           <UserCircle className="h-4 w-4 text-indigo-600" />
                           <span className="text-sm font-semibold text-indigo-800">Recherche dirigeant</span>
                         </div>
-                        {!aiDirigeantLoading && !aiDirigeant && (
+                        {!aiDirigeantLoading && !aiDirigeant && !aiDirigeantError && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -661,6 +697,9 @@ export function BusinessDetailPanel({
                             <Search className="h-3.5 w-3.5 mr-1" />
                             Chercher
                           </Button>
+                        )}
+                        {aiDirigeantError && (
+                          <button onClick={() => { setAiDirigeantError(null); searchDirigeant(); }} className="text-xs text-indigo-500 hover:text-indigo-700 underline">Réessayer</button>
                         )}
                         {aiDirigeant && aiDirigeant !== 'non trouvé' && (
                           <div className="flex items-center gap-1">
@@ -688,6 +727,8 @@ export function BusinessDetailPanel({
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span>Recherche en cours (~20s)...</span>
                         </div>
+                      ) : aiDirigeantError ? (
+                        <p className="text-xs text-red-500">{aiDirigeantError}</p>
                       ) : aiDirigeant ? (
                         aiDirigeant === 'non trouvé' ? (
                           <div className="flex items-center gap-2">
