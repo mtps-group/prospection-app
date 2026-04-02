@@ -12,13 +12,15 @@ function Card3D({
   children,
   className = '',
   intensity = 12,
+  style: externalStyle,
 }: {
   children: React.ReactNode;
   className?: string;
   intensity?: number;
+  style?: React.CSSProperties;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [transform, setTransform] = useState('');
+  const [tiltTransform, setTiltTransform] = useState('');
   const [shine, setShine] = useState({ x: 50, y: 50, opacity: 0 });
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -29,14 +31,14 @@ function Card3D({
     const y = (e.clientY - rect.top) / rect.height;
     const rotX = (y - 0.5) * -intensity;
     const rotY = (x - 0.5) * intensity;
-    setTransform(
+    setTiltTransform(
       `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(8px)`
     );
     setShine({ x: x * 100, y: y * 100, opacity: 0.12 });
   }, [intensity]);
 
   const handleMouseLeave = useCallback(() => {
-    setTransform('perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px)');
+    setTiltTransform('perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px)');
     setShine({ x: 50, y: 50, opacity: 0 });
   }, []);
 
@@ -47,8 +49,9 @@ function Card3D({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        transform: transform || 'perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px)',
-        transition: transform ? 'transform 0.08s ease-out' : 'transform 0.4s ease-out',
+        ...externalStyle,
+        transform: tiltTransform || 'perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px)',
+        transition: tiltTransform ? 'transform 0.08s ease-out' : 'transform 0.4s ease-out',
         willChange: 'transform',
         transformStyle: 'preserve-3d',
       }}
