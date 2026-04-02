@@ -27,10 +27,6 @@ import {
   Search,
   TrendingUp,
   UserCircle,
-  Briefcase,
-  Hash,
-  CalendarDays,
-  Users,
   Sparkles,
   FileText,
   Send,
@@ -38,17 +34,6 @@ import {
 } from 'lucide-react';
 import { computeScore } from '@/lib/scoring';
 import type { SearchResultClient } from '@/types';
-
-interface PappersData {
-  dirigeant: string | null;
-  siret: string | null;
-  siren: string | null;
-  formeJuridique: string | null;
-  dateCreation: string | null;
-  trancheEffectif: string | null;
-  codeNaf: string | null;
-  libelleNaf: string | null;
-}
 
 interface BusinessDetailPanelProps {
   placeId: string;
@@ -111,8 +96,6 @@ export function BusinessDetailPanel({
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<PlaceDetail | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [pappersData, setPappersData] = useState<PappersData | null>(null);
-  const [pappersLoading, setPappersLoading] = useState(false);
 
   // Ultra AI states
   const [aiProfile, setAiProfile] = useState<string | null>(null);
@@ -121,6 +104,8 @@ export function BusinessDetailPanel({
   const [aiEmailLoading, setAiEmailLoading] = useState(false);
   const [aiMail, setAiMail] = useState<string | null>(null);
   const [aiMailLoading, setAiMailLoading] = useState(false);
+  const [aiDirigeant, setAiDirigeant] = useState<string | null>(null);
+  const [aiDirigeantLoading, setAiDirigeantLoading] = useState(false);
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -135,10 +120,6 @@ export function BusinessDetailPanel({
     activite: detail?.types?.[0] || '',
     rating: detail?.rating || result?.rating,
     userRatingCount: detail?.userRatingCount || result?.user_rating_count,
-    dirigeant: pappersData?.dirigeant || undefined,
-    formeJuridique: pappersData?.formeJuridique || undefined,
-    dateCreation: pappersData?.dateCreation || undefined,
-    libelleNaf: pappersData?.libelleNaf || undefined,
     address: detail?.formattedAddress || undefined,
     phone: detail?.nationalPhoneNumber || undefined,
     hasWebsite: hasWebsite ?? false,
@@ -200,6 +181,26 @@ export function BusinessDetailPanel({
     }
   };
 
+  const searchDirigeant = async () => {
+    setAiDirigeant(null);
+    setAiDirigeantLoading(true);
+    const timeout = setTimeout(() => setAiDirigeantLoading(false), 45000);
+    try {
+      const res = await fetch('/api/ai-enrichment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'dirigeant', ...buildAiPayload() }),
+      });
+      const data = await res.json();
+      if (res.ok) setAiDirigeant(data.content);
+    } catch {
+      // silencieux
+    } finally {
+      clearTimeout(timeout);
+      setAiDirigeantLoading(false);
+    }
+  };
+
   // Extrait la ville depuis une adresse formatée française
   function extractCityFromAddress(address: string): string {
     // Ex: "12 Rue de la Paix, 75001 Paris, France" → "Paris"
@@ -219,43 +220,24 @@ export function BusinessDetailPanel({
     async function fetchAll() {
       setLoading(true);
       setError(null);
-      setPappersLoading(true);
-      setPappersData(null);
       setDetail(null);
       // Réinitialiser les résultats IA au changement de fiche
       setAiProfile(null);
       setAiEmail(null);
       setAiMail(null);
-
-      const detailPromise = fetch(`/api/place-details?placeId=${encodeURIComponent(placeId)}`, { signal })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Erreur lors du chargement');
-          return data;
-        });
-
-      const pappersPromise = fetch(
-        `/api/pappers?name=${encodeURIComponent(businessName)}${city ? `&city=${encodeURIComponent(city)}` : ''}`,
-        { signal }
-      )
-        .then(async (res) => {
-          const data = await res.json();
-          return data as PappersData;
-        })
-        .catch(() => null);
+      setAiDirigeant(null);
 
       try {
-        const [detailData, pappersResult] = await Promise.all([detailPromise, pappersPromise]);
+        const res = await fetch(`/api/place-details?placeId=${encodeURIComponent(placeId)}`, { signal });
+        const data = await res.json();
         if (signal.aborted) return;
-        setDetail(detailData);
+        if (!res.ok) throw new Error(data.error || 'Erreur lors du chargement');
+        setDetail(data);
         setLoading(false);
-        if (pappersResult) setPappersData(pappersResult);
-        setPappersLoading(false);
       } catch (err) {
         if (signal.aborted) return;
         setError(err instanceof Error ? err.message : 'Erreur de connexion');
         setLoading(false);
-        setPappersLoading(false);
       }
     }
 
@@ -661,97 +643,71 @@ export function BusinessDetailPanel({
                         <p className="text-xs text-emerald-600 opacity-70">Génère un email de prospection personnalisé (méthode PAS) pour vendre un site web.</p>
                       )}
                     </div>
+
+                    {/* ── RECHERCHE DIRIGEANT ── */}
+                    <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <UserCircle className="h-4 w-4 text-indigo-600" />
+                          <span className="text-sm font-semibold text-indigo-800">Recherche dirigeant</span>
+                        </div>
+                        {!aiDirigeantLoading && !aiDirigeant && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={searchDirigeant}
+                            className="border-indigo-300 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-400"
+                          >
+                            <Search className="h-3.5 w-3.5 mr-1" />
+                            Chercher
+                          </Button>
+                        )}
+                        {aiDirigeant && aiDirigeant !== 'non trouvé' && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setAiDirigeant(null)}
+                              className="p-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                              title="Nouvelle recherche"
+                            >
+                              <Search className="h-4 w-4 text-indigo-400" />
+                            </button>
+                            <button
+                              onClick={() => copyToClipboard(aiDirigeant, 'ai-dirigeant')}
+                              className="p-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                              title="Copier"
+                            >
+                              {copiedField === 'ai-dirigeant'
+                                ? <Check className="h-4 w-4 text-green-600" />
+                                : <Copy className="h-4 w-4 text-indigo-500" />}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {aiDirigeantLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-indigo-600 animate-pulse">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Recherche en cours (~20s)...</span>
+                        </div>
+                      ) : aiDirigeant ? (
+                        aiDirigeant === 'non trouvé' ? (
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-indigo-600 opacity-70">Aucun dirigeant trouvé</p>
+                            <button onClick={() => setAiDirigeant(null)} className="text-xs text-indigo-500 hover:text-indigo-700 underline">Réessayer</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 rounded-lg bg-white/60 border border-indigo-200 px-3 py-2">
+                            <UserCircle className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+                            <span className="text-sm font-medium text-indigo-800">{aiDirigeant}</span>
+                          </div>
+                        )
+                      ) : (
+                        <p className="text-xs text-indigo-600 opacity-70">Recherche le dirigeant sur societe.com, infogreffe.fr et pappers.fr.</p>
+                      )}
+                    </div>
                   </div>
                 </section>
               )}
 
-              {/* Dirigeant & infos légales (Pappers) */}
-              <section>
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
-                  <UserCircle className="h-4 w-4 text-text-muted" />
-                  Dirigeant & infos légales
-                  {pappersLoading && (
-                    <span className="text-xs font-normal text-text-muted flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Recherche...
-                    </span>
-                  )}
-                </h3>
-
-                {pappersLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-10 rounded-lg" />
-                    <Skeleton className="h-10 rounded-lg" />
-                  </div>
-                ) : pappersData?.dirigeant ? (
-                  <div className="space-y-2">
-                    {/* Dirigeant */}
-                    <div className="flex items-center justify-between gap-2 rounded-lg bg-indigo-50 border border-indigo-200 px-3 py-2.5">
-                      <div className="flex items-center gap-2 text-sm min-w-0">
-                        <UserCircle className="h-4 w-4 flex-shrink-0 text-indigo-500" />
-                        <div className="min-w-0">
-                          <span className="font-semibold text-indigo-800 block truncate">{pappersData.dirigeant}</span>
-                          <span className="text-xs text-indigo-500">Dirigeant</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => copyToClipboard(pappersData.dirigeant!, 'dirigeant')}
-                        className="flex-shrink-0 p-1 rounded hover:bg-indigo-100 transition-colors"
-                        title="Copier"
-                      >
-                        {copiedField === 'dirigeant'
-                          ? <Check className="h-3.5 w-3.5 text-green-600" />
-                          : <Copy className="h-3.5 w-3.5 text-indigo-400" />}
-                      </button>
-                    </div>
-
-                    {/* Infos complémentaires */}
-                    <div className="grid grid-cols-2 gap-2">
-                      {pappersData.siret && (
-                        <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs">
-                          <Hash className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
-                          <div>
-                            <span className="text-text-muted block">SIRET</span>
-                            <span className="font-medium text-text">{pappersData.siret}</span>
-                          </div>
-                        </div>
-                      )}
-                      {pappersData.formeJuridique && (
-                        <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs">
-                          <Briefcase className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
-                          <div>
-                            <span className="text-text-muted block">Forme</span>
-                            <span className="font-medium text-text">{pappersData.formeJuridique}</span>
-                          </div>
-                        </div>
-                      )}
-                      {pappersData.dateCreation && (
-                        <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs">
-                          <CalendarDays className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
-                          <div>
-                            <span className="text-text-muted block">Création</span>
-                            <span className="font-medium text-text">{pappersData.dateCreation}</span>
-                          </div>
-                        </div>
-                      )}
-                      {pappersData.libelleNaf && (
-                        <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-xs">
-                          <Building2 className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
-                          <div>
-                            <span className="text-text-muted block">Activité (NAF)</span>
-                            <span className="font-medium text-text truncate block">{pappersData.libelleNaf}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : !pappersLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-text-muted rounded-lg bg-gray-50 px-3 py-2">
-                    <UserCircle className="h-4 w-4 flex-shrink-0" />
-                    <span>Aucune information trouvée sur Pappers.fr</span>
-                  </div>
-                ) : null}
-              </section>
 
 
               {/* Rating */}

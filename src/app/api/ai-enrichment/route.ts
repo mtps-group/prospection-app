@@ -20,7 +20,7 @@ interface AiEnrichmentResult {
 }
 
 interface RequestBody {
-  type: 'profile' | 'email' | 'mail';
+  type: 'profile' | 'email' | 'mail' | 'dirigeant';
   businessName: string;
   city: string;
   activite?: string;
@@ -236,8 +236,41 @@ RÈGLES STRICTES :
       result = { type: 'mail', content: text.trim() };
     }
 
+    // ── TYPE: DIRIGEANT (Google Search Grounding) ────────────────────────────
+    else if (type === 'dirigeant') {
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-2.5-flash',
+        // @ts-expect-error — googleSearch est bien supporté à runtime
+        tools: [{ googleSearch: {} }],
+      });
+
+      const prompt = `Cherche le nom du dirigeant (gérant, président ou directeur général) de l'entreprise "${businessName}" située à ${city}, France.
+
+Stratégie de recherche :
+1. societe.com : "${businessName} ${city} dirigeant"
+2. infogreffe.fr : "${businessName} ${city}"
+3. pappers.fr : "${businessName} ${city}"
+4. linkedin.com : "${businessName} ${city} gérant"
+
+RÈGLES STRICTES :
+- Si tu trouves un dirigeant : réponds UNIQUEMENT "DIRIGEANT: Prénom Nom (qualité)"
+- Si tu ne trouves rien : réponds UNIQUEMENT "DIRIGEANT: non trouvé"
+- Aucune explication, aucun autre texte
+- La qualité peut être : Gérant, Président, Directeur général, etc.`;
+
+      const response = await model.generateContent(prompt);
+      const rawText = response.response.text();
+
+      // Extraire le pattern DIRIGEANT:
+      const match = rawText.match(/DIRIGEANT:\s*(.+)/i);
+      const dirigeant = match ? match[1].trim() : null;
+      const notFound = !dirigeant || dirigeant.toLowerCase().includes('non trouvé');
+
+      result = { type: 'dirigeant', content: notFound ? 'non trouvé' : dirigeant };
+    }
+
     else {
-      return NextResponse.json({ error: 'type invalide (profile | email | mail)' }, { status: 400 });
+      return NextResponse.json({ error: 'type invalide (profile | email | mail | dirigeant)' }, { status: 400 });
     }
 
     // Mettre en cache
