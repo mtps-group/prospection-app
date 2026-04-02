@@ -90,13 +90,21 @@ export async function GET(request: NextRequest) {
 
     const searchData = await searchRes.json();
 
+    // DEBUG TEMPORAIRE
+    console.log('Pappers search URL:', searchUrl);
+    console.log('Pappers raw response:', JSON.stringify(searchData).slice(0, 2000));
+
     if (!searchData.resultats || searchData.resultats.length === 0) {
       cache.set(cacheKey, { data: EMPTY, timestamp: Date.now() });
-      return NextResponse.json(EMPTY);
+      return NextResponse.json({ ...EMPTY, _debug: { totalResultats: searchData.total, query: params.get('q') } });
     }
 
     const entreprise = searchData.resultats[0];
     const siren = entreprise.siren;
+
+    // DEBUG: retourner les clés disponibles
+    console.log('Entreprise keys:', Object.keys(entreprise));
+    console.log('Entreprise representants:', JSON.stringify(entreprise.representants));
 
     // ── ÉTAPE 2 : Détail par SIREN pour avoir les représentants ────────────
     let dirigeant: string | null = null;
@@ -107,6 +115,9 @@ export async function GET(request: NextRequest) {
 
       if (detailRes.ok) {
         const detailData = await detailRes.json();
+        console.log('Detail keys:', Object.keys(detailData));
+        console.log('Detail representants:', JSON.stringify(detailData.representants?.slice(0,2)));
+        console.log('Detail dirigeants:', JSON.stringify(detailData.dirigeants?.slice(0,2)));
         const reps = detailData.representants || detailData.dirigeants || [];
         dirigeant = extractDirigeant(reps);
 
@@ -140,6 +151,7 @@ export async function GET(request: NextRequest) {
     }
     cache.set(cacheKey, { data: result, timestamp: Date.now() });
 
+    console.log('Final result:', JSON.stringify(result));
     return NextResponse.json(result);
   } catch (error) {
     console.error('Pappers error:', error);
