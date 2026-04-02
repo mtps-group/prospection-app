@@ -84,7 +84,10 @@ export async function GET(request: NextRequest) {
     const searchRes = await fetch(searchUrl, { headers: { Accept: 'application/json' } });
 
     if (!searchRes.ok) {
-      console.error('Pappers search error:', searchRes.status);
+      const errBody = await searchRes.text();
+      console.error('Pappers search error:', searchRes.status, errBody);
+      console.error('API key used (first 6 chars):', apiKey?.slice(0, 6));
+      console.error('URL called:', searchUrl.replace(apiKey, 'HIDDEN'));
       return NextResponse.json(EMPTY);
     }
 
