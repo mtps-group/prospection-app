@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Card3D } from '@/components/ui/Card3D';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import {
   Globe,
@@ -328,24 +329,24 @@ export default function LandingPage() {
             <p className="text-text-secondary">Sans engagement · Annulez à tout moment · Paiement sécurisé</p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3 items-start">
+          <div className="grid gap-8 md:grid-cols-3 items-center" style={{ perspective: '1200px' }}>
 
             {/* Gratuit */}
-            <div className="rounded-2xl bg-white border border-gray-200 p-8 flex flex-col hover:shadow-lg transition-shadow">
-              <div className="mb-6">
+            <Card3D
+              intensity={6}
+              className="relative rounded-2xl bg-white border border-gray-200 p-8 flex flex-col overflow-hidden"
+              style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)' }}
+            >
+              <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gray-100 opacity-60" />
+              <div className="relative mb-6">
                 <h3 className="text-lg font-bold text-text mb-1">Gratuit</h3>
-                <p className="text-sm text-text-muted">Pour découvrir ProspectWeb</p>
+                <p className="text-sm text-text-muted">Pour découvrir l&apos;outil</p>
               </div>
-              <div className="mb-6">
+              <div className="relative mb-6">
                 <span className="text-5xl font-black text-text">0€</span>
               </div>
-              <ul className="space-y-3 mb-8 flex-1">
-                {[
-                  '2 recherches maximum',
-                  '5 résultats visibles',
-                  'Export CSV, Sheets, Notion',
-                  'Score de priorité',
-                ].map((f) => (
+              <ul className="relative space-y-3 mb-8 flex-1">
+                {['2 recherches maximum', '5 résultats visibles', 'Score de priorité'].map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-text-secondary">
                     <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                     {f}
@@ -354,89 +355,109 @@ export default function LandingPage() {
               </ul>
               <Link
                 href={isLoggedIn ? '/recherche' : '/signup'}
-                className="block text-center rounded-xl border-2 border-gray-200 py-3.5 font-bold text-text hover:bg-gray-50 transition-colors"
+                className="relative block text-center rounded-xl border-2 border-gray-200 py-3.5 font-bold text-text hover:bg-gray-50 transition-colors"
               >
                 {isLoggedIn ? 'Mon espace' : 'Essayer gratuitement'}
               </Link>
-            </div>
+            </Card3D>
 
             {/* Premium — mis en avant */}
-            <div className="relative rounded-2xl bg-gradient-to-br from-primary to-purple-600 p-8 shadow-2xl shadow-primary/30 flex flex-col md:scale-105 md:-mt-4 md:-mb-4">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 px-6 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg">
+            <div className="relative scale-105">
+              {/* Badge en dehors de la carte pour ne pas être coupé par overflow-hidden */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
                 ⭐ LE PLUS POPULAIRE
               </div>
-              <div className="mb-6">
-                <h3 className="text-lg font-bold text-white mb-1">Premium</h3>
-                <p className="text-sm text-white/60">Pour les créateurs qui veulent des résultats</p>
+              <Card3D
+                intensity={8}
+                className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-8 flex flex-col overflow-hidden"
+                style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)' }}
+              >
+                <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-white/5" />
+                <div className="absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-white/5" />
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                <div className="relative mb-6 mt-2">
+                  <h3 className="text-lg font-bold text-white mb-1">Premium</h3>
+                  <p className="text-sm text-white/70">Pour les créateurs actifs</p>
+                </div>
+                <div className="relative mb-2">
+                  <span className="text-5xl font-black text-white">39,99€</span>
+                  <span className="text-white/70 ml-1 text-sm">/ mois</span>
+                </div>
+                <p className="relative text-xs text-white/50 mb-6">= 1,33€/jour · Sans engagement</p>
+                <ul className="relative space-y-3 mb-8 flex-1">
+                  {[
+                    'Recherches illimitées',
+                    '60 résultats par recherche',
+                    'Coordonnées complètes',
+                    'Export CSV, Google Sheets, Notion',
+                    'Historique illimité & cliquable',
+                    'Score de priorité des prospects',
+                    'Mini-CRM intégré',
+                    'Onglet "avec site web"',
+                  ].map((f) => (
+                    <li key={f} className="flex items-center gap-2.5 text-sm text-white/90">
+                      <CheckCircle className="h-4 w-4 text-white flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={isLoggedIn ? '/abonnement' : '/signup'}
+                  className="relative block text-center rounded-xl bg-white py-4 font-bold text-primary hover:bg-gray-50 transition-colors text-base shadow-lg"
+                >
+                  {isLoggedIn ? 'Passer à Premium →' : 'Commencer avec Premium →'}
+                </Link>
+              </Card3D>
+            </div>
+
+            {/* Ultra */}
+            <Card3D
+              intensity={6}
+              className="relative rounded-2xl p-8 flex flex-col overflow-hidden"
+              style={{
+                background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)',
+              }}
+            >
+              <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #f59e0b, transparent)' }} />
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+              <div className="absolute top-5 right-5 z-10">
+                <div className="h-8 w-8 rounded-lg bg-amber-400/10 border border-amber-400/20 flex items-center justify-center">
+                  <Crown className="h-4 w-4 text-amber-400" />
+                </div>
               </div>
-              <div className="mb-2">
-                <span className="text-5xl font-black text-white">39,99€</span>
-                <span className="text-white/60 ml-1 text-sm">/ mois</span>
+              <div className="relative mb-6">
+                <h3 className="text-lg font-bold text-white mb-1">Ultra</h3>
+                <p className="text-sm text-white/50">Pour les agences &amp; freelances pro</p>
               </div>
-              <p className="text-xs text-white/40 mb-6">= 1,33€/jour · Sans engagement</p>
-              <ul className="space-y-3 mb-8 flex-1">
+              <div className="relative mb-6">
+                <span className="text-5xl font-black text-white">59,99€</span>
+                <span className="text-white/50 ml-1 text-sm">/ mois</span>
+              </div>
+              <ul className="relative space-y-3 mb-8 flex-1">
                 {[
-                  'Recherches illimitées',
-                  '60 résultats par recherche',
-                  'Coordonnées complètes',
-                  'Export CSV, Google Sheets, Notion',
-                  'Historique illimité & cliquable',
-                  'Score de priorité des prospects',
-                  'Mini-CRM intégré',
-                  'Onglet "avec site web"',
+                  'Tout le plan Premium',
+                  'Photos, avis & horaires détaillés',
+                  'Fiche de présentation de l\'entreprise',
+                  'Recherche email automatique',
+                  'Recherche du dirigeant',
+                  'Email de prospection personnalisé',
+                  'Support prioritaire',
                 ].map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm text-white/90">
-                    <CheckCircle className="h-4 w-4 text-white flex-shrink-0" />
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">
+                    <CheckCircle className="h-4 w-4 text-amber-400 flex-shrink-0" />
                     {f}
                   </li>
                 ))}
               </ul>
               <Link
                 href={isLoggedIn ? '/abonnement' : '/signup'}
-                className="block text-center rounded-xl bg-white py-4 font-bold text-primary hover:bg-gray-50 transition-colors text-base shadow-lg"
-              >
-                {isLoggedIn ? 'Passer à Premium →' : 'Commencer avec Premium →'}
-              </Link>
-            </div>
-
-            {/* Ultra */}
-            <div className="rounded-2xl bg-white border border-gray-200 p-8 flex flex-col relative hover:shadow-lg transition-shadow">
-              <div className="absolute -top-3 right-6">
-                <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full px-4 py-1 text-xs font-bold text-gray-900 shadow">
-                  <Crown className="h-3.5 w-3.5" /> PRO
-                </div>
-              </div>
-              <div className="mb-6">
-                <h3 className="text-lg font-bold text-text mb-1">Ultra</h3>
-                <p className="text-sm text-text-muted">Pour les agences & freelances pro</p>
-              </div>
-              <div className="mb-6">
-                <span className="text-5xl font-black text-text">59,99€</span>
-                <span className="text-text-muted ml-1 text-sm">/ mois</span>
-              </div>
-              <ul className="space-y-3 mb-8 flex-1">
-                {[
-                  'Tout le plan Premium',
-                  'Fiche entreprise (photos, avis, horaires)',
-                  'Nom du dirigeant via Pappers.fr',
-                  'Fiche détaillée de l\'entreprise',
-                  'Recherche email automatique',
-                  'Email de prospection personnalisé',
-                  'Support prioritaire',
-                ].map((f, i) => (
-                  <li key={f} className="flex items-center gap-2.5 text-sm text-text-secondary">
-                    <CheckCircle className={`h-4 w-4 flex-shrink-0 ${i === 0 ? 'text-primary' : 'text-amber-400'}`} />
-                    {i === 0 ? <span className="font-semibold text-text">{f}</span> : f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={isLoggedIn ? '/abonnement' : '/signup'}
-                className="block text-center rounded-xl bg-gray-900 py-3.5 font-bold text-white hover:bg-gray-800 transition-colors"
+                className="relative block text-center rounded-xl py-3.5 font-bold text-gray-900 hover:opacity-90 transition-all shadow-lg shadow-amber-400/20"
+                style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%)' }}
               >
                 {isLoggedIn ? 'Passer à Ultra' : 'Commencer avec Ultra'}
               </Link>
-            </div>
+            </Card3D>
           </div>
 
           {/* Garantie */}
