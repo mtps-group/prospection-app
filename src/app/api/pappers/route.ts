@@ -85,10 +85,15 @@ export async function GET(request: NextRequest) {
 
     if (!searchRes.ok) {
       const errBody = await searchRes.text();
-      console.error('Pappers search error:', searchRes.status, errBody);
-      console.error('API key used (first 6 chars):', apiKey?.slice(0, 6));
-      console.error('URL called:', searchUrl.replace(apiKey, 'HIDDEN'));
-      return NextResponse.json(EMPTY);
+      return NextResponse.json({
+        ...EMPTY,
+        _debug: {
+          status: searchRes.status,
+          error: errBody,
+          keyStart: apiKey?.slice(0, 8),
+          keyLength: apiKey?.length,
+        }
+      });
     }
 
     const searchData = await searchRes.json();
