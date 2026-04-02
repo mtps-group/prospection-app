@@ -25,9 +25,8 @@ const EMPTY: PappersResult = {
 function extractDirigeant(representants: Record<string, string>[]): string | null {
   if (!representants || representants.length === 0) return null;
 
-  // Priorité : gérant, président, directeur général, puis premier représentant
   const priority = ['gérant', 'président', 'directeur général', 'associé gérant'];
-  let rep = representants.find(r =>
+  const rep = representants.find(r =>
     priority.some(p => (r.qualite || '').toLowerCase().includes(p))
   ) || representants[0];
 
@@ -62,7 +61,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Pappers API non configurée' }, { status: 500 });
   }
 
-  // Cache
   const cacheKey = `${businessName.toLowerCase()}:${(city || '').toLowerCase()}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
@@ -70,51 +68,27 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // ── ÉTAPE 1 : Recherche par nom (+ ville si dispo) ──────────────────────
-    const params = new URLSearchParams({
-      api_token: apiKey,
-      q: businessName,
-      page: '1',
-      par_page: '3',
-    });
-    // On passe la ville comme paramètre texte libre, pas comme code postal
-    if (city) params.set('q', `${businessName} ${city}`);
-
-    const searchUrl = `https://api.pappers.fr/v2/recherche?${params.toString()}`;
+    // Étape 1 : recherche par nom + ville
+    const q = city ? `${businessName} ${city}` : businessName;
+    const searchUrl = `https://api.pappers.fr/v2/recherche?api_token=${apiKey}&q=${encodeURIComponent(q)}&page=1&par_page=3`;
     const searchRes = await fetch(searchUrl, { headers: { Accept: 'application/json' } });
 
     if (!searchRes.ok) {
-      const errBody = await searchRes.text();
-      return NextResponse.json({
-        ...EMPTY,
-        _debug: {
-          status: searchRes.status,
-          error: errBody,
-          keyStart: apiKey?.slice(0, 8),
-          keyLength: apiKey?.length,
-        }
-      });
+      console.error('Pappers search error:', searchRes.status);
+      return NextResponse.json(EMPTY);
     }
 
     const searchData = await searchRes.json();
 
-    // DEBUG TEMPORAIRE
-    console.log('Pappers search URL:', searchUrl);
-    console.log('Pappers raw response:', JSON.stringify(searchData).slice(0, 2000));
-
     if (!searchData.resultats || searchData.resultats.length === 0) {
       cache.set(cacheKey, { data: EMPTY, timestamp: Date.now() });
-      return NextResponse.json({ ...EMPTY, _debug: { totalResultats: searchData.total, query: params.get('q') } });
+      return NextResponse.json(EMPTY);
     }
 
     const entreprise = searchData.resultats[0];
     const siren = entreprise.siren;
 
-    // DEBUG: retourner les clés disponibles
-    console.log('Entreprise keys:', Object.keys(entreprise));
-    console.log('Entreprise representants:', JSON.stringify(entreprise.representants));
-
-    // ── ÉTAPE 2 : Détail par SIREN pour avoir les représentants ────────────
+    // Étape 2 : détail par SIREN pour avoir les représentants
     let dirigeant: string | null = null;
 
     if (siren) {
@@ -123,13 +97,9 @@ export async function GET(request: NextRequest) {
 
       if (detailRes.ok) {
         const detailData = await detailRes.json();
-        console.log('Detail keys:', Object.keys(detailData));
-        console.log('Detail representants:', JSON.stringify(detailData.representants?.slice(0,2)));
-        console.log('Detail dirigeants:', JSON.stringify(detailData.dirigeants?.slice(0,2)));
         const reps = detailData.representants || detailData.dirigeants || [];
         dirigeant = extractDirigeant(reps);
 
-        // Compléter avec les infos du détail si disponibles
         if (!dirigeant && detailData.beneficiaires_effectifs?.length > 0) {
           const b = detailData.beneficiaires_effectifs[0];
           if (b.prenom && b.nom) dirigeant = `${b.prenom} ${b.nom}`;
@@ -137,7 +107,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fallback : essayer representants depuis la recherche
+    // Fallback : representants depuis la recherche
     if (!dirigeant && entreprise.representants?.length > 0) {
       dirigeant = extractDirigeant(entreprise.representants);
     }
@@ -159,7 +129,6 @@ export async function GET(request: NextRequest) {
     }
     cache.set(cacheKey, { data: result, timestamp: Date.now() });
 
-    console.log('Final result:', JSON.stringify(result));
     return NextResponse.json(result);
   } catch (error) {
     console.error('Pappers error:', error);
