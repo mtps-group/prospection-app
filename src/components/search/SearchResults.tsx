@@ -84,7 +84,9 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
     result?: import('@/types').SearchResultClient;
   } | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'no-website' | 'with-website'>('no-website');
+  const [activeTab, setActiveTab] = useState<'no-website' | 'with-website'>(
+    data.results.length === 0 ? 'with-website' : 'no-website'
+  );
   const [sortBy, setSortBy] = useState<'score' | 'rating' | 'reviews'>('score');
   const [sheetsLoading, setSheetsLoading] = useState(false);
   const [notionLoading, setNotionLoading] = useState(false);
@@ -156,7 +158,8 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
     }
   };
 
-  if (data.results.length === 0) {
+  const totalResults = data.results.length + (data.withWebsiteResults?.length ?? 0);
+  if (totalResults === 0) {
     return (
       <div className="text-center py-12">
         <AlertCircle className="mx-auto h-12 w-12 text-text-muted mb-4" />
@@ -337,6 +340,14 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
               Fermer
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Notice quand toutes les entreprises ont déjà un site */}
+      {data.results.length === 0 && (data.withWebsiteResults?.length ?? 0) > 0 && (
+        <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-700 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          Toutes les entreprises trouvées ont déjà un site web — voici les résultats quand même.
         </div>
       )}
 
