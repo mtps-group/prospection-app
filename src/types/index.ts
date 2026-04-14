@@ -193,3 +193,43 @@ export interface EmailDraft {
   body: string;
   created_at: string;
 }
+
+// ============================================
+// Call Analysis (Agence)
+// ============================================
+export interface CallAnalysisResult {
+  summary: string;
+  score_call: number;
+  score_prospect: number;
+  talk_ratio: { salesperson: number; prospect: number };
+  questions_asked: number;
+  filler_words: { count: number; words: string[] };
+  what_went_well: string[];
+  what_went_wrong: string[];
+  objections: string[];
+  objections_handled: string[];
+  interest_signals: string[];
+  communication_style: string;
+  top_3_improvements: string[];
+  next_step: string;
+  model_reformulations: { original: string; better: string; context: string }[];
+  bant: { budget: boolean; authority: boolean; need: boolean; timing: boolean };
+  sentiment_timeline: { start: string; middle: string; end: string };
+  follow_up_email: string;
+  missed_opportunities: string[];
+  key_topics: string[];
+}
+
+export interface CallAnalysis {
+  id: string;
+  user_id: string;
+  audio_url: string | null;
+  duration_seconds: number | null;
+  prospect_name: string | null;
+  prospect_company: string | null;
+  transcript: string | null;
+  analysis: CallAnalysisResult | null;
+  status: 'processing' | 'done' | 'error';
+  error_message: string | null;
+  created_at: string;
+}

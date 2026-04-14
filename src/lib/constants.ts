@@ -12,6 +12,7 @@ export const PLANS = {
     canExportNotion: false,
     hasDetailedBusinessInfo: false,
     hasEmailDraft: false,
+    hasCallAnalysis: false,
     priceMonthly: 0,
   },
   premium: {
@@ -27,6 +28,7 @@ export const PLANS = {
     canExportNotion: true,
     hasDetailedBusinessInfo: false,
     hasEmailDraft: false,
+    hasCallAnalysis: false,
     priceMonthly: 39.99,
   },
   ultra: {
@@ -42,7 +44,24 @@ export const PLANS = {
     canExportNotion: true,
     hasDetailedBusinessInfo: true,
     hasEmailDraft: true,
+    hasCallAnalysis: false,
     priceMonthly: 59.99,
+  },
+  agence: {
+    name: 'Agence',
+    slug: 'agence' as const,
+    maxSearchesLifetime: Infinity,
+    maxResultsPerSearch: 60,
+    visibleResults: 60,
+    maxHistoryItems: Infinity,
+    canExport: true,
+    canExportCSV: true,
+    canExportGoogleSheets: true,
+    canExportNotion: true,
+    hasDetailedBusinessInfo: true,
+    hasEmailDraft: true,
+    hasCallAnalysis: true,
+    priceMonthly: 179,
   },
 } as const;
 

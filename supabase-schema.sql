@@ -173,3 +173,46 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ============================================
+-- Migration: Plan Agence + Analyse d'appels
+-- A executer dans Supabase SQL Editor
+-- ============================================
+
+-- Ajouter 'agence' au CHECK constraint du plan
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_plan_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_plan_check
+  CHECK (plan IN ('free', 'premium', 'ultra', 'agence'));
+
+-- Table: call_analyses
+CREATE TABLE IF NOT EXISTS public.call_analyses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  audio_url TEXT,
+  duration_seconds INTEGER,
+  prospect_name TEXT,
+  prospect_company TEXT,
+  transcript TEXT,
+  analysis JSONB,
+  status TEXT NOT NULL DEFAULT 'processing'
+    CHECK (status IN ('processing', 'done', 'error')),
+  error_message TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.call_analyses ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own call analyses"
+  ON public.call_analyses FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own call analyses"
+  ON public.call_analyses FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own call analyses"
+  ON public.call_analyses FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_call_analyses_user_id ON public.call_analyses(user_id);
+CREATE INDEX IF NOT EXISTS idx_call_analyses_created_at ON public.call_analyses(created_at DESC);

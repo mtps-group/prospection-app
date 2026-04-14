@@ -5,7 +5,7 @@ import { Card3D } from '@/components/ui/Card3D';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useToast } from '@/providers/ToastProvider';
 import { STRIPE_PLANS } from '@/lib/stripe/config';
-import { CheckCircle, Crown, Loader2 } from 'lucide-react';
+import { CheckCircle, Crown, Loader2, Mic } from 'lucide-react';
 
 export function PricingCards() {
   const { profile } = useSupabase();
@@ -45,7 +45,7 @@ export function PricingCards() {
   const currentPlan = profile?.plan || 'free';
 
   return (
-    <div className="grid gap-8 md:grid-cols-3 items-center" style={{ perspective: '1200px' }}>
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-center" style={{ perspective: '1200px' }}>
 
       {/* ── GRATUIT ─────────────────────────────────────────────────────────── */}
       <Card3D
@@ -220,6 +220,74 @@ export function PricingCards() {
                   <Loader2 className="h-4 w-4 animate-spin" /> Chargement...
                 </span>
               ) : 'Passer à Ultra'}
+            </button>
+          )}
+        </div>
+      </Card3D>
+
+      {/* ── AGENCE ──────────────────────────────────────────────────────────── */}
+      <Card3D
+        intensity={6}
+        className="relative rounded-2xl p-8 flex flex-col overflow-hidden"
+        style={{
+          background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)',
+          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)',
+        }}
+      >
+        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #a855f7, transparent)' }} />
+        <div className="absolute -bottom-8 -left-6 h-24 w-24 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #7c3aed, transparent)' }} />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/60 to-transparent" />
+
+        <div className="absolute top-5 right-5 z-10">
+          <div className="h-8 w-8 rounded-lg bg-violet-400/10 border border-violet-400/20 flex items-center justify-center">
+            <Mic className="h-4 w-4 text-violet-400" />
+          </div>
+        </div>
+
+        <div className="relative mb-6">
+          <h3 className="text-lg font-bold text-white mb-1">Agence</h3>
+          <p className="text-sm text-white/50">Pour les commerciaux & agences</p>
+        </div>
+        <div className="relative mb-6">
+          <span className="text-4xl font-black text-white">179€</span>
+          <span className="text-white/50 ml-1 text-sm">/ mois</span>
+        </div>
+        <ul className="relative space-y-3 mb-8 flex-1">
+          {[
+            'Tout le plan Ultra',
+            'Analyse IA de vos appels',
+            'Score appel & prospect /10',
+            'Transcription complète',
+            'Objections & signaux détectés',
+            'Style de communication analysé',
+            'Email de suivi auto-rédigé',
+          ].map((f) => (
+            <li key={f} className="flex items-center gap-2 text-sm text-white/80">
+              <CheckCircle className="h-4 w-4 text-violet-400 flex-shrink-0" />
+              {f}
+            </li>
+          ))}
+        </ul>
+        <div className="relative">
+          {currentPlan === 'agence' ? (
+            <button
+              onClick={handleManageSubscription}
+              className="block w-full text-center rounded-xl border border-violet-400/30 bg-violet-400/10 py-3 font-semibold text-violet-400 hover:bg-violet-400/20 transition-colors text-sm"
+            >
+              ✓ Plan actuel · Gérer
+            </button>
+          ) : (
+            <button
+              onClick={() => handleSubscribe('agence')}
+              disabled={loadingPlan === 'agence'}
+              className="block w-full text-center rounded-xl py-3 font-bold text-white hover:opacity-90 transition-all disabled:opacity-70 shadow-lg shadow-violet-500/30"
+              style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #7c3aed 100%)' }}
+            >
+              {loadingPlan === 'agence' ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Chargement...
+                </span>
+              ) : 'Passer à Agence'}
             </button>
           )}
         </div>

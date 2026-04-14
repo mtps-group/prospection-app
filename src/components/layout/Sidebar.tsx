@@ -20,6 +20,7 @@ import {
   Home,
   Users,
   ArrowUpRight,
+  Phone,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,10 +29,11 @@ interface SidebarProps {
 }
 
 const mainNav = [
-  { name: fr.nav.recherche, href: '/recherche', icon: Search, gradient: 'from-blue-500 to-cyan-500' },
-  { name: 'Mes Prospects', href: '/prospects', icon: Users, gradient: 'from-purple-500 to-pink-500' },
-  { name: fr.nav.historique, href: '/historique', icon: History, gradient: 'from-amber-500 to-orange-500' },
-  { name: fr.nav.exports, href: '/exports', icon: Download, gradient: 'from-green-500 to-emerald-500' },
+  { name: fr.nav.recherche, href: '/recherche', icon: Search, gradient: 'from-blue-500 to-cyan-500', plan: null },
+  { name: 'Mes Prospects', href: '/prospects', icon: Users, gradient: 'from-purple-500 to-pink-500', plan: null },
+  { name: fr.nav.historique, href: '/historique', icon: History, gradient: 'from-amber-500 to-orange-500', plan: null },
+  { name: fr.nav.exports, href: '/exports', icon: Download, gradient: 'from-green-500 to-emerald-500', plan: null },
+  { name: 'Analyse d\'appels', href: '/appels', icon: Phone, gradient: 'from-violet-500 to-purple-600', plan: 'agence' },
 ];
 
 const bottomNav = [
@@ -94,15 +96,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           {mainNav.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            const isLocked = item.plan === 'agence' && profile?.plan !== 'agence';
             return (
               <Link
                 key={item.name}
-                href={item.href}
+                href={isLocked ? '/abonnement' : item.href}
                 onClick={onClose}
                 className={cn(
                   'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                   isActive
                     ? 'bg-gradient-to-r from-primary/10 to-purple-500/10 text-primary shadow-sm'
+                    : isLocked
+                    ? 'text-text-muted hover:bg-gray-50 opacity-70'
                     : 'text-text-secondary hover:bg-gray-50 hover:text-text'
                 )}
               >
@@ -115,7 +120,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <item.icon className={cn('h-4 w-4', isActive ? 'text-white' : 'text-text-muted group-hover:text-text-secondary')} />
                 </div>
                 {item.name}
-                {isActive && <div className="ml-auto h-2 w-2 rounded-full bg-primary animate-pulse-glow" />}
+                {isLocked && (
+                  <span className="ml-auto rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-bold text-violet-600">AGENCE</span>
+                )}
+                {isActive && !isLocked && <div className="ml-auto h-2 w-2 rounded-full bg-primary animate-pulse-glow" />}
               </Link>
             );
           })}
@@ -190,7 +198,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
               <div>
                 <p className="text-sm font-bold text-text">Plan {plan.name}</p>
-                <p className="text-[10px] text-text-muted">Recherches illimitées</p>
+                <p className="text-[10px] text-text-muted">
+                  {profile?.plan === 'agence' ? 'Analyse d\'appels incluse' : 'Recherches illimitées'}
+                </p>
               </div>
             </div>
           )}

@@ -4,8 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import Stripe from 'stripe';
 
 // Résout le plan depuis un price ID
-function resolvePlan(priceId: string | null | undefined): 'premium' | 'ultra' {
+function resolvePlan(priceId: string | null | undefined): 'premium' | 'ultra' | 'agence' {
   if (priceId === process.env.STRIPE_ULTRA_PRICE_ID) return 'ultra';
+  if (priceId === process.env.STRIPE_AGENCE_PRICE_ID) return 'agence';
   return 'premium';
 }
 

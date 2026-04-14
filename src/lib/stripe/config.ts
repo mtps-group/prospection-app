@@ -21,4 +21,17 @@ export const STRIPE_PLANS = {
       'Generation de brouillons d\'emails (bientot)',
     ],
   },
+  agence: {
+    name: 'Agence',
+    // Créer ce produit dans Stripe Dashboard puis remplacer cet ID
+    priceId: process.env.STRIPE_AGENCE_PRICE_ID || 'price_AGENCE_TODO',
+    priceMonthly: 179,
+    features: [
+      'Tout Ultra inclus',
+      'Analyse IA des appels de prospection',
+      'Score appel + score prospect /10',
+      'Transcription + résumé complet',
+      'Email de suivi généré automatiquement',
+    ],
+  },
 } as const;
