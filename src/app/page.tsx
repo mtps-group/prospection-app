@@ -16,6 +16,7 @@ import {
   CheckCircle,
   MapPin,
   Phone,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   TrendingUp,
