@@ -330,7 +330,7 @@ export default function LandingPage() {
             <p className="text-text-secondary">Sans engagement · Annulez à tout moment · Paiement sécurisé</p>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4 items-center" style={{ perspective: '1200px' }}>
+          <div className="grid gap-5 sm:grid-cols-2 items-center" style={{ perspective: '1200px' }}>
 
             {/* Gratuit */}
             <Card3D
@@ -363,7 +363,7 @@ export default function LandingPage() {
             </Card3D>
 
             {/* Premium — mis en avant */}
-            <div className="relative scale-105">
+            <div className="relative mt-5">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-4 py-1 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
                 ⭐ LE PLUS POPULAIRE
               </div>
@@ -375,7 +375,7 @@ export default function LandingPage() {
                 <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-white/5" />
                 <div className="absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-white/5" />
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                <div className="relative mb-3 mt-5">
+                <div className="relative mb-3 mt-2">
                   <h3 className="text-base font-bold text-white mb-0.5">Premium</h3>
                   <p className="text-xs text-white/70">Pour les créateurs actifs</p>
                 </div>
