@@ -11,6 +11,7 @@ import { fr } from '@/i18n/fr';
 import type { SearchResponse } from '@/types';
 import type { PlanSlug } from '@/lib/constants';
 import { Search, Sparkles, ExternalLink, AlertCircle, Zap, ArrowRight, TrendingUp } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import Link from 'next/link';
 
 function GoogleSheetsIcon({ className }: { className?: string }) {
@@ -109,30 +110,111 @@ export default function RecherchePage() {
   const handleExportCSV = () => {
     if (!searchData) return;
 
-    const visibleResults = searchData.results.filter((r) => !r.is_blurred);
-    const headers = ['Nom', 'Type', 'Adresse', 'Telephone', 'Google Maps', 'Note'];
-    const rows = visibleResults.map((r) => [
-      r.business_name,
-      r.business_type || '',
-      r.formatted_address || '',
-      r.phone_national || '',
-      r.google_maps_uri || '',
-      r.rating?.toString() || '',
-    ]);
+    const allVisible = [
+      ...searchData.results.filter((r) => !r.is_blurred),
+      ...(searchData.withWebsiteResults ?? []).filter((r) => !r.is_blurred),
+    ];
 
-    const csvContent = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${cell}"`).join(','))
-      .join('\n');
+    if (allVisible.length === 0) {
+      addToast('Aucun résultat à exporter', 'error');
+      return;
+    }
 
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `prospection-${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    // ── Données ──────────────────────────────────────────────
+    const rows = allVisible.map((r, i) => ({
+      '#': i + 1,
+      'Nom de l\'établissement': r.business_name,
+      'Catégorie': r.business_type || '',
+      'A un site web': r.has_website ? 'Oui' : 'Non',
+      'Site web': r.website_url || '',
+      'Téléphone': r.phone_national || '',
+      'Adresse complète': r.formatted_address || '',
+      'Note Google': r.rating ?? '',
+      'Nombre d\'avis': r.user_rating_count ?? '',
+      'Google Maps': r.google_maps_uri || '',
+      'Date d\'export': new Date().toLocaleDateString('fr-FR'),
+    }));
 
-    addToast('Export CSV téléchargé !', 'success');
+    const ws = XLSX.utils.json_to_sheet(rows);
+
+    // ── Largeurs de colonnes ──────────────────────────────────
+    ws['!cols'] = [
+      { wch: 4 },   // #
+      { wch: 35 },  // Nom
+      { wch: 22 },  // Catégorie
+      { wch: 14 },  // A un site web
+      { wch: 30 },  // Site web
+      { wch: 16 },  // Téléphone
+      { wch: 40 },  // Adresse
+      { wch: 12 },  // Note
+      { wch: 14 },  // Nb avis
+      { wch: 40 },  // Google Maps
+      { wch: 14 },  // Date
+    ];
+
+    // ── Style en-têtes (ligne 1) ──────────────────────────────
+    const headerStyle = {
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+      fill: { fgColor: { rgb: '4F46E5' } },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: false },
+      border: {
+        bottom: { style: 'medium', color: { rgb: '3730A3' } },
+      },
+    };
+
+    const range = XLSX.utils.decode_range(ws['!ref'] ?? 'A1');
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddr = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (ws[cellAddr]) ws[cellAddr].s = headerStyle;
+    }
+
+    // ── Style lignes de données (alternées) ──────────────────
+    for (let row = 1; row <= range.e.r; row++) {
+      const isEven = row % 2 === 0;
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddr = XLSX.utils.encode_cell({ r: row, c: col });
+        if (!ws[cellAddr]) continue;
+
+        // Colonne "A un site web" → couleur rouge/vert
+        if (col === 3) {
+          const val = ws[cellAddr].v;
+          ws[cellAddr].s = {
+            font: { bold: true, color: { rgb: val === 'Non' ? 'DC2626' : '16A34A' } },
+            fill: { fgColor: { rgb: isEven ? 'F8F7FF' : 'FFFFFF' } },
+            alignment: { horizontal: 'center' },
+          };
+        } else {
+          ws[cellAddr].s = {
+            fill: { fgColor: { rgb: isEven ? 'F8F7FF' : 'FFFFFF' } },
+            alignment: { horizontal: col === 0 ? 'center' : 'left', vertical: 'center' },
+          };
+        }
+      }
+    }
+
+    // ── Figer la ligne d'en-tête ──────────────────────────────
+    ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+    // ── Hauteur de ligne d'en-tête ────────────────────────────
+    ws['!rows'] = [{ hpt: 22 }];
+
+    // ── Workbook ─────────────────────────────────────────────
+    const wb = XLSX.utils.book_new();
+    const date = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
+    const sheetName = `Prospects ${date}`;
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    // ── Métadonnées ───────────────────────────────────────────
+    wb.Props = {
+      Title: 'Liste de prospects – ProspectWeb',
+      Author: 'ProspectWeb',
+      CreatedDate: new Date(),
+    };
+
+    const fileName = `prospects-${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    addToast(`${allVisible.length} prospects exportés en Excel !`, 'success');
   };
 
   const isLimitReached =

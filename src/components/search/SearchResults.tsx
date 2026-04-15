@@ -253,7 +253,7 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
             {onExportCSV && (
               <Button variant="outline" size="sm" onClick={onExportCSV}>
                 <Download className="h-4 w-4" />
-                CSV
+                Excel
               </Button>
             )}
 
