@@ -16,7 +16,8 @@ import {
   CheckCircle,
   MapPin,
   Phone,
-  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   TrendingUp,
   LayoutDashboard,
   Users,
@@ -32,12 +33,12 @@ const GAP = 24;
 
 function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [showGratuit, setShowGratuit] = useState(false);
-  const outerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const [cardW, setCardW] = useState(0);
 
   const measure = useCallback(() => {
-    if (outerRef.current) {
-      setCardW((outerRef.current.clientWidth - GAP * 2) / 3);
+    if (trackRef.current) {
+      setCardW((trackRef.current.clientWidth - GAP * 2) / 3);
     }
   }, []);
 
@@ -51,34 +52,34 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
   const cw = cardW > 0 ? cardW : undefined;
 
   return (
-    <div ref={outerRef} className="relative px-8">
+    <div className="relative mx-8">
 
       {/* Flèche gauche */}
       <button
         onClick={() => setShowGratuit(true)}
-        className={`absolute left-0 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full pl-2 pr-3 py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-primary hover:border-primary/30 hover:shadow-xl transition-all duration-200 ${showGratuit ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`absolute -left-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full pl-2 pr-3 py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-primary hover:border-primary/30 hover:shadow-xl transition-all duration-200 ${showGratuit ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
-        <ChevronDown className="h-4 w-4 -rotate-90" />
+        <ChevronLeft className="h-4 w-4" />
         Gratuit
       </button>
 
       {/* Flèche droite */}
       <button
         onClick={() => setShowGratuit(false)}
-        className={`absolute right-0 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full pl-3 pr-2 py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-violet-600 hover:border-violet-200 hover:shadow-xl transition-all duration-200 ${!showGratuit ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`absolute -right-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full pl-3 pr-2 py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-violet-600 hover:border-violet-200 hover:shadow-xl transition-all duration-200 ${!showGratuit ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         Agence
-        <ChevronDown className="h-4 w-4 rotate-90" />
+        <ChevronRight className="h-4 w-4" />
       </button>
 
-      <div className="overflow-hidden">
+      <div ref={trackRef} className="overflow-hidden">
         <div
           className="flex transition-transform duration-500 ease-in-out"
           style={{ gap: GAP, transform: `translateX(-${translateX}px)` }}
         >
           {/* Gratuit */}
           <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col">
-            <Card3D intensity={6} className="relative rounded-2xl bg-white border border-gray-200 p-8 flex flex-col overflow-hidden h-full" style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)', minHeight: 580 }}>
+            <Card3D intensity={6} className="relative rounded-2xl bg-white border border-gray-200 p-8 flex flex-col overflow-hidden h-full" style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)', minHeight: 680 }}>
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-gray-100 opacity-60" />
               <div className="relative mb-5">
                 <h3 className="text-xl font-bold text-text mb-1">Gratuit</h3>
@@ -101,11 +102,11 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
           </div>
 
           {/* Premium */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col pt-6">
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="relative flex flex-col pt-7">
             <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
               ⭐ LE PLUS POPULAIRE
             </div>
-            <Card3D intensity={8} className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-8 flex flex-col overflow-hidden flex-1" style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)', minHeight: 580 }}>
+            <Card3D intensity={8} className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-8 flex flex-col overflow-hidden flex-1" style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)', minHeight: 680 }}>
               <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/5" />
               <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
@@ -133,7 +134,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           {/* Ultra */}
           <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col">
-            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)', minHeight: 580 }}>
+            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)', minHeight: 680 }}>
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #f59e0b, transparent)' }} />
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
               <div className="absolute top-5 right-5 z-10">
@@ -164,7 +165,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
 
           {/* Agence */}
           <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col">
-            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)', minHeight: 580 }}>
+            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)', minHeight: 680 }}>
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #a855f7, transparent)' }} />
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/60 to-transparent" />
               <div className="absolute top-5 right-5 z-10">
