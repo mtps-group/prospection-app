@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card3D } from '@/components/ui/Card3D';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import {
@@ -26,6 +27,182 @@ import {
   Sparkles,
   Mic,
 } from 'lucide-react';
+
+const GAP = 24;
+
+function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
+  const [showGratuit, setShowGratuit] = useState(false);
+  const outerRef = useRef<HTMLDivElement>(null);
+  const [cardW, setCardW] = useState(0);
+
+  const measure = useCallback(() => {
+    if (outerRef.current) {
+      setCardW((outerRef.current.clientWidth - GAP * 2) / 3);
+    }
+  }, []);
+
+  useEffect(() => {
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [measure]);
+
+  const translateX = showGratuit ? 0 : cardW > 0 ? cardW + GAP : 0;
+  const cw = cardW > 0 ? cardW : undefined;
+
+  return (
+    <div ref={outerRef} className="relative px-8">
+
+      {/* Flèche gauche */}
+      <button
+        onClick={() => setShowGratuit(true)}
+        className={`absolute left-0 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full pl-2 pr-3 py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-primary hover:border-primary/30 hover:shadow-xl transition-all duration-200 ${showGratuit ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      >
+        <ChevronDown className="h-4 w-4 -rotate-90" />
+        Gratuit
+      </button>
+
+      {/* Flèche droite */}
+      <button
+        onClick={() => setShowGratuit(false)}
+        className={`absolute right-0 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full pl-3 pr-2 py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-violet-600 hover:border-violet-200 hover:shadow-xl transition-all duration-200 ${!showGratuit ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+      >
+        Agence
+        <ChevronDown className="h-4 w-4 rotate-90" />
+      </button>
+
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-500 ease-in-out"
+          style={{ gap: GAP, transform: `translateX(-${translateX}px)` }}
+        >
+          {/* Gratuit */}
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col">
+            <Card3D intensity={6} className="relative rounded-2xl bg-white border border-gray-200 p-8 flex flex-col overflow-hidden h-full" style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)', minHeight: 580 }}>
+              <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-gray-100 opacity-60" />
+              <div className="relative mb-5">
+                <h3 className="text-xl font-bold text-text mb-1">Gratuit</h3>
+                <p className="text-sm text-text-muted">Pour découvrir l&apos;outil</p>
+              </div>
+              <div className="relative mb-5">
+                <span className="text-5xl font-black text-text">0€</span>
+              </div>
+              <ul className="relative space-y-3 mb-8 flex-1">
+                {['2 recherches maximum', '5 résultats visibles', 'Score de priorité'].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-text-secondary">
+                    <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Link href={isLoggedIn ? '/recherche' : '/signup'} className="relative block text-center rounded-xl border-2 border-gray-200 py-3.5 font-bold text-text hover:bg-gray-50 transition-colors text-base">
+                {isLoggedIn ? 'Mon espace' : 'Essayer gratuitement'}
+              </Link>
+            </Card3D>
+          </div>
+
+          {/* Premium */}
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col pt-6">
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
+              ⭐ LE PLUS POPULAIRE
+            </div>
+            <Card3D intensity={8} className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-8 flex flex-col overflow-hidden flex-1" style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)', minHeight: 580 }}>
+              <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/5" />
+              <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+              <div className="relative mb-5">
+                <h3 className="text-xl font-bold text-white mb-1">Premium</h3>
+                <p className="text-sm text-white/70">Pour les créateurs actifs</p>
+              </div>
+              <div className="relative mb-2">
+                <span className="text-5xl font-black text-white">39,99€</span>
+                <span className="text-white/70 ml-1 text-sm">/ mois</span>
+              </div>
+              <p className="relative text-xs text-white/50 mb-6">= 1,33€/jour · Sans engagement</p>
+              <ul className="relative space-y-3 mb-8 flex-1">
+                {['Recherches illimitées', '60 résultats par recherche', 'Coordonnées complètes', 'Export CSV, Google Sheets, Notion', 'Historique illimité & cliquable', 'Score de priorité des prospects', 'Mini-CRM intégré', 'Onglet "avec site web"'].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-white/90">
+                    <CheckCircle className="h-4 w-4 text-white flex-shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Link href={isLoggedIn ? '/abonnement' : '/signup'} className="relative block text-center rounded-xl bg-white py-4 font-bold text-primary hover:bg-gray-50 transition-colors text-base shadow-lg">
+                {isLoggedIn ? 'Passer à Premium →' : 'Commencer avec Premium →'}
+              </Link>
+            </Card3D>
+          </div>
+
+          {/* Ultra */}
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col">
+            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)', minHeight: 580 }}>
+              <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #f59e0b, transparent)' }} />
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+              <div className="absolute top-5 right-5 z-10">
+                <div className="h-8 w-8 rounded-lg bg-amber-400/10 border border-amber-400/20 flex items-center justify-center">
+                  <Crown className="h-4 w-4 text-amber-400" />
+                </div>
+              </div>
+              <div className="relative mb-5">
+                <h3 className="text-xl font-bold text-white mb-1">Ultra</h3>
+                <p className="text-sm text-white/50">Pour les agences &amp; freelances pro</p>
+              </div>
+              <div className="relative mb-5">
+                <span className="text-5xl font-black text-white">59,99€</span>
+                <span className="text-white/50 ml-1 text-sm">/ mois</span>
+              </div>
+              <ul className="relative space-y-3 mb-8 flex-1">
+                {['Tout le plan Premium', 'Photos, avis & horaires détaillés', "Fiche de présentation de l'entreprise", 'Recherche email automatique', 'Recherche du dirigeant', 'Email de prospection personnalisé', 'Support prioritaire'].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">
+                    <CheckCircle className="h-4 w-4 text-amber-400 flex-shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Link href={isLoggedIn ? '/abonnement' : '/signup'} className="relative block text-center rounded-xl py-3.5 font-bold text-gray-900 hover:opacity-90 transition-all shadow-lg shadow-amber-400/20 text-base" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%)' }}>
+                {isLoggedIn ? 'Passer à Ultra' : 'Commencer avec Ultra'}
+              </Link>
+            </Card3D>
+          </div>
+
+          {/* Agence */}
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col">
+            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)', minHeight: 580 }}>
+              <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #a855f7, transparent)' }} />
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/60 to-transparent" />
+              <div className="absolute top-5 right-5 z-10">
+                <div className="h-8 w-8 rounded-lg bg-violet-400/10 border border-violet-400/20 flex items-center justify-center">
+                  <Mic className="h-4 w-4 text-violet-400" />
+                </div>
+              </div>
+              <div className="relative mb-5">
+                <h3 className="text-xl font-bold text-white mb-1">Agence</h3>
+                <p className="text-sm text-white/50">Pour les commerciaux &amp; agences</p>
+              </div>
+              <div className="relative mb-5">
+                <span className="text-5xl font-black text-white">179€</span>
+                <span className="text-white/50 ml-1 text-sm">/ mois</span>
+              </div>
+              <ul className="relative space-y-3 mb-8 flex-1">
+                {['Tout le plan Ultra', 'Analyse IA de vos appels', 'Score appel & prospect /10', 'Transcription complète', 'Objections & signaux détectés', 'Style de communication analysé', 'Email de suivi auto-rédigé'].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">
+                    <CheckCircle className="h-4 w-4 text-violet-400 flex-shrink-0" />{f}
+                  </li>
+                ))}
+              </ul>
+              <Link href={isLoggedIn ? '/abonnement' : '/signup'} className="relative block text-center rounded-xl py-3.5 font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-violet-500/30 text-base" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)' }}>
+                {isLoggedIn ? 'Passer à Agence' : 'Commencer avec Agence'}
+              </Link>
+            </Card3D>
+          </div>
+        </div>
+      </div>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-2 mt-6">
+        <button onClick={() => setShowGratuit(true)} className={`h-2 rounded-full transition-all duration-300 ${showGratuit ? 'w-6 bg-primary' : 'w-2 bg-gray-300 hover:bg-gray-400'}`} />
+        <button onClick={() => setShowGratuit(false)} className={`h-2 rounded-full transition-all duration-300 ${!showGratuit ? 'w-6 bg-primary' : 'w-2 bg-gray-300 hover:bg-gray-400'}`} />
+      </div>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const { profile } = useSupabase();
@@ -321,7 +498,7 @@ export default function LandingPage() {
 
       {/* ── TARIFS ─────────────────────────────────────── */}
       <section id="tarifs" className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <p className="text-sm font-bold uppercase tracking-[0.15em] bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent mb-3">Tarifs</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-4">
@@ -330,184 +507,8 @@ export default function LandingPage() {
             <p className="text-text-secondary">Sans engagement · Annulez à tout moment · Paiement sécurisé</p>
           </div>
 
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 items-stretch" style={{ perspective: '1200px' }}>
+          <LandingPricingSlider isLoggedIn={isLoggedIn} />
 
-            {/* Gratuit */}
-            <Card3D
-              intensity={6}
-              className="relative rounded-2xl bg-white border border-gray-200 p-7 flex flex-col overflow-hidden h-full"
-              style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)' }}
-            >
-              <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gray-100 opacity-60" />
-              <div className="relative mb-3">
-                <h3 className="text-base font-bold text-text mb-0.5">Gratuit</h3>
-                <p className="text-xs text-text-muted">Pour découvrir l&apos;outil</p>
-              </div>
-              <div className="relative mb-3">
-                <span className="text-3xl font-black text-text">0€</span>
-              </div>
-              <ul className="relative space-y-2 mb-4 flex-1">
-                {['2 recherches maximum', '5 résultats visibles', 'Score de priorité'].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-xs text-text-secondary">
-                    <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={isLoggedIn ? '/recherche' : '/signup'}
-                className="relative block text-center rounded-xl border-2 border-gray-200 py-2.5 font-bold text-text hover:bg-gray-50 transition-colors text-sm"
-              >
-                {isLoggedIn ? 'Mon espace' : 'Essayer gratuitement'}
-              </Link>
-            </Card3D>
-
-            {/* Premium — mis en avant */}
-            <div className="relative pt-5 h-full flex flex-col">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-4 py-1 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
-                ⭐ LE PLUS POPULAIRE
-              </div>
-              <Card3D
-                intensity={8}
-                className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-7 flex flex-col overflow-hidden flex-1"
-                style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)' }}
-              >
-                <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-white/5" />
-                <div className="absolute -bottom-8 -left-8 h-28 w-28 rounded-full bg-white/5" />
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                <div className="relative mb-3 mt-2">
-                  <h3 className="text-base font-bold text-white mb-0.5">Premium</h3>
-                  <p className="text-xs text-white/70">Pour les créateurs actifs</p>
-                </div>
-                <div className="relative mb-1">
-                  <span className="text-3xl font-black text-white">39,99€</span>
-                  <span className="text-white/70 ml-1 text-xs">/ mois</span>
-                </div>
-                <p className="relative text-xs text-white/50 mb-3">Sans engagement · Résiliez à tout moment</p>
-                <ul className="relative space-y-2 mb-4 flex-1">
-                  {[
-                    'Recherches illimitées',
-                    '60 résultats par recherche',
-                    'Coordonnées complètes',
-                    'Export CSV, Google Sheets, Notion',
-                    'Historique illimité & cliquable',
-                    'Score de priorité des prospects',
-                    'Mini-CRM intégré',
-                    'Onglet "avec site web"',
-                  ].map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-white/90">
-                      <CheckCircle className="h-3.5 w-3.5 text-white flex-shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={isLoggedIn ? '/abonnement' : '/signup'}
-                  className="relative block text-center rounded-xl bg-white py-2.5 font-bold text-primary hover:bg-gray-50 transition-colors text-sm shadow-lg"
-                >
-                  {isLoggedIn ? 'Passer à Premium →' : 'Commencer avec Premium →'}
-                </Link>
-              </Card3D>
-            </div>
-
-            {/* Ultra */}
-            <Card3D
-              intensity={6}
-              className="relative rounded-2xl p-7 flex flex-col overflow-hidden h-full"
-              style={{
-                background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)',
-              }}
-            >
-              <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #f59e0b, transparent)' }} />
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
-              <div className="absolute top-4 right-4 z-10">
-                <div className="h-7 w-7 rounded-lg bg-amber-400/10 border border-amber-400/20 flex items-center justify-center">
-                  <Crown className="h-3.5 w-3.5 text-amber-400" />
-                </div>
-              </div>
-              <div className="relative mb-3">
-                <h3 className="text-base font-bold text-white mb-0.5">Ultra</h3>
-                <p className="text-xs text-white/50">Pour les agences &amp; freelances pro</p>
-              </div>
-              <div className="relative mb-3">
-                <span className="text-3xl font-black text-white">59,99€</span>
-                <span className="text-white/50 ml-1 text-xs">/ mois</span>
-              </div>
-              <ul className="relative space-y-2 mb-4 flex-1">
-                {[
-                  'Tout le plan Premium',
-                  'Photos, avis & horaires détaillés',
-                  'Fiche de présentation de l\'entreprise',
-                  'Recherche email automatique',
-                  'Recherche du dirigeant',
-                  'Email de prospection personnalisé',
-                  'Support prioritaire',
-                ].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-xs text-white/80">
-                    <CheckCircle className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={isLoggedIn ? '/abonnement' : '/signup'}
-                className="relative block text-center rounded-xl py-2.5 font-bold text-gray-900 hover:opacity-90 transition-all shadow-lg shadow-amber-400/20 text-sm"
-                style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%)' }}
-              >
-                {isLoggedIn ? 'Passer à Ultra' : 'Commencer avec Ultra'}
-              </Link>
-            </Card3D>
-
-            {/* Agence */}
-            <Card3D
-              intensity={6}
-              className="relative rounded-2xl p-7 flex flex-col overflow-hidden h-full"
-              style={{
-                background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)',
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)',
-              }}
-            >
-              <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #a855f7, transparent)' }} />
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/60 to-transparent" />
-              <div className="absolute top-4 right-4 z-10">
-                <div className="h-7 w-7 rounded-lg bg-violet-400/10 border border-violet-400/20 flex items-center justify-center">
-                  <Mic className="h-3.5 w-3.5 text-violet-400" />
-                </div>
-              </div>
-              <div className="relative mb-3">
-                <h3 className="text-base font-bold text-white mb-0.5">Agence</h3>
-                <p className="text-xs text-white/50">Pour les commerciaux &amp; agences</p>
-              </div>
-              <div className="relative mb-3">
-                <span className="text-3xl font-black text-white">179€</span>
-                <span className="text-white/50 ml-1 text-xs">/ mois</span>
-              </div>
-              <ul className="relative space-y-2 mb-4 flex-1">
-                {[
-                  'Tout le plan Ultra',
-                  'Analyse IA de vos appels',
-                  'Score appel & prospect /10',
-                  'Transcription complète',
-                  'Objections & signaux détectés',
-                  'Style de communication analysé',
-                  'Email de suivi auto-rédigé',
-                ].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-xs text-white/80">
-                    <CheckCircle className="h-3.5 w-3.5 text-violet-400 flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={isLoggedIn ? '/abonnement' : '/signup'}
-                className="relative block text-center rounded-xl py-2.5 font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-violet-500/30 text-sm"
-                style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)' }}
-              >
-                {isLoggedIn ? 'Passer à Agence' : 'Commencer avec Agence'}
-              </Link>
-            </Card3D>
-          </div>
 
           {/* Garantie */}
           <div className="mt-10 text-center">
