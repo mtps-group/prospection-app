@@ -330,12 +330,12 @@ export default function LandingPage() {
             <p className="text-text-secondary">Sans engagement · Annulez à tout moment · Paiement sécurisé</p>
           </div>
 
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 items-start" style={{ perspective: '1200px' }}>
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 items-stretch" style={{ perspective: '1200px' }}>
 
             {/* Gratuit */}
             <Card3D
               intensity={6}
-              className="relative rounded-2xl bg-white border border-gray-200 p-5 flex flex-col overflow-hidden"
+              className="relative rounded-2xl bg-white border border-gray-200 p-6 flex flex-col overflow-hidden h-full"
               style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)' }}
             >
               <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gray-100 opacity-60" />
@@ -363,13 +363,13 @@ export default function LandingPage() {
             </Card3D>
 
             {/* Premium — mis en avant */}
-            <div className="relative pt-5">
+            <div className="relative pt-5 h-full flex flex-col">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-4 py-1 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
                 ⭐ LE PLUS POPULAIRE
               </div>
               <Card3D
                 intensity={8}
-                className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-5 flex flex-col overflow-hidden"
+                className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-6 flex flex-col overflow-hidden flex-1"
                 style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)' }}
               >
                 <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-white/5" />
@@ -413,7 +413,7 @@ export default function LandingPage() {
             {/* Ultra */}
             <Card3D
               intensity={6}
-              className="relative rounded-2xl p-5 flex flex-col overflow-hidden"
+              className="relative rounded-2xl p-6 flex flex-col overflow-hidden h-full"
               style={{
                 background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
                 boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)',
@@ -462,7 +462,7 @@ export default function LandingPage() {
             {/* Agence */}
             <Card3D
               intensity={6}
-              className="relative rounded-2xl p-5 flex flex-col overflow-hidden"
+              className="relative rounded-2xl p-6 flex flex-col overflow-hidden h-full"
               style={{
                 background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)',
                 boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)',
