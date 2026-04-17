@@ -73,7 +73,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
         <ChevronRight className="h-4 w-4" />
       </button>
 
-      <div ref={trackRef} className="overflow-hidden">
+      <div ref={trackRef} className="overflow-hidden pt-8">
         <div
           className="flex transition-transform duration-500 ease-in-out"
           style={{ gap: GAP, transform: `translateX(-${translateX}px)` }}
@@ -103,8 +103,8 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
           </div>
 
           {/* Premium */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="relative flex flex-col pt-7">
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="relative flex flex-col">
+            <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
               ⭐ LE PLUS POPULAIRE
             </div>
             <Card3D intensity={8} className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-8 flex flex-col overflow-hidden flex-1" style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)', minHeight: 680 }}>

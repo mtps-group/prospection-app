@@ -90,7 +90,7 @@ export function PricingCards() {
       </button>
 
       {/* ── Track (mesuré ici pour avoir la vraie largeur visible) ── */}
-      <div ref={trackRef} className="overflow-hidden">
+      <div ref={trackRef} className="overflow-hidden pt-8">
         <div
           className="flex transition-transform duration-500 ease-in-out"
           style={{ gap: GAP, transform: `translateX(-${translateX}px)` }}
@@ -126,7 +126,7 @@ export function PricingCards() {
           </div>
 
           {/* ── PREMIUM ── */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="pt-7">
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }}>
             <div className="relative">
               <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
                 ⭐ LE PLUS POPULAIRE
