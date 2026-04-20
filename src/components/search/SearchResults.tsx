@@ -131,6 +131,7 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
   const handleExportNotion = async () => {
     setNotionLoading(true);
     setExportError(null);
+    setShowNotionSetup(false);
     try {
       const res = await fetch('/api/notion/export', {
         method: 'POST',
@@ -141,18 +142,19 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
 
       if (json.needsSetup) {
         setShowNotionSetup(true);
-        setNotionLoading(false);
+        if (json.error) setExportError(json.error);
         return;
       }
 
       if (json.success) {
         setNotionUrl(json.databaseUrl);
+        addToast(`${json.count} prospects exportés vers Notion !`, 'success');
         window.open(json.databaseUrl, '_blank');
       } else {
         setExportError(json.error || 'Erreur export Notion');
       }
     } catch {
-      setExportError('Erreur lors de l\'export Notion');
+      setExportError('Erreur de connexion. Vérifiez votre connexion internet.');
     } finally {
       setNotionLoading(false);
     }
@@ -317,26 +319,26 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
 
       {/* Setup Notion */}
       {showNotionSetup && (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
-          <h3 className="font-semibold text-text mb-2 flex items-center gap-2">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
+          <h3 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
             <NotionIcon className="h-5 w-5" />
-            Configurer l&apos;export Notion
+            Configuration Notion requise
           </h3>
-          <p className="text-sm text-text-secondary mb-4">
-            Pour exporter vers Notion, configurez votre intégration dans vos{' '}
-            <Link href="/compte" className="text-primary underline">paramètres de compte</Link>.
-          </p>
-          <ol className="text-sm text-text-secondary space-y-1 list-decimal list-inside">
-            <li>Créez une intégration sur <a href="https://www.notion.so/my-integrations" target="_blank" rel="noopener noreferrer" className="text-primary underline">notion.so/my-integrations</a></li>
-            <li>Copiez le token d&apos;intégration</li>
-            <li>Partagez votre base de données avec l&apos;intégration</li>
-            <li>Collez le token et l&apos;ID de la base dans vos paramètres</li>
+          {exportError && (
+            <div className="mb-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+              {exportError}
+            </div>
+          )}
+          <ol className="text-sm text-amber-800 space-y-1.5 list-decimal list-inside mb-4">
+            <li>Allez sur <a href="https://www.notion.so/my-integrations" target="_blank" rel="noopener noreferrer" className="underline font-medium">notion.so/my-integrations</a> → créez une intégration → copiez le token</li>
+            <li>Dans Notion, ouvrez votre base → <strong>⋯ → Connexions → ajoutez votre intégration</strong></li>
+            <li>Copiez l&apos;ID de la base (dans l&apos;URL) et collez-le dans Intégrations</li>
           </ol>
-          <div className="mt-4 flex gap-2">
+          <div className="flex gap-2">
             <Link href="/compte">
-              <Button size="sm">Aller aux paramètres</Button>
+              <Button size="sm">⚙️ Configurer Notion</Button>
             </Link>
-            <Button variant="outline" size="sm" onClick={() => setShowNotionSetup(false)}>
+            <Button variant="outline" size="sm" onClick={() => { setShowNotionSetup(false); setExportError(null); }}>
               Fermer
             </Button>
           </div>
