@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Save, Check, ExternalLink, BookOpen, Link2, Key, Database, Sparkles } from 'lucide-react';
 
 export default function ComptePage() {
-  const { supabase, profile } = useSupabase();
+  const { profile, refreshProfile } = useSupabase();
   const [notionToken, setNotionToken] = useState('');
   const [notionDatabaseId, setNotionDatabaseId] = useState('');
   const [saving, setSaving] = useState(false);
@@ -21,22 +21,28 @@ export default function ComptePage() {
   }, [profile]);
 
   const handleSave = async () => {
+    if (!notionToken.trim() || !notionDatabaseId.trim()) {
+      setError('Veuillez remplir le token et l\'ID de base de données');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      const res = await fetch('/api/user', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           notion_token: notionToken.trim() || null,
           notion_database_id: notionDatabaseId.trim() || null,
-        })
-        .eq('id', profile?.id);
-
-      if (error) throw error;
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erreur serveur');
+      await refreshProfile();
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      setError('Erreur lors de la sauvegarde');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur lors de la sauvegarde');
     } finally {
       setSaving(false);
     }
