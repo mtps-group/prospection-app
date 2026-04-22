@@ -37,7 +37,7 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -51,6 +51,13 @@ export default function SignupPage() {
     if (error) {
       setError(error.message);
       setLoading(false);
+      return;
+    }
+
+    // Si une session est retournée, la confirmation email est désactivée
+    // → on redirige directement vers le dashboard
+    if (data.session) {
+      router.push('/recherche');
       return;
     }
 
