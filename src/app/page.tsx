@@ -206,12 +206,63 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
   );
 }
 
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'D\'où viennent les données ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'ProspectWeb utilise l\'API officielle Google Maps — la source la plus complète et à jour pour les entreprises françaises. Toutes les informations sont publiquement disponibles.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Est-ce légal pour prospecter ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Oui. Les données (nom, adresse, téléphone) sont publiques et accessibles à tous. Vous pouvez les utiliser pour de la prospection B2B, en respectant le RGPD dans vos communications.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Puis-je annuler à tout moment ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Oui, en un clic depuis votre espace Abonnement. La résiliation prend effet à la fin de la période en cours. Aucun frais caché, jamais.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Le plan gratuit est-il vraiment gratuit ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Oui, 100%. Vous avez 2 recherches et 5 résultats visibles sans aucune carte bancaire. C\'est fait pour que vous puissiez tester l\'outil avant de vous engager.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Combien de temps pour trouver un client ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Nos utilisateurs trouvent en moyenne leurs premiers prospects en moins de 5 minutes. La conversion dépend de votre approche commerciale, mais l\'outil vous donne toutes les cartes en main.',
+      },
+    },
+  ],
+};
+
 export default function LandingPage() {
   const { profile } = useSupabase();
   const isLoggedIn = !!profile;
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
 
       {/* ── Navbar ────────────────────────────────────── */}
       <nav className="border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
