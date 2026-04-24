@@ -8,6 +8,10 @@ async function createSpreadsheet(accessToken: string, results: Array<{
   phone_national?: string;
   business_type?: string;
   rating?: number;
+  user_rating_count?: number;
+  has_website?: boolean;
+  website_url?: string;
+  google_maps_uri?: string;
 }>, query: string): Promise<string> {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -29,14 +33,21 @@ async function createSpreadsheet(accessToken: string, results: Array<{
   const spreadsheetId = spreadsheet.data.spreadsheetId!;
   const sheetId = spreadsheet.data.sheets?.[0]?.properties?.sheetId ?? 0;
 
+  // ── Données ──────────────────────────────────────────────
+  const headers = ['#', 'Nom', 'Catégorie', 'A un site web', 'Site web', 'Téléphone', 'Adresse', 'Note Google', "Nb d'avis", 'Google Maps'];
   const rows = [
-    ['Nom', 'Adresse', 'Téléphone', 'Type', 'Note Google'],
-    ...results.map(r => [
+    headers,
+    ...results.map((r, i) => [
+      i + 1,
       r.business_name || '',
-      r.formatted_address || '',
-      r.phone_national || '',
       r.business_type || '',
-      r.rating ? r.rating.toString() : '',
+      r.has_website ? 'Oui' : 'Non',
+      r.website_url || '',
+      r.phone_national || '',
+      r.formatted_address || '',
+      r.rating ?? '',
+      r.user_rating_count ?? '',
+      r.google_maps_uri || '',
     ]),
   ];
 
@@ -47,21 +58,181 @@ async function createSpreadsheet(accessToken: string, results: Array<{
     requestBody: { values: rows },
   });
 
+  // ── Formatage ─────────────────────────────────────────────
   await sheets.spreadsheets.batchUpdate({
     spreadsheetId,
     requestBody: {
-      requests: [{
-        repeatCell: {
-          range: { sheetId, startRowIndex: 0, endRowIndex: 1 },
-          cell: {
-            userEnteredFormat: {
-              textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 } },
-              backgroundColor: { red: 0.38, green: 0.40, blue: 0.95 },
+      requests: [
+        // En-têtes : fond violet, texte blanc, gras
+        {
+          repeatCell: {
+            range: { sheetId, startRowIndex: 0, endRowIndex: 1 },
+            cell: {
+              userEnteredFormat: {
+                textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 }, fontSize: 11 },
+                backgroundColor: { red: 0.31, green: 0.28, blue: 0.92 },
+                horizontalAlignment: 'CENTER',
+                verticalAlignment: 'MIDDLE',
+              },
             },
+            fields: 'userEnteredFormat(textFormat,backgroundColor,horizontalAlignment,verticalAlignment)',
           },
-          fields: 'userEnteredFormat(textFormat,backgroundColor)',
         },
-      }],
+        // Hauteur ligne d'en-tête
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'ROWS', startIndex: 0, endIndex: 1 },
+            properties: { pixelSize: 36 },
+            fields: 'pixelSize',
+          },
+        },
+        // Figer la ligne d'en-tête
+        {
+          updateSheetProperties: {
+            properties: {
+              sheetId,
+              gridProperties: { frozenRowCount: 1 },
+            },
+            fields: 'gridProperties.frozenRowCount',
+          },
+        },
+        // Lignes alternées
+        {
+          addConditionalFormatRule: {
+            rule: {
+              ranges: [{ sheetId, startRowIndex: 1, endRowIndex: results.length + 1 }],
+              booleanRule: {
+                condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: '=MOD(ROW(),2)=0' }] },
+                format: { backgroundColor: { red: 0.96, green: 0.95, blue: 1.0 } },
+              },
+            },
+            index: 0,
+          },
+        },
+        // Colonne "A un site web" : vert si Oui
+        {
+          addConditionalFormatRule: {
+            rule: {
+              ranges: [{ sheetId, startColumnIndex: 3, endColumnIndex: 4, startRowIndex: 1, endRowIndex: results.length + 1 }],
+              booleanRule: {
+                condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: 'Oui' }] },
+                format: {
+                  textFormat: { bold: true, foregroundColor: { red: 0.09, green: 0.64, blue: 0.29 } },
+                },
+              },
+            },
+            index: 1,
+          },
+        },
+        // Colonne "A un site web" : rouge si Non
+        {
+          addConditionalFormatRule: {
+            rule: {
+              ranges: [{ sheetId, startColumnIndex: 3, endColumnIndex: 4, startRowIndex: 1, endRowIndex: results.length + 1 }],
+              booleanRule: {
+                condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: 'Non' }] },
+                format: {
+                  textFormat: { bold: true, foregroundColor: { red: 0.86, green: 0.15, blue: 0.15 } },
+                },
+              },
+            },
+            index: 2,
+          },
+        },
+        // Largeurs de colonnes (en pixels)
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 },
+            properties: { pixelSize: 40 },   // #
+            fields: 'pixelSize',
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 },
+            properties: { pixelSize: 260 },  // Nom
+            fields: 'pixelSize',
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 2, endIndex: 3 },
+            properties: { pixelSize: 180 },  // Catégorie
+            fields: 'pixelSize',
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 3, endIndex: 4 },
+            properties: { pixelSize: 120 },  // A un site web
+            fields: 'pixelSize',
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 4, endIndex: 5 },
+            properties: { pixelSize: 240 },  // Site web
+            fields: 'pixelSize',
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 5, endIndex: 6 },
+            properties: { pixelSize: 140 },  // Téléphone
+            fields: 'pixelSize',
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 6, endIndex: 7 },
+            properties: { pixelSize: 300 },  // Adresse
+            fields: 'pixelSize',
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 7, endIndex: 8 },
+            properties: { pixelSize: 100 },  // Note
+            fields: 'pixelSize',
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 8, endIndex: 9 },
+            properties: { pixelSize: 100 },  // Nb avis
+            fields: 'pixelSize',
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: { sheetId, dimension: 'COLUMNS', startIndex: 9, endIndex: 10 },
+            properties: { pixelSize: 300 },  // Google Maps
+            fields: 'pixelSize',
+          },
+        },
+        // Centrer colonne # et Note
+        {
+          repeatCell: {
+            range: { sheetId, startRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1 },
+            cell: { userEnteredFormat: { horizontalAlignment: 'CENTER' } },
+            fields: 'userEnteredFormat.horizontalAlignment',
+          },
+        },
+        {
+          repeatCell: {
+            range: { sheetId, startRowIndex: 1, startColumnIndex: 3, endColumnIndex: 4 },
+            cell: { userEnteredFormat: { horizontalAlignment: 'CENTER' } },
+            fields: 'userEnteredFormat.horizontalAlignment',
+          },
+        },
+        {
+          repeatCell: {
+            range: { sheetId, startRowIndex: 1, startColumnIndex: 7, endColumnIndex: 9 },
+            cell: { userEnteredFormat: { horizontalAlignment: 'CENTER' } },
+            fields: 'userEnteredFormat.horizontalAlignment',
+          },
+        },
+      ],
     },
   });
 
@@ -81,7 +252,6 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = await createClient();
-
     const { data: { user } } = await supabase.auth.getUser();
     console.log('[Sheets GET] user:', user?.id ?? 'NOT FOUND');
 
@@ -97,10 +267,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${appUrl}/recherche?export_error=expired`);
     }
 
-    console.log('[Sheets GET] token length:', accessToken?.length, '| results:', exportJob.results?.length);
-
     const sheetUrl = await createSpreadsheet(accessToken, exportJob.results, exportJob.query);
-
     await supabase.from('export_jobs').delete().eq('id', exportId);
 
     return NextResponse.redirect(`${appUrl}/recherche?sheets_url=${encodeURIComponent(sheetUrl)}`);
@@ -126,7 +293,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Résultats requis' }, { status: 400 });
   }
 
-  // Vérifier si l'utilisateur a déjà un refresh token Google Sheets
   const { data: profile } = await supabase
     .from('profiles')
     .select('google_sheets_refresh_token')
@@ -134,7 +300,6 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (profile?.google_sheets_refresh_token) {
-    // Déjà autorisé → créer le sheet directement
     try {
       const oauth2Client = new google.auth.OAuth2(
         process.env.GOOGLE_CLIENT_ID,
@@ -142,7 +307,6 @@ export async function POST(request: NextRequest) {
       );
       oauth2Client.setCredentials({ refresh_token: profile.google_sheets_refresh_token });
       const { credentials } = await oauth2Client.refreshAccessToken();
-
       const sheetUrl = await createSpreadsheet(credentials.access_token!, results, query || '');
       return NextResponse.json({ sheetUrl, needsAuth: false });
     } catch {
@@ -150,7 +314,6 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Stocker les données temporairement puis demander l'OAuth
   const { data: job, error } = await supabase
     .from('export_jobs')
     .insert({ user_id: user.id, results, query: query || '' })

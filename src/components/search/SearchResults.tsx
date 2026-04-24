@@ -107,7 +107,13 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
       const res = await fetch('/api/google-sheets/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ results: data.results, query: query || '' }),
+        body: JSON.stringify({
+          results: [
+            ...data.results,
+            ...(data.withWebsiteResults ?? []),
+          ],
+          query: query || '',
+        }),
       });
       const json = await res.json();
 
