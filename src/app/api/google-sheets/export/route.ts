@@ -89,54 +89,8 @@ async function createSpreadsheet(accessToken: string, results: Array<{
         // Figer la ligne d'en-tête
         {
           updateSheetProperties: {
-            properties: {
-              sheetId,
-              gridProperties: { frozenRowCount: 1 },
-            },
+            properties: { sheetId, gridProperties: { frozenRowCount: 1 } },
             fields: 'gridProperties.frozenRowCount',
-          },
-        },
-        // Lignes alternées
-        {
-          addConditionalFormatRule: {
-            rule: {
-              ranges: [{ sheetId, startRowIndex: 1, endRowIndex: results.length + 1 }],
-              booleanRule: {
-                condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: '=MOD(ROW(),2)=0' }] },
-                format: { backgroundColor: { red: 0.96, green: 0.95, blue: 1.0 } },
-              },
-            },
-            index: 0,
-          },
-        },
-        // Colonne "A un site web" : vert si Oui
-        {
-          addConditionalFormatRule: {
-            rule: {
-              ranges: [{ sheetId, startColumnIndex: 3, endColumnIndex: 4, startRowIndex: 1, endRowIndex: results.length + 1 }],
-              booleanRule: {
-                condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: 'Oui' }] },
-                format: {
-                  textFormat: { bold: true, foregroundColor: { red: 0.09, green: 0.64, blue: 0.29 } },
-                },
-              },
-            },
-            index: 1,
-          },
-        },
-        // Colonne "A un site web" : rouge si Non
-        {
-          addConditionalFormatRule: {
-            rule: {
-              ranges: [{ sheetId, startColumnIndex: 3, endColumnIndex: 4, startRowIndex: 1, endRowIndex: results.length + 1 }],
-              booleanRule: {
-                condition: { type: 'TEXT_EQ', values: [{ userEnteredValue: 'Non' }] },
-                format: {
-                  textFormat: { bold: true, foregroundColor: { red: 0.86, green: 0.15, blue: 0.15 } },
-                },
-              },
-            },
-            index: 2,
           },
         },
         // Largeurs de colonnes (en pixels)
