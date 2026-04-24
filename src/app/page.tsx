@@ -212,6 +212,30 @@ const faqJsonLd = {
   mainEntity: [
     {
       '@type': 'Question',
+      name: 'À qui s\'adresse ProspectWeb ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'ProspectWeb s\'adresse à tous ceux qui ont besoin de trouver de nouveaux clients : commerciaux, entrepreneurs, freelances, agences web, artisans, consultants, TPE et PME. Si vous avez besoin d\'une liste de prospects qualifiés avec leurs coordonnées, ProspectWeb est fait pour vous.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Quelles informations obtient-on sur chaque prospect ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Pour chaque entreprise trouvée, vous obtenez : le nom, l\'adresse complète, le numéro de téléphone, le site web (si disponible), la note Google, le nombre d\'avis, le lien Google Maps et le type d\'activité. Tout ce qu\'il faut pour contacter directement vos prospects.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Combien de temps faut-il pour obtenir une liste de prospects ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Moins de 10 secondes. Vous tapez un secteur d\'activité et une ville, et ProspectWeb vous retourne instantanément jusqu\'à 60 entreprises avec leurs coordonnées complètes, prêtes à être contactées ou exportées.',
+      },
+    },
+    {
+      '@type': 'Question',
       name: 'D\'où viennent les données ?',
       acceptedAnswer: {
         '@type': 'Answer',
@@ -228,6 +252,14 @@ const faqJsonLd = {
     },
     {
       '@type': 'Question',
+      name: 'Puis-je exporter ma liste de prospects ?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Oui. Vous pouvez exporter vos prospects en fichier Excel (.xlsx), vers Google Sheets en un clic, ou vers une base de données Notion. Les exports incluent toutes les coordonnées : nom, téléphone, adresse, site web, note Google.',
+      },
+    },
+    {
+      '@type': 'Question',
       name: 'Puis-je annuler à tout moment ?',
       acceptedAnswer: {
         '@type': 'Answer',
@@ -240,14 +272,6 @@ const faqJsonLd = {
       acceptedAnswer: {
         '@type': 'Answer',
         text: 'Oui, 100%. Vous avez 2 recherches et 5 résultats visibles sans aucune carte bancaire. C\'est fait pour que vous puissiez tester l\'outil avant de vous engager.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Combien de temps pour trouver un client ?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Nos utilisateurs trouvent en moyenne leurs premiers prospects en moins de 5 minutes. La conversion dépend de votre approche commerciale, mais l\'outil vous donne toutes les cartes en main.',
       },
     },
   ],
@@ -316,20 +340,19 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20 px-5 py-2 mb-6 animate-fade-in">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-              L&apos;outil N°1 de prospection pour créateurs de sites web
+              L&apos;outil N°1 pour générer des listes de prospects qualifiés
             </span>
           </div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-text leading-[1.1] mb-6 tracking-tight">
-            Trouvez des clients{' '}
+            Une liste de prospects<br />
             <span className="bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
-              en 30 secondes
+              en quelques secondes
             </span>
           </h1>
 
           <p className="text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
-            ProspectWeb identifie automatiquement les <strong className="text-text">entreprises sans site web</strong> dans votre ville.
-            Coordonnées, score de priorité, CRM intégré — tout pour closer vos premiers clients.
+            Tapez un secteur d&apos;activité et une ville — ProspectWeb vous retourne instantanément jusqu&apos;à <strong className="text-text">60 entreprises avec leurs coordonnées complètes</strong> : téléphone, adresse, site web, note Google. Prêt à exporter et à contacter.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
@@ -728,7 +751,7 @@ export default function LandingPage() {
                   Prospect<span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Web</span>
                 </span>
               </div>
-              <p className="text-sm text-text-muted max-w-xs">L&apos;outil de prospection automatique pour les créateurs de sites web en France.</p>
+              <p className="text-sm text-text-muted max-w-xs">Générez une liste de prospects qualifiés avec coordonnées complètes en quelques secondes. Pour commerciaux, freelances, agences et entrepreneurs.</p>
             </div>
             <div className="flex flex-wrap gap-x-10 gap-y-3 text-sm text-text-muted">
               <a href="#fonctionnalites" className="hover:text-text transition-colors">Fonctionnalités</a>
