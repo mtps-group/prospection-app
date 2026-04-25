@@ -8,19 +8,24 @@ import { STRIPE_PLANS } from '@/lib/stripe/config';
 import { CheckCircle, Crown, Loader2, Mic, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const GAP = 24;
+const CARD_NAMES = ['Gratuit', 'Premium', 'Ultra', 'Agence'];
 
 export function PricingCards() {
   const { profile } = useSupabase();
   const { addToast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [showGratuit, setShowGratuit] = useState(false);
-  // On mesure le div overflow-hidden (pas le wrapper) pour avoir la vraie largeur visible
+  const [currentIndex, setCurrentIndex] = useState(1); // 1 = Premium visible en premier
+  const [visibleCount, setVisibleCount] = useState(3);
   const trackRef = useRef<HTMLDivElement>(null);
   const [cardW, setCardW] = useState(0);
 
   const measure = useCallback(() => {
     if (trackRef.current) {
-      setCardW((trackRef.current.clientWidth - GAP * 2) / 3);
+      const w = trackRef.current.clientWidth;
+      const vc = w < 640 ? 1 : 3;
+      setVisibleCount(vc);
+      setCardW((w - GAP * (vc - 1)) / vc);
+      setCurrentIndex(prev => Math.min(prev, 4 - vc));
     }
   }, []);
 
@@ -30,8 +35,11 @@ export function PricingCards() {
     return () => window.removeEventListener('resize', measure);
   }, [measure]);
 
-  const translateX = showGratuit ? 0 : cardW > 0 ? cardW + GAP : 0;
+  const translateX = cardW > 0 ? currentIndex * (cardW + GAP) : 0;
   const cw = cardW > 0 ? cardW : undefined;
+  const totalPositions = 4 - visibleCount + 1;
+  const canPrev = currentIndex > 0;
+  const canNext = currentIndex < totalPositions - 1;
 
   const handleSubscribe = async (planSlug: string) => {
     const stripePlan = STRIPE_PLANS[planSlug as keyof typeof STRIPE_PLANS];
@@ -69,23 +77,23 @@ export function PricingCards() {
     (plan === 'ultra' && currentPlan === 'agence');
 
   return (
-    <div className="relative mx-8">
+    <div className="relative mx-0 sm:mx-8">
 
-      {/* ── Flèche gauche : révèle Gratuit ── */}
+      {/* ── Flèche gauche ── */}
       <button
-        onClick={() => setShowGratuit(true)}
-        className={`absolute -left-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1.5 bg-white rounded-full pl-2 pr-3 py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-primary hover:border-primary/30 transition-all duration-200 ${showGratuit ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
+        className={`absolute left-2 sm:-left-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1.5 bg-white rounded-full p-2 sm:pl-2 sm:pr-3 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-primary hover:border-primary/30 transition-all duration-200 ${!canPrev ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <ChevronLeft className="h-4 w-4" />
-        Gratuit
+        <span className="hidden sm:inline">{CARD_NAMES[currentIndex - 1]}</span>
       </button>
 
-      {/* ── Flèche droite : retour Agence ── */}
+      {/* ── Flèche droite ── */}
       <button
-        onClick={() => setShowGratuit(false)}
-        className={`absolute -right-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1.5 bg-white rounded-full pl-3 pr-2 py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-violet-600 hover:border-violet-200 transition-all duration-200 ${!showGratuit ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        onClick={() => setCurrentIndex(i => Math.min(totalPositions - 1, i + 1))}
+        className={`absolute right-2 sm:-right-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1.5 bg-white rounded-full p-2 sm:pl-3 sm:pr-2 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-violet-600 hover:border-violet-200 transition-all duration-200 ${!canNext ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
-        Agence
+        <span className="hidden sm:inline">{canNext ? CARD_NAMES[currentIndex + visibleCount] : ''}</span>
         <ChevronRight className="h-4 w-4" />
       </button>
 
@@ -246,8 +254,13 @@ export function PricingCards() {
 
       {/* ── Dots ── */}
       <div className="flex justify-center gap-2 mt-6">
-        <button onClick={() => setShowGratuit(true)} className={`h-2 rounded-full transition-all duration-300 ${showGratuit ? 'w-6 bg-primary' : 'w-2 bg-gray-300 hover:bg-gray-400'}`} />
-        <button onClick={() => setShowGratuit(false)} className={`h-2 rounded-full transition-all duration-300 ${!showGratuit ? 'w-6 bg-primary' : 'w-2 bg-gray-300 hover:bg-gray-400'}`} />
+        {Array.from({ length: totalPositions }, (_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrentIndex(i)}
+            className={`h-2 rounded-full transition-all duration-300 ${currentIndex === i ? 'w-6 bg-primary' : 'w-2 bg-gray-300 hover:bg-gray-400'}`}
+          />
+        ))}
       </div>
     </div>
   );
