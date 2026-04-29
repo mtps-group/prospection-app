@@ -63,6 +63,22 @@ export const PLANS = {
     hasCallAnalysis: true,
     priceMonthly: 179,
   },
+  entreprise: {
+    name: 'Entreprise',
+    slug: 'entreprise' as const,
+    maxSearchesLifetime: Infinity,
+    maxResultsPerSearch: 60,
+    visibleResults: 60,
+    maxHistoryItems: Infinity,
+    canExport: true,
+    canExportCSV: true,
+    canExportGoogleSheets: true,
+    canExportNotion: true,
+    hasDetailedBusinessInfo: true,
+    hasEmailDraft: true,
+    hasCallAnalysis: false,
+    priceMonthly: 159,
+  },
 } as const;
 
 export type PlanSlug = keyof typeof PLANS;

@@ -50,8 +50,8 @@ interface SearchResultsProps {
 export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) {
   const { profile } = useSupabase();
   const { addToast } = useToast();
-  const isPaid = profile?.plan === 'premium' || profile?.plan === 'ultra';
-  const isUltra = profile?.plan === 'ultra';
+  const isPaid = profile?.plan === 'premium' || profile?.plan === 'ultra' || profile?.plan === 'agence' || profile?.plan === 'entreprise';
+  const isUltra = profile?.plan === 'ultra' || profile?.plan === 'agence' || profile?.plan === 'entreprise';
   const [prospectIds, setProspectIds] = useState<Set<string>>(new Set());
 
   const handleAddProspect = useCallback(async (result: SearchResultClient) => {

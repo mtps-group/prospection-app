@@ -34,7 +34,11 @@ export default function ParametresPage() {
     setLoading(false);
   };
 
-  const planInfo = profile?.plan === 'ultra'
+  const planInfo = profile?.plan === 'agence'
+    ? { label: 'Agence', icon: Crown, gradient: 'from-violet-500 to-purple-600', text: 'text-violet-700', bg: 'from-violet-50 to-purple-50', border: 'border-violet-200' }
+    : profile?.plan === 'entreprise'
+    ? { label: 'Entreprise', icon: Crown, gradient: 'from-indigo-500 to-purple-600', text: 'text-indigo-700', bg: 'from-indigo-50 to-purple-50', border: 'border-indigo-200' }
+    : profile?.plan === 'ultra'
     ? { label: 'Ultra', icon: Crown, gradient: 'from-amber-400 to-orange-400', text: 'text-amber-800', bg: 'from-amber-50 to-orange-50', border: 'border-amber-200' }
     : profile?.plan === 'premium'
     ? { label: 'Premium', icon: Zap, gradient: 'from-primary to-purple-500', text: 'text-purple-700', bg: 'from-purple-50 to-indigo-50', border: 'border-purple-200' }

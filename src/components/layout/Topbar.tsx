@@ -35,7 +35,11 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     router.push('/login');
   };
 
-  const planBadge = profile?.plan === 'ultra'
+  const planBadge = profile?.plan === 'agence'
+    ? { label: 'Agence', icon: Crown, class: 'bg-gradient-to-r from-violet-500 to-purple-600 text-white' }
+    : profile?.plan === 'entreprise'
+    ? { label: 'Entreprise', icon: Crown, class: 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white' }
+    : profile?.plan === 'ultra'
     ? { label: 'Ultra', icon: Crown, class: 'bg-gradient-to-r from-amber-400 to-orange-400 text-gray-900' }
     : profile?.plan === 'premium'
     ? { label: 'Premium', icon: Zap, class: 'bg-gradient-to-r from-primary to-purple-500 text-white' }

@@ -1,20 +1,18 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { PricingCards } from '@/components/billing/PricingCards';
 import { useToast } from '@/providers/ToastProvider';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { fr } from '@/i18n/fr';
 import { CreditCard, Shield, Zap, CheckCircle, Crown } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
-import { ENTREPRISE_PRICE_ID } from '@/lib/offres/config';
 
 export default function AbonnementPage() {
   const searchParams = useSearchParams();
-  const { addToast, } = useToast();
-  const { refreshProfile } = useSupabase();
-  const [isEnterprise, setIsEnterprise] = useState(false);
+  const { addToast } = useToast();
+  const { profile, refreshProfile } = useSupabase();
+  const isEnterprise = profile?.plan === 'entreprise';
 
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
@@ -26,25 +24,6 @@ export default function AbonnementPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
-
-  // Détecte si l'utilisateur a un plan entreprise (price_id spécifique)
-  useEffect(() => {
-    async function checkEnterprise() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from('subscriptions')
-        .select('price_id')
-        .eq('user_id', user.id)
-        .in('status', ['active', 'trialing'])
-        .single();
-      if (data?.price_id === ENTREPRISE_PRICE_ID) {
-        setIsEnterprise(true);
-      }
-    }
-    checkEnterprise();
-  }, []);
 
   if (isEnterprise) {
     return (
