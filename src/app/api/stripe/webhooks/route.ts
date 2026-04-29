@@ -3,10 +3,13 @@ import { stripe } from '@/lib/stripe/client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import Stripe from 'stripe';
 
+import { ENTREPRISE_PRICE_ID } from '@/lib/offres/config';
+
 // Résout le plan depuis un price ID
 function resolvePlan(priceId: string | null | undefined): 'premium' | 'ultra' | 'agence' {
   if (priceId === process.env.STRIPE_ULTRA_PRICE_ID) return 'ultra';
   if (priceId === process.env.STRIPE_AGENCE_PRICE_ID) return 'agence';
+  if (priceId === ENTREPRISE_PRICE_ID) return 'agence'; // Plan Entreprise → accès Agence complet
   return 'premium';
 }
 

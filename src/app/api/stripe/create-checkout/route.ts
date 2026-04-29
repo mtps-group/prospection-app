@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorise' }, { status: 401 });
     }
 
-    const { priceId } = await request.json();
+    const { priceId, successUrl, cancelUrl } = await request.json();
 
     if (!priceId) {
       return NextResponse.json({ error: 'Prix requis' }, { status: 400 });
@@ -22,12 +22,13 @@ export async function POST(request: NextRequest) {
 
     const customerId = await createOrRetrieveCustomer(user.id, user.email!);
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/abonnement?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/abonnement?canceled=true`,
+      success_url: `${appUrl}${successUrl ?? '/abonnement?success=true'}`,
+      cancel_url: `${appUrl}${cancelUrl ?? '/abonnement?canceled=true'}`,
       metadata: {
         userId: user.id,
       },
