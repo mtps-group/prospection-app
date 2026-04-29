@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card3D } from '@/components/ui/Card3D';
 import { useSupabase } from '@/providers/SupabaseProvider';
@@ -293,8 +294,26 @@ const faqJsonLd = {
 };
 
 export default function LandingPage() {
-  const { profile } = useSupabase();
+  const { profile, loading } = useSupabase();
+  const router = useRouter();
   const isLoggedIn = !!profile;
+
+  // Rediriger automatiquement les utilisateurs connectés vers l'app
+  // Évite qu'un client entreprise voie les tarifs publics en revenant sur la landing
+  useEffect(() => {
+    if (!loading && isLoggedIn) {
+      router.replace('/recherche');
+    }
+  }, [loading, isLoggedIn, router]);
+
+  // Pendant le chargement ou si connecté → ne rien afficher (évite le flash)
+  if (loading || isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
