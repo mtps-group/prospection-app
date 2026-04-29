@@ -8,7 +8,7 @@ export interface OffrePrivee {
 }
 
 export const OFFRES_PRIVEES: Record<string, OffrePrivee> = {
-  'nettoyage-pro': {
+  'entreprise': {
     nomOffre: 'Offre Entreprise',
     prix: 159,
     priceId: ENTREPRISE_PRICE_ID,
