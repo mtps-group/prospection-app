@@ -297,6 +297,19 @@ export default function LandingPage() {
   const { profile, loading } = useSupabase();
   const router = useRouter();
   const isLoggedIn = !!profile;
+  const [hasAuthCode, setHasAuthCode] = useState(false);
+
+  // Si l'URL contient ?code= → callback OAuth/magic link Supabase
+  // Rediriger vers le route handler /callback qui exchange le code en session
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      setHasAuthCode(true);
+      window.location.replace(`/callback?code=${encodeURIComponent(code)}`);
+    }
+  }, []);
 
   // Rediriger automatiquement les utilisateurs connectés vers l'app
   // Évite qu'un client entreprise voie les tarifs publics en revenant sur la landing
@@ -306,8 +319,8 @@ export default function LandingPage() {
     }
   }, [loading, isLoggedIn, router]);
 
-  // Pendant le chargement ou si connecté → ne rien afficher (évite le flash)
-  if (loading || isLoggedIn) {
+  // Pendant le chargement, callback en cours, ou connecté → spinner (évite le flash)
+  if (hasAuthCode || loading || isLoggedIn) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
