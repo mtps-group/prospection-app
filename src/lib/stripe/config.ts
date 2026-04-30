@@ -2,7 +2,7 @@ export const STRIPE_PLANS = {
   premium: {
     name: 'Premium',
     priceId: 'price_1TAViSHDs8WJU7EjvR0QSe5X',
-    priceMonthly: 39.99,
+    priceMonthly: 39,
     features: [
       'Recherches illimitees',
       'Jusqu\'a 60 resultats par recherche',

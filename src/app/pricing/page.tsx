@@ -27,7 +27,7 @@ const plans = [
   },
   {
     name: 'Premium',
-    price: '39,99',
+    price: '39',
     icon: Crown,
     color: 'text-primary',
     popular: true,

@@ -126,10 +126,10 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
                 <p className="text-sm text-white/70">Pour les créateurs actifs</p>
               </div>
               <div className="relative mb-2">
-                <span className="text-5xl font-black text-white">39,99€</span>
+                <span className="text-5xl font-black text-white">39€</span>
                 <span className="text-white/70 ml-1 text-sm">/ mois</span>
               </div>
-              <p className="relative text-xs text-white/50 mb-6">= 1,33€/jour · Sans engagement</p>
+              <p className="relative text-xs text-white/50 mb-6">= 1,30€/jour · Sans engagement</p>
               <ul className="relative space-y-3 mb-8 flex-1">
                 {['Recherches illimitées', '60 résultats par recherche', 'Coordonnées complètes', 'Export CSV, Google Sheets, Notion', 'Historique illimité & cliquable', 'Score de priorité des prospects', 'Mini-CRM intégré', 'Onglet "avec site web"'].map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-white/90">
@@ -622,7 +622,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-2xl font-extrabold text-text mb-3">1 seul client signé = 15 mois d&apos;abonnement</h3>
               <p className="text-text-secondary leading-relaxed">
-                Un site vitrine se vend entre <strong className="text-text">600€ et 1 500€</strong>. Avec un abonnement à 39,99€/mois,
+                Un site vitrine se vend entre <strong className="text-text">600€ et 1 500€</strong>. Avec un abonnement à 39€/mois,
                 votre ROI est de <strong className="text-green-600">×20</strong> dès le premier contrat.
               </p>
             </div>
