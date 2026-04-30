@@ -469,7 +469,7 @@ export default function AppelsPage() {
             className="inline-block rounded-xl px-8 py-3 font-bold text-white shadow-lg shadow-violet-500/30 hover:opacity-90 transition-opacity"
             style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)' }}
           >
-            Passer au plan Agence — 179€/mois →
+            Passer au plan Agence — 159€/mois →
           </Link>
         </div>
       </div>

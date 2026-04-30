@@ -25,7 +25,7 @@ export const STRIPE_PLANS = {
     name: 'Agence',
     // Créer ce produit dans Stripe Dashboard puis remplacer cet ID
     priceId: process.env.STRIPE_AGENCE_PRICE_ID || 'price_AGENCE_TODO',
-    priceMonthly: 179,
+    priceMonthly: 159,
     features: [
       'Tout Ultra inclus',
       'Analyse IA des appels de prospection',

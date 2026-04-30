@@ -158,7 +158,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
                 <p className="text-sm text-white/50">Pour les agences &amp; freelances pro</p>
               </div>
               <div className="relative mb-5">
-                <span className="text-5xl font-black text-white">59,99€</span>
+                <span className="text-5xl font-black text-white">79€</span>
                 <span className="text-white/50 ml-1 text-sm">/ mois</span>
               </div>
               <ul className="relative space-y-3 mb-8 flex-1">
@@ -189,7 +189,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
                 <p className="text-sm text-white/50">Pour les commerciaux &amp; agences</p>
               </div>
               <div className="relative mb-5">
-                <span className="text-5xl font-black text-white">179€</span>
+                <span className="text-5xl font-black text-white">159€</span>
                 <span className="text-white/50 ml-1 text-sm">/ mois</span>
               </div>
               <ul className="relative space-y-3 mb-8 flex-1">

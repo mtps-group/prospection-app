@@ -45,7 +45,7 @@ export const PLANS = {
     hasDetailedBusinessInfo: true,
     hasEmailDraft: true,
     hasCallAnalysis: false,
-    priceMonthly: 59.99,
+    priceMonthly: 79,
   },
   agence: {
     name: 'Agence',
@@ -61,7 +61,7 @@ export const PLANS = {
     hasDetailedBusinessInfo: true,
     hasEmailDraft: true,
     hasCallAnalysis: true,
-    priceMonthly: 179,
+    priceMonthly: 159,
   },
 } as const;
 
