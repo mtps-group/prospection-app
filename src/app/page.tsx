@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card3D } from '@/components/ui/Card3D';
 import { useSupabase } from '@/providers/SupabaseProvider';
@@ -294,39 +293,8 @@ const faqJsonLd = {
 };
 
 export default function LandingPage() {
-  const { profile, loading } = useSupabase();
-  const router = useRouter();
+  const { profile } = useSupabase();
   const isLoggedIn = !!profile;
-  const [hasAuthCode, setHasAuthCode] = useState(false);
-
-  // Si l'URL contient ?code= → callback OAuth/magic link Supabase
-  // Rediriger vers le route handler /callback qui exchange le code en session
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (code) {
-      setHasAuthCode(true);
-      window.location.replace(`/callback?code=${encodeURIComponent(code)}`);
-    }
-  }, []);
-
-  // Rediriger automatiquement les utilisateurs connectés vers l'app
-  // Évite qu'un client entreprise voie les tarifs publics en revenant sur la landing
-  useEffect(() => {
-    if (!loading && isLoggedIn) {
-      router.replace('/recherche');
-    }
-  }, [loading, isLoggedIn, router]);
-
-  // Pendant le chargement, callback en cours, ou connecté → spinner (évite le flash)
-  if (hasAuthCode || loading || isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
