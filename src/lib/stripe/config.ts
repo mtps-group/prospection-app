@@ -1,8 +1,8 @@
 export const STRIPE_PLANS = {
   premium: {
     name: 'Premium',
-    priceId: 'price_1TAViSHDs8WJU7EjvR0QSe5X',
-    priceMonthly: 39,
+    priceId: 'price_1TRxJSHDs8WJU7Ej4z4HW7bl',
+    priceMonthly: 49,
     features: [
       'Recherches illimitees',
       'Jusqu\'a 60 resultats par recherche',
@@ -12,7 +12,7 @@ export const STRIPE_PLANS = {
   },
   ultra: {
     name: 'Ultra',
-    priceId: 'price_1TAVlGHDs8WJU7EjO2KSxbOK',
+    priceId: 'price_1TRweJHDs8WJU7EjzlfLQX9W',
     priceMonthly: 79,
     features: [
       'Tout Premium inclus',
@@ -24,7 +24,7 @@ export const STRIPE_PLANS = {
   agence: {
     name: 'Agence',
     // Créer ce produit dans Stripe Dashboard puis remplacer cet ID
-    priceId: process.env.STRIPE_AGENCE_PRICE_ID || 'price_AGENCE_TODO',
+    priceId: process.env.STRIPE_AGENCE_PRICE_ID || 'price_1TRwdHHDs8WJU7Ejol83tg4s',
     priceMonthly: 159,
     features: [
       'Tout Ultra inclus',

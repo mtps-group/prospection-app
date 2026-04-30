@@ -148,7 +148,7 @@ export function PricingCards() {
                   <p className="text-sm text-white/70">Pour les créateurs actifs</p>
                 </div>
                 <div className="relative mb-2">
-                  <span className="text-5xl font-black text-white">39€</span>
+                  <span className="text-5xl font-black text-white">49€</span>
                   <span className="text-white/70 ml-1 text-sm">/ mois</span>
                 </div>
                 <p className="relative text-xs text-white/50 mb-6">Sans engagement · Résiliez à tout moment</p>

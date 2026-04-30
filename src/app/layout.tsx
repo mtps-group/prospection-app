@@ -96,7 +96,7 @@ const jsonLd = {
     {
       '@type': 'Offer',
       name: 'Premium',
-      price: '39',
+      price: '49',
       priceCurrency: 'EUR',
       billingIncrement: 'P1M',
     },

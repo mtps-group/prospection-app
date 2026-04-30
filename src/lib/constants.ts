@@ -29,7 +29,7 @@ export const PLANS = {
     hasDetailedBusinessInfo: false,
     hasEmailDraft: false,
     hasCallAnalysis: false,
-    priceMonthly: 39,
+    priceMonthly: 49,
   },
   ultra: {
     name: 'Ultra',
