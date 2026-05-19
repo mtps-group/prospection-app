@@ -50,9 +50,10 @@ interface SearchResultsProps {
 export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) {
   const { profile } = useSupabase();
   const { addToast } = useToast();
-  const isPaid = profile?.plan === 'premium' || profile?.plan === 'ultra';
-  const isUltra = profile?.plan === 'ultra';
+  const isPaid = profile?.plan === 'premium' || profile?.plan === 'ultra' || profile?.plan === 'agence';
+  const isUltra = profile?.plan === 'ultra' || profile?.plan === 'agence';
   const [prospectIds, setProspectIds] = useState<Set<string>>(new Set());
+  const [noSocialsOnly, setNoSocialsOnly] = useState(false);
 
   const handleAddProspect = useCallback(async (result: SearchResultClient) => {
     if (prospectIds.has(result.google_place_id)) return;
@@ -184,8 +185,17 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
   const rawResults = activeTab === 'no-website' ? data.results : (data.withWebsiteResults || []);
 
   const activeResults = useMemo(() => {
-    const visible = rawResults.filter(r => !r.is_blurred);
+    let visible = rawResults.filter(r => !r.is_blurred);
     const blurred = rawResults.filter(r => r.is_blurred);
+
+    // Filtre "Sans reseau social" (Ultra+ uniquement, onglet "avec site web")
+    if (noSocialsOnly && isUltra && activeTab === 'with-website') {
+      visible = visible.filter(r => {
+        const s = r.social_profiles;
+        return !s || (!s.facebook && !s.instagram && !s.linkedin);
+      });
+    }
+
     const sorted = [...visible].sort((a, b) => {
       if (sortBy === 'score') return computeScore(b).total - computeScore(a).total;
       if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
@@ -193,7 +203,7 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
       return 0;
     });
     return [...sorted, ...blurred];
-  }, [rawResults, sortBy]);
+  }, [rawResults, sortBy, noSocialsOnly, isUltra, activeTab]);
 
   return (
     <div className="space-y-6">
@@ -254,6 +264,22 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
               <option value="reviews">Par avis</option>
             </select>
           </div>
+
+          {/* Filtre Sans reseau social (Ultra+ uniquement, onglet with-website) */}
+          {isUltra && activeTab === 'with-website' && (
+            <label className="flex items-center gap-1.5 text-sm text-text-secondary cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={noSocialsOnly}
+                onChange={e => setNoSocialsOnly(e.target.checked)}
+                className="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              Sans réseau social
+              <span className="ml-1 inline-flex items-center rounded-full bg-gradient-to-r from-amber-400 to-orange-400 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                ULTRA
+              </span>
+            </label>
+          )}
         </div>
 
         {true && (

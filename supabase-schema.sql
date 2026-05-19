@@ -91,6 +91,7 @@ CREATE TABLE public.search_results (
   longitude DOUBLE PRECISION,
   rating DOUBLE PRECISION,
   user_rating_count INTEGER,
+  social_profiles JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

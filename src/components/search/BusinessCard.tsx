@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge } from '@/components/ui/Badge';
+import { SocialBadges } from './SocialBadges';
 import { fr } from '@/i18n/fr';
 import type { SearchResultClient } from '@/types';
 import { computeScore } from '@/lib/scoring';
@@ -145,6 +146,13 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspe
             >
               {result.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
             </a>
+          </div>
+        )}
+
+        {result.social_profiles && (result.social_profiles.facebook || result.social_profiles.instagram || result.social_profiles.linkedin) && (
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-4 flex-shrink-0" />
+            <SocialBadges socials={result.social_profiles} />
           </div>
         )}
 

@@ -48,6 +48,12 @@ export interface Search {
   created_at: string;
 }
 
+export interface SocialProfiles {
+  facebook?: string;
+  instagram?: string;
+  linkedin?: string;
+}
+
 export interface SearchResult {
   id: string;
   search_id: string;
@@ -65,6 +71,7 @@ export interface SearchResult {
   longitude: number | null;
   rating: number | null;
   user_rating_count: number | null;
+  social_profiles: SocialProfiles | null;
   created_at: string;
 }
 

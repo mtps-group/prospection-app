@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { searchPlaces, filterNoWebsite, getPrimaryType } from '@/lib/google-places/client';
+import { extractSocialLinks } from '@/lib/social-scraper';
 import { getPlanConfig } from '@/lib/constants';
 import type { PlanSlug } from '@/lib/constants';
-import type { SearchResultClient } from '@/types';
+import type { SearchResultClient, SocialProfiles } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,6 +73,28 @@ export async function POST(request: NextRequest) {
     // 6. Filter businesses without a website
     const noWebsitePlaces = filterNoWebsite(allPlaces);
 
+    // 6.5. Enrichissement social (Ultra + Agence uniquement)
+    // Pour chaque prospect ayant un site web, on scrape les liens Facebook/Instagram/LinkedIn.
+    // Synchrone : ajoute ~3-5s a la recherche dans le pire cas (Promise.all parallele + timeout 4s par fetch).
+    const isUltraPlus = profile.plan === 'ultra' || profile.plan === 'agence';
+    const socialsByPlaceId = new Map<string, SocialProfiles>();
+
+    if (isUltraPlus) {
+      const enrichmentPromises = allPlaces
+        .filter((p) => !!p.websiteUri)
+        .map(async (place) => {
+          const socials = await extractSocialLinks(place.websiteUri);
+          return { id: place.id, socials };
+        });
+
+      const settled = await Promise.allSettled(enrichmentPromises);
+      for (const r of settled) {
+        if (r.status === 'fulfilled') {
+          socialsByPlaceId.set(r.value.id, r.value.socials);
+        }
+      }
+    }
+
     // 7. Create the search record
     const { data: search, error: searchError } = await supabase
       .from('searches')
@@ -108,6 +131,7 @@ export async function POST(request: NextRequest) {
       longitude: place.location?.longitude || null,
       rating: place.rating || null,
       user_rating_count: place.userRatingCount || null,
+      social_profiles: socialsByPlaceId.get(place.id) || null,
     }));
 
     if (resultsToInsert.length > 0) {
