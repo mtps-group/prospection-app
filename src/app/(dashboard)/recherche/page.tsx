@@ -13,6 +13,7 @@ import type { PlanSlug } from '@/lib/constants';
 import { Search, Sparkles, ExternalLink, AlertCircle, Zap, ArrowRight, TrendingUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Link from 'next/link';
+import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 
 function GoogleSheetsIcon({ className }: { className?: string }) {
   return (
@@ -28,9 +29,18 @@ export default function RecherchePage() {
   const [loading, setLoading] = useState(false);
   const [searchData, setSearchData] = useState<SearchResponse | null>(null);
   const [currentQuery, setCurrentQuery] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [prefilledBusinessType, setPrefilledBusinessType] = useState('');
   const { profile, refreshProfile } = useSupabase();
   const { addToast } = useToast();
   const searchParams = useSearchParams();
+
+  // Affiche le tour d'accueil si pas encore complete
+  useEffect(() => {
+    if (profile && profile.onboarding_completed === false) {
+      setShowOnboarding(true);
+    }
+  }, [profile]);
 
   const sheetsUrlParam = searchParams.get('sheets_url');
   const exportErrorParam = searchParams.get('export_error');
@@ -301,9 +311,15 @@ export default function RecherchePage() {
           onSearch={handleSearch}
           loading={loading}
           disabled={isLimitReached}
-          initialBusinessType={businessTypeParam || ''}
+          initialBusinessType={prefilledBusinessType || businessTypeParam || ''}
           initialCity={cityParam || ''}
         />
+        {prefilledBusinessType && !searchData && !loading && (
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/20 px-3 py-2 text-xs text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            Suggestion : ajoute juste ta ville et lance ta première recherche !
+          </div>
+        )}
       </div>
 
       {/* Quick tips when no results yet */}
@@ -349,6 +365,20 @@ export default function RecherchePage() {
           data={searchData}
           query={currentQuery}
           onExportCSV={handleExportCSV}
+        />
+      )}
+
+      {/* Onboarding flow (premiere connexion uniquement) */}
+      {showOnboarding && (
+        <OnboardingFlow
+          userName={profile?.full_name || null}
+          onComplete={({ suggestedSearch }) => {
+            setShowOnboarding(false);
+            if (suggestedSearch) {
+              setPrefilledBusinessType(suggestedSearch);
+            }
+            refreshProfile();
+          }}
         />
       )}
     </div>

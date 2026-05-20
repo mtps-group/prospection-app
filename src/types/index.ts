@@ -17,6 +17,8 @@ export interface Profile {
   notion_workspace_name: string | null;
   notion_token: string | null;
   notion_database_id: string | null;
+  onboarding_completed: boolean;
+  onboarding_persona: string | null;
   created_at: string;
   updated_at: string;
 }
