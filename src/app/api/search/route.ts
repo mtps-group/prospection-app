@@ -135,7 +135,30 @@ export async function POST(request: NextRequest) {
     }));
 
     if (resultsToInsert.length > 0) {
-      await supabase.from('search_results').insert(resultsToInsert);
+      const { error: insertError } = await supabase
+        .from('search_results')
+        .insert(resultsToInsert);
+
+      // Fallback : si la colonne social_profiles n'existe pas encore en BDD,
+      // on retente sans elle (cas ou la migration n'a pas ete executee).
+      if (insertError && /social_profiles/i.test(insertError.message)) {
+        console.warn('Colonne social_profiles introuvable, retry sans cette colonne. Lance la migration SQL.');
+        const safeRows = resultsToInsert.map((r) => {
+          const { social_profiles, ...rest } = r;
+          void social_profiles;
+          return rest;
+        });
+        const { error: retryError } = await supabase
+          .from('search_results')
+          .insert(safeRows);
+        if (retryError) {
+          console.error('Insert search_results failed even after retry:', retryError);
+          return NextResponse.json({ error: 'Erreur lors de la sauvegarde des resultats' }, { status: 500 });
+        }
+      } else if (insertError) {
+        console.error('Insert search_results failed:', insertError);
+        return NextResponse.json({ error: 'Erreur lors de la sauvegarde des resultats' }, { status: 500 });
+      }
     }
 
     // 9. Increment search counter
