@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { fr } from '@/i18n/fr';
 import { formatDateTime } from '@/lib/utils';
 import type { Search } from '@/types';
-import { History, Search as SearchIcon, Globe, Calendar, TrendingUp, ArrowRight, Clock, BarChart3 } from 'lucide-react';
+import { History, Search as SearchIcon, Globe, Calendar, ArrowRight, Clock, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HistoriquePage() {
@@ -27,7 +27,7 @@ export default function HistoriquePage() {
     fetchHistory();
   }, []);
 
-  const totalProspects = searches.reduce((acc, s) => acc + (s.no_website_count || 0), 0);
+  const totalProspects = searches.reduce((acc, s) => acc + (s.total_results || 0), 0);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -46,7 +46,7 @@ export default function HistoriquePage() {
 
       {/* Stats bar */}
       {!loading && searches.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-white border border-gray-100 p-4 text-center">
             <div className="text-2xl font-black text-text">{searches.length}</div>
             <div className="text-xs font-medium text-text-muted mt-0.5">Recherches</div>
@@ -54,12 +54,6 @@ export default function HistoriquePage() {
           <div className="rounded-2xl bg-white border border-gray-100 p-4 text-center">
             <div className="text-2xl font-black text-text">{totalProspects}</div>
             <div className="text-xs font-medium text-text-muted mt-0.5">Prospects trouvés</div>
-          </div>
-          <div className="rounded-2xl bg-white border border-gray-100 p-4 text-center">
-            <div className="text-2xl font-black text-text">
-              {searches.length > 0 ? Math.round(totalProspects / searches.length) : 0}
-            </div>
-            <div className="text-xs font-medium text-text-muted mt-0.5">Moy. / recherche</div>
           </div>
         </div>
       )}
