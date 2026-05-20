@@ -31,8 +31,14 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('signOut error:', err);
+    }
+    // Hard reload pour vider TOUT l'état (cookies serveur + cache React)
+    // Sinon le middleware peut renvoyer vers l'app avec une session fantome.
+    window.location.href = '/login';
   };
 
   const planBadge = profile?.plan === 'ultra'
