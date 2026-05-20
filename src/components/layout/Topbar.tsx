@@ -32,12 +32,16 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 
   const handleLogout = async () => {
     try {
+      // 1. Server-side signOut : ecrit les Set-Cookie d'expiration dans la reponse HTTP
+      //    Indispensable sinon le middleware nous redirige vers /recherche en pensant qu'on
+      //    est encore authentifie (session fantome cote serveur).
+      await fetch('/api/auth/signout', { method: 'POST' });
+      // 2. Client-side signOut pour bonne mesure (nettoie le store en memoire)
       await supabase.auth.signOut();
     } catch (err) {
       console.error('signOut error:', err);
     }
-    // Hard reload pour vider TOUT l'état (cookies serveur + cache React)
-    // Sinon le middleware peut renvoyer vers l'app avec une session fantome.
+    // 3. Hard reload : vide cache React + tout etat en memoire
     window.location.href = '/login';
   };
 
