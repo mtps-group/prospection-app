@@ -23,6 +23,8 @@ interface StatsResponse {
   revenue: { total: number; signedCount: number; avgDeal: number };
   velocityDays: number | null;
   conversionRate: number;
+  closingRate: number;
+  rdvPrisCumul: number;
   monthlySignatures: { month: string; count: number; revenue: number }[];
 }
 
@@ -95,9 +97,9 @@ export default function CrmStatsPage() {
             />
             <KpiCard
               icon={TrendingUp}
-              label="Taux closing"
-              value={`${stats.conversionRate}%`}
-              sub="prospects créés → signés"
+              label="Taux de closing"
+              value={`${stats.closingRate}%`}
+              sub={stats.rdvPrisCumul > 0 ? `RDV pris → signés (${stats.revenue.signedCount}/${stats.rdvPrisCumul})` : 'pas encore de RDV'}
               gradient="from-amber-500 to-orange-500"
             />
             <KpiCard
@@ -204,7 +206,7 @@ export default function CrmStatsPage() {
                 />
                 <PerfRow
                   icon={TrendingUp}
-                  label="Taux de closing global"
+                  label="Taux de conversion global"
                   value={`${stats.conversionRate}%`}
                   color="text-green-600"
                 />

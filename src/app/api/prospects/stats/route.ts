@@ -157,6 +157,14 @@ export async function GET(request: NextRequest) {
   const created = byStatus['a_contacter'] + byStatus['contacte'] + byStatus['interesse'] + byStatus['rdv_pris'] + byStatus['signe'];
   const conversionRate = created > 0 ? Math.round((byStatus['signe'] / created) * 1000) / 10 : 0;
 
+  // 9. Taux de closing REEL : RDV pris -> Signe (efficacite commerciale en RDV)
+  // On regarde les prospects qui sont au moins arrives au statut "RDV pris" :
+  // rdv_pris_cumul = ceux actuellement en rdv_pris + ceux qui ont signe (cumulatif)
+  const rdvPrisCumul = byStatus['rdv_pris'] + byStatus['signe'];
+  const closingRate = rdvPrisCumul > 0
+    ? Math.round((byStatus['signe'] / rdvPrisCumul) * 1000) / 10
+    : 0;
+
   return NextResponse.json({
     period,
     byStatus,
@@ -170,6 +178,8 @@ export async function GET(request: NextRequest) {
     },
     velocityDays,
     conversionRate,
+    closingRate,
+    rdvPrisCumul,
     monthlySignatures,
   });
 }
