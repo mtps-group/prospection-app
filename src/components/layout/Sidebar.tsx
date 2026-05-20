@@ -30,7 +30,7 @@ interface SidebarProps {
 
 const mainNav = [
   { name: fr.nav.recherche, href: '/recherche', icon: Search, gradient: 'from-blue-500 to-cyan-500', plan: null },
-  { name: 'Mes Prospects', href: '/prospects', icon: Users, gradient: 'from-purple-500 to-pink-500', plan: null },
+  { name: 'CRM', href: '/crm', icon: Users, gradient: 'from-purple-500 to-pink-500', plan: null },
   { name: fr.nav.historique, href: '/historique', icon: History, gradient: 'from-amber-500 to-orange-500', plan: null },
   { name: fr.nav.exports, href: '/exports', icon: Download, gradient: 'from-green-500 to-emerald-500', plan: null },
   { name: 'Analyse d\'appels', href: '/appels', icon: Phone, gradient: 'from-violet-500 to-purple-600', plan: 'agence' },

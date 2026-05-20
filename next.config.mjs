@@ -1,6 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable experimental features as needed
+  async redirects() {
+    return [
+      {
+        source: '/prospects',
+        destination: '/crm',
+        permanent: true,
+      },
+      {
+        source: '/prospects/:path*',
+        destination: '/crm/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
