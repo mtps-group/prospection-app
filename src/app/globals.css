@@ -46,8 +46,18 @@
    Dark mode brand : surfaces glassmorphism + violet tint
    ============================================ */
 [data-theme="dark"] .bg-white {
-  background-color: #15102e !important;
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  background-color: rgba(21, 16, 46, 0.6) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.12);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 8px 32px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* Hover sur cards : leger glow violet */
+[data-theme="dark"] .bg-white:hover {
+  border-color: rgba(139, 92, 246, 0.25);
 }
 [data-theme="dark"] .bg-gray-50 { background-color: rgba(255, 255, 255, 0.02) !important; }
 [data-theme="dark"] .bg-gray-100 { background-color: rgba(255, 255, 255, 0.05) !important; }
@@ -195,16 +205,35 @@
 [data-theme="dark"] .via-emerald-50 { --tw-gradient-via: rgba(16, 185, 129, 0.1) !important; }
 [data-theme="dark"] .via-teal-50 { --tw-gradient-via: rgba(20, 184, 166, 0.1) !important; }
 
-/* Inputs : focus borders restent visibles */
+/* Inputs : glassmorphism + focus violet */
 [data-theme="dark"] input,
 [data-theme="dark"] textarea,
 [data-theme="dark"] select {
-  background-color: #0f172a;
+  background-color: rgba(255, 255, 255, 0.04);
   color: #f1f5f9;
+  border-color: rgba(139, 92, 246, 0.15);
+}
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+  border-color: rgba(139, 92, 246, 0.5);
+  outline: none;
 }
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder {
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Toutes les bordures par defaut deviennent violet subtil en dark */
+[data-theme="dark"] [class*="border-"]:not([class*="border-X"]):not([class*="border-l-"]):not([class*="border-r-"]):not([class*="border-t-"]):not([class*="border-b-"]) {
+  /* fallback gerb par d'autres overrides plus haut */
+}
+
+/* Buttons / cards interactifs : ring violet au focus */
+[data-theme="dark"] button:focus-visible,
+[data-theme="dark"] a:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.5);
+  outline-offset: 2px;
 }
 
 /* Backdrop des modales : un peu plus sombre en dark */
