@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { fr } from '@/i18n/fr';
-import { Menu, User, LogOut, Settings, ChevronDown, Crown, Zap, Search } from 'lucide-react';
+import { Menu, User, LogOut, Settings, ChevronDown, Crown, Zap, Search, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface TopbarProps {
@@ -15,6 +15,8 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const { supabase, user, profile } = useSupabase();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutStatus, setLogoutStatus] = useState<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,19 +33,40 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   }, []);
 
   const handleLogout = async () => {
-    console.log('[Logout] Bouton clique, debut de la sequence');
-    try {
-      console.log('[Logout] Etape 1: POST /api/auth/signout');
-      const res = await fetch('/api/auth/signout', { method: 'POST' });
-      console.log('[Logout] Etape 1 termine, status:', res.status);
+    setLoggingOut(true);
+    setLogoutStatus('Déconnexion en cours...');
 
-      console.log('[Logout] Etape 2: supabase.auth.signOut() client-side');
+    // Brute-force: efface les cookies cote client avant tout
+    try {
+      document.cookie.split(';').forEach((c) => {
+        const eqPos = c.indexOf('=');
+        const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+        if (name.startsWith('sb-') || name.includes('supabase')) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
+        }
+      });
+    } catch {}
+
+    try {
+      setLogoutStatus('Étape 1/2 : Server signOut...');
+      const res = await fetch('/api/auth/signout', { method: 'POST' });
+      setLogoutStatus(`Étape 1/2 OK (${res.status})`);
+
+      setLogoutStatus('Étape 2/2 : Client signOut...');
       await supabase.auth.signOut();
-      console.log('[Logout] Etape 2 termine');
+      setLogoutStatus('OK, redirection...');
     } catch (err) {
-      console.error('[Logout] ERREUR pendant signOut:', err);
+      setLogoutStatus('Erreur : ' + (err instanceof Error ? err.message : 'inconnue'));
+      // On essaie quand meme la redirection apres 2s
+      await new Promise((r) => setTimeout(r, 2000));
     }
-    console.log('[Logout] Etape 3: redirection hard vers /login');
+
+    // Hard reload + vide localStorage/sessionStorage
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch {}
     window.location.href = '/login';
   };
 
@@ -119,10 +142,11 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  disabled={loggingOut}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-wait"
                 >
-                  <LogOut className="h-4 w-4" />
-                  {fr.nav.deconnexion}
+                  {loggingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                  {loggingOut ? (logoutStatus || 'Déconnexion...') : fr.nav.deconnexion}
                 </button>
               </div>
             </div>
