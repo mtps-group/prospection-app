@@ -21,45 +21,57 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Dark theme : override les CSS variables */
+/* Dark theme : palette brand (violet profond, comme le tutoriel) */
 [data-theme="dark"] {
   --color-primary-light: #312e81;
-  --color-surface: #0f172a;          /* slate-900 */
-  --color-surface-secondary: #020617; /* slate-950 (encore plus sombre) */
-  --color-border: #334155;           /* slate-700 */
+  --color-surface: #15102e;          /* violet profond pour les cards */
+  --color-surface-secondary: #0a0720; /* fond ambiant tres sombre */
+  --color-border: #2a2348;           /* violet desature pour borders subtiles */
   --color-text: #f1f5f9;             /* slate-100 */
   --color-text-secondary: #cbd5e1;   /* slate-300 */
-  --color-text-muted: #94a3b8;       /* slate-400 */
+  --color-text-muted: #8b85b8;       /* tinted violet for muted text */
+}
+
+/* Body ambient gradient brand (violet + pink subtils depuis les coins) */
+[data-theme="dark"] body {
+  background:
+    radial-gradient(ellipse 80% 60% at 0% 0%, rgba(139, 92, 246, 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(99, 102, 241, 0.06), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 100% 100%, rgba(236, 72, 153, 0.05), transparent 60%),
+    #050318;
+  background-attachment: fixed;
 }
 
 /* ============================================
-   Dark mode : overrides globaux pour les classes Tailwind hardcodees
-   (bg-white, bg-gray-XX, border-gray-XX, text-gray-XX)
+   Dark mode brand : surfaces glassmorphism + violet tint
    ============================================ */
-[data-theme="dark"] .bg-white { background-color: #0f172a !important; }
-[data-theme="dark"] .bg-gray-50 { background-color: #020617 !important; }
-[data-theme="dark"] .bg-gray-100 { background-color: #1e293b !important; }
-[data-theme="dark"] .bg-gray-200 { background-color: #334155 !important; }
+[data-theme="dark"] .bg-white {
+  background-color: #15102e !important;
+  border: 1px solid rgba(139, 92, 246, 0.1);
+}
+[data-theme="dark"] .bg-gray-50 { background-color: rgba(255, 255, 255, 0.02) !important; }
+[data-theme="dark"] .bg-gray-100 { background-color: rgba(255, 255, 255, 0.05) !important; }
+[data-theme="dark"] .bg-gray-200 { background-color: rgba(255, 255, 255, 0.08) !important; }
 
-[data-theme="dark"] .border-gray-100 { border-color: #1e293b !important; }
-[data-theme="dark"] .border-gray-200 { border-color: #334155 !important; }
-[data-theme="dark"] .border-gray-300 { border-color: #475569 !important; }
+[data-theme="dark"] .border-gray-100 { border-color: rgba(139, 92, 246, 0.1) !important; }
+[data-theme="dark"] .border-gray-200 { border-color: rgba(139, 92, 246, 0.15) !important; }
+[data-theme="dark"] .border-gray-300 { border-color: rgba(139, 92, 246, 0.2) !important; }
 
-[data-theme="dark"] .text-gray-500 { color: #94a3b8 !important; }
-[data-theme="dark"] .text-gray-600 { color: #cbd5e1 !important; }
-[data-theme="dark"] .text-gray-700 { color: #cbd5e1 !important; }
-[data-theme="dark"] .text-gray-800 { color: #e2e8f0 !important; }
+[data-theme="dark"] .text-gray-500 { color: #8b85b8 !important; }
+[data-theme="dark"] .text-gray-600 { color: #a8a3cc !important; }
+[data-theme="dark"] .text-gray-700 { color: #c4bfdc !important; }
+[data-theme="dark"] .text-gray-800 { color: #e2dff0 !important; }
 [data-theme="dark"] .text-gray-900 { color: #f1f5f9 !important; }
 
-[data-theme="dark"] .bg-white\/80 { background-color: rgba(15, 23, 42, 0.8) !important; }
-[data-theme="dark"] .bg-white\/60 { background-color: rgba(15, 23, 42, 0.6) !important; }
+[data-theme="dark"] .bg-white\/80 { background-color: rgba(21, 16, 46, 0.8) !important; }
+[data-theme="dark"] .bg-white\/60 { background-color: rgba(21, 16, 46, 0.6) !important; }
 
-/* Hover states sur backgrounds clairs */
-[data-theme="dark"] .hover\:bg-gray-50:hover { background-color: #1e293b !important; }
-[data-theme="dark"] .hover\:bg-gray-100:hover { background-color: #334155 !important; }
-[data-theme="dark"] .hover\:bg-white:hover { background-color: #1e293b !important; }
-[data-theme="dark"] .hover\:border-gray-200:hover { border-color: #475569 !important; }
-[data-theme="dark"] .hover\:border-gray-300:hover { border-color: #64748b !important; }
+/* Hover states */
+[data-theme="dark"] .hover\:bg-gray-50:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
+[data-theme="dark"] .hover\:bg-gray-100:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
+[data-theme="dark"] .hover\:bg-white:hover { background-color: #1a1438 !important; }
+[data-theme="dark"] .hover\:border-gray-200:hover { border-color: rgba(139, 92, 246, 0.25) !important; }
+[data-theme="dark"] .hover\:border-gray-300:hover { border-color: rgba(139, 92, 246, 0.35) !important; }
 
 /* Gradient backgrounds qui finissent en blanc */
 [data-theme="dark"] .from-white { --tw-gradient-from: #0f172a !important; }
