@@ -16,7 +16,6 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [logoutStatus, setLogoutStatus] = useState<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +33,6 @@ export function Topbar({ onMenuClick }: TopbarProps) {
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    setLogoutStatus('Déconnexion en cours...');
 
     // Brute-force: efface les cookies cote client avant tout
     try {
@@ -49,20 +47,15 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     } catch {}
 
     try {
-      setLogoutStatus('Étape 1/2 : Server signOut...');
-      const res = await fetch('/api/auth/signout', { method: 'POST' });
-      setLogoutStatus(`Étape 1/2 OK (${res.status})`);
-
-      setLogoutStatus('Étape 2/2 : Client signOut...');
+      // 1. Server-side signOut : ecrit les Set-Cookie d'expiration dans la reponse HTTP
+      await fetch('/api/auth/signout', { method: 'POST' });
+      // 2. Client-side signOut : nettoie le store en memoire
       await supabase.auth.signOut();
-      setLogoutStatus('OK, redirection...');
     } catch (err) {
-      setLogoutStatus('Erreur : ' + (err instanceof Error ? err.message : 'inconnue'));
-      // On essaie quand meme la redirection apres 2s
-      await new Promise((r) => setTimeout(r, 2000));
+      console.error('signOut error:', err);
     }
 
-    // Hard reload + vide localStorage/sessionStorage
+    // Vide localStorage/sessionStorage + hard reload
     try {
       localStorage.clear();
       sessionStorage.clear();
@@ -146,7 +139,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                   className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-wait"
                 >
                   {loggingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
-                  {loggingOut ? (logoutStatus || 'Déconnexion...') : fr.nav.deconnexion}
+                  {loggingOut ? 'Déconnexion...' : fr.nav.deconnexion}
                 </button>
               </div>
             </div>
