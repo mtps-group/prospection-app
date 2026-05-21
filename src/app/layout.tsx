@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { SupabaseProvider } from '@/providers/SupabaseProvider';
 import { ToastProvider } from '@/providers/ToastProvider';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 
 // Force dynamic rendering - Supabase client needs env vars at runtime
 export const dynamic = 'force-dynamic';
@@ -115,6 +116,9 @@ const jsonLd = {
   },
 };
 
+// Script inline pour appliquer le theme AVANT le rendu React (anti FOUC = flash blanc en mode dark)
+const themeInitScript = `(function(){try{var t=localStorage.getItem('prospectweb-theme')||'light';var r=t==='system'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t;document.documentElement.setAttribute('data-theme',r);}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: {
@@ -127,13 +131,16 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className={inter.className}>
-        <SupabaseProvider>
-          <ToastProvider>
-            {children}
-          </ToastProvider>
-        </SupabaseProvider>
+        <ThemeProvider>
+          <SupabaseProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </SupabaseProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

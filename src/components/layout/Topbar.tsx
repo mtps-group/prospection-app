@@ -70,11 +70,11 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     : null;
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-100 bg-white/80 backdrop-blur-md px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 lg:px-6">
       {/* Hamburger mobile */}
       <button
         onClick={onMenuClick}
-        className="rounded-xl p-2.5 text-text-secondary hover:bg-gray-100 hover:text-text lg:hidden transition-colors"
+        className="rounded-xl p-2.5 text-text-secondary hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-text lg:hidden transition-colors"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -82,11 +82,11 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       {/* Quick search hint */}
       <Link
         href="/recherche"
-        className="hidden lg:flex items-center gap-2 text-sm text-text-muted hover:text-text-secondary transition-colors bg-gray-50 rounded-xl px-4 py-2 border border-gray-100 hover:border-gray-200"
+        className="hidden lg:flex items-center gap-2 text-sm text-text-muted hover:text-text-secondary transition-colors bg-gray-50 dark:bg-slate-800 rounded-xl px-4 py-2 border border-gray-100 dark:border-slate-700 hover:border-gray-200 dark:hover:border-slate-600"
       >
         <Search className="h-4 w-4" />
         <span>Recherche rapide...</span>
-        <kbd className="ml-6 text-xs bg-white rounded px-1.5 py-0.5 border border-gray-200 text-text-muted font-mono">Ctrl+K</kbd>
+        <kbd className="ml-6 text-xs bg-white dark:bg-slate-900 rounded px-1.5 py-0.5 border border-gray-200 dark:border-slate-700 text-text-muted font-mono">Ctrl+K</kbd>
       </Link>
 
       {/* Right side */}
@@ -103,7 +103,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100"
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-gray-100 dark:hover:border-slate-700"
           >
             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
               {(profile?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
@@ -115,8 +115,8 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-gray-100 bg-white py-2 shadow-xl animate-fade-in">
-              <div className="px-4 py-3 border-b border-gray-100">
+            <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-900 py-2 shadow-xl animate-fade-in">
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-800">
                 <p className="text-sm font-bold text-text">
                   {profile?.full_name || 'Utilisateur'}
                 </p>
@@ -128,7 +128,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                     router.push('/parametres');
                     setDropdownOpen(false);
                   }}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:bg-gray-50 hover:text-text transition-colors"
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text-secondary hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-text transition-colors"
                 >
                   <Settings className="h-4 w-4" />
                   {fr.nav.parametres}
@@ -136,7 +136,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                 <button
                   onClick={handleLogout}
                   disabled={loggingOut}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60 disabled:cursor-wait"
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60 disabled:cursor-wait"
                 >
                   {loggingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
                   {loggingOut ? 'Déconnexion...' : fr.nav.deconnexion}

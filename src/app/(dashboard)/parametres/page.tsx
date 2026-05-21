@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useToast } from '@/providers/ToastProvider';
 import { fr } from '@/i18n/fr';
-import { Settings, User, Save, Mail, Shield, Crown, Zap, CreditCard, ArrowRight } from 'lucide-react';
+import { Settings, User, Save, Mail, Shield, Crown, Zap, CreditCard, ArrowRight, Palette } from 'lucide-react';
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export default function ParametresPage() {
   const { profile, supabase, refreshProfile } = useSupabase();
@@ -92,6 +93,20 @@ export default function ParametresPage() {
             {fr.settings.sauvegarder}
           </Button>
         </form>
+      </div>
+
+      {/* Theme Card */}
+      <div className="rounded-2xl border border-border bg-surface p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-500/10 to-pink-500/10 flex items-center justify-center">
+            <Palette className="h-4 w-4 text-violet-500" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-bold text-text">Apparence</h2>
+            <p className="text-xs text-text-secondary">Choisissez votre thème de couleur</p>
+          </div>
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Plan Card */}

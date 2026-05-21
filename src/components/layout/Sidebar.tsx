@@ -58,7 +58,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white border-r border-gray-100 transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto',
+          'fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-800 transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -72,7 +72,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               Prospect<span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Web</span>
             </span>
           </Link>
-          <button onClick={onClose} className="lg:hidden text-text-secondary hover:text-text rounded-lg p-1.5 hover:bg-gray-100">
+          <button onClick={onClose} className="lg:hidden text-text-secondary hover:text-text rounded-lg p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -83,14 +83,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <Link
             href="/"
             onClick={onClose}
-            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-muted hover:bg-gray-50 hover:text-text transition-all mb-3"
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-text-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-text transition-all mb-3"
           >
             <Home className="h-4.5 w-4.5" />
             Page d&apos;accueil
             <ArrowUpRight className="h-3.5 w-3.5 ml-auto opacity-50" />
           </Link>
 
-          <div className="h-px bg-gray-100 mb-3" />
+          <div className="h-px bg-gray-100 dark:bg-slate-800 mb-3" />
 
           <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted/60 mb-2">Prospection</p>
 
@@ -105,17 +105,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className={cn(
                   'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-gradient-to-r from-primary/10 to-purple-500/10 text-primary shadow-sm'
+                    ? 'bg-gradient-to-r from-primary/10 to-purple-500/10 dark:from-primary/20 dark:to-purple-500/20 text-primary shadow-sm'
                     : isLocked
-                    ? 'text-text-muted hover:bg-gray-50 opacity-70'
-                    : 'text-text-secondary hover:bg-gray-50 hover:text-text'
+                    ? 'text-text-muted hover:bg-gray-50 dark:hover:bg-slate-800 opacity-70'
+                    : 'text-text-secondary hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-text'
                 )}
               >
                 <div className={cn(
                   'h-8 w-8 rounded-lg flex items-center justify-center transition-all',
                   isActive
                     ? `bg-gradient-to-br ${item.gradient} shadow-md`
-                    : 'bg-gray-100 group-hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-slate-800 group-hover:bg-gray-200 dark:group-hover:bg-slate-700'
                 )}>
                   <item.icon className={cn('h-4 w-4', isActive ? 'text-white' : 'text-text-muted group-hover:text-text-secondary')} />
                 </div>
@@ -128,7 +128,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             );
           })}
 
-          <div className="h-px bg-gray-100 my-3" />
+          <div className="h-px bg-gray-100 dark:bg-slate-800 my-3" />
 
           <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted/60 mb-2">Compte</p>
 
@@ -142,8 +142,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className={cn(
                   'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-gray-100 text-text'
-                    : 'text-text-muted hover:bg-gray-50 hover:text-text-secondary'
+                    ? 'bg-gray-100 dark:bg-slate-800 text-text'
+                    : 'text-text-muted hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-text-secondary'
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -156,7 +156,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Plan indicator */}
         <div className="p-4">
           {profile?.plan === 'free' ? (
-            <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-purple-500/5 border border-primary/10 p-4">
+            <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-purple-500/5 dark:from-primary/15 dark:to-purple-500/15 border border-primary/10 dark:border-primary/30 p-4">
               <div className="flex items-center gap-2 mb-3">
                 <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
                   <Zap className="h-3.5 w-3.5 text-white" />
@@ -168,7 +168,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   </p>
                 </div>
               </div>
-              <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden mb-3">
+              <div className="h-1.5 rounded-full bg-gray-200 dark:bg-slate-800 overflow-hidden mb-3">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-primary to-purple-500 transition-all"
                   style={{
@@ -188,7 +188,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </Link>
             </div>
           ) : (
-            <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-purple-500/5 border border-primary/10 p-4 flex items-center gap-3">
+            <div className="rounded-2xl bg-gradient-to-br from-primary/5 to-purple-500/5 dark:from-primary/15 dark:to-purple-500/15 border border-primary/10 dark:border-primary/30 p-4 flex items-center gap-3">
               <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-md">
                 {profile?.plan === 'ultra' ? (
                   <Crown className="h-4.5 w-4.5 text-white" />
