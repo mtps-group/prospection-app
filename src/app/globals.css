@@ -71,6 +71,141 @@
   /* Geres via CSS variables, rien a faire */
 }
 
+/* ============================================
+   Dark mode : couleurs semantiques (bg-X-50, text-X-700, border-X-200)
+   On garde la teinte mais on ajuste pour le dark
+   ============================================ */
+
+/* Bleu (info) */
+[data-theme="dark"] .bg-blue-50 { background-color: rgba(59, 130, 246, 0.12) !important; }
+[data-theme="dark"] .bg-blue-100 { background-color: rgba(59, 130, 246, 0.2) !important; }
+[data-theme="dark"] .border-blue-200 { border-color: rgba(59, 130, 246, 0.3) !important; }
+[data-theme="dark"] .text-blue-600 { color: #60a5fa !important; }
+[data-theme="dark"] .text-blue-700 { color: #93c5fd !important; }
+[data-theme="dark"] .text-blue-800 { color: #bfdbfe !important; }
+[data-theme="dark"] .from-blue-50 { --tw-gradient-from: rgba(59, 130, 246, 0.1) !important; }
+[data-theme="dark"] .to-blue-50 { --tw-gradient-to: rgba(59, 130, 246, 0.1) !important; }
+
+/* Indigo */
+[data-theme="dark"] .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.12) !important; }
+[data-theme="dark"] .bg-indigo-100 { background-color: rgba(99, 102, 241, 0.2) !important; }
+[data-theme="dark"] .border-indigo-200 { border-color: rgba(99, 102, 241, 0.3) !important; }
+[data-theme="dark"] .text-indigo-600 { color: #818cf8 !important; }
+[data-theme="dark"] .text-indigo-700 { color: #a5b4fc !important; }
+[data-theme="dark"] .text-indigo-800 { color: #c7d2fe !important; }
+[data-theme="dark"] .from-indigo-50 { --tw-gradient-from: rgba(99, 102, 241, 0.1) !important; }
+[data-theme="dark"] .to-indigo-50 { --tw-gradient-to: rgba(99, 102, 241, 0.1) !important; }
+
+/* Vert (success) */
+[data-theme="dark"] .bg-green-50 { background-color: rgba(34, 197, 94, 0.12) !important; }
+[data-theme="dark"] .bg-green-100 { background-color: rgba(34, 197, 94, 0.2) !important; }
+[data-theme="dark"] .border-green-200 { border-color: rgba(34, 197, 94, 0.3) !important; }
+[data-theme="dark"] .border-green-300 { border-color: rgba(34, 197, 94, 0.5) !important; }
+[data-theme="dark"] .text-green-600 { color: #4ade80 !important; }
+[data-theme="dark"] .text-green-700 { color: #86efac !important; }
+[data-theme="dark"] .text-green-800 { color: #bbf7d0 !important; }
+[data-theme="dark"] .from-green-50 { --tw-gradient-from: rgba(34, 197, 94, 0.1) !important; }
+[data-theme="dark"] .to-green-50 { --tw-gradient-to: rgba(34, 197, 94, 0.1) !important; }
+
+/* Emeraude */
+[data-theme="dark"] .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.12) !important; }
+[data-theme="dark"] .bg-emerald-100 { background-color: rgba(16, 185, 129, 0.2) !important; }
+[data-theme="dark"] .border-emerald-200 { border-color: rgba(16, 185, 129, 0.3) !important; }
+[data-theme="dark"] .text-emerald-600 { color: #34d399 !important; }
+[data-theme="dark"] .text-emerald-700 { color: #6ee7b7 !important; }
+[data-theme="dark"] .from-emerald-50 { --tw-gradient-from: rgba(16, 185, 129, 0.1) !important; }
+[data-theme="dark"] .to-emerald-50 { --tw-gradient-to: rgba(16, 185, 129, 0.1) !important; }
+
+/* Rouge (error / lost) */
+[data-theme="dark"] .bg-red-50 { background-color: rgba(239, 68, 68, 0.12) !important; }
+[data-theme="dark"] .bg-red-100 { background-color: rgba(239, 68, 68, 0.2) !important; }
+[data-theme="dark"] .border-red-200 { border-color: rgba(239, 68, 68, 0.3) !important; }
+[data-theme="dark"] .text-red-500 { color: #fca5a5 !important; }
+[data-theme="dark"] .text-red-600 { color: #fca5a5 !important; }
+[data-theme="dark"] .text-red-700 { color: #fecaca !important; }
+
+/* Ambre / orange (warning, interested) */
+[data-theme="dark"] .bg-amber-50 { background-color: rgba(245, 158, 11, 0.12) !important; }
+[data-theme="dark"] .bg-amber-100 { background-color: rgba(245, 158, 11, 0.2) !important; }
+[data-theme="dark"] .border-amber-200 { border-color: rgba(245, 158, 11, 0.3) !important; }
+[data-theme="dark"] .text-amber-600 { color: #fbbf24 !important; }
+[data-theme="dark"] .text-amber-700 { color: #fcd34d !important; }
+[data-theme="dark"] .text-amber-800 { color: #fde68a !important; }
+[data-theme="dark"] .text-amber-900 { color: #fef3c7 !important; }
+[data-theme="dark"] .from-amber-50 { --tw-gradient-from: rgba(245, 158, 11, 0.1) !important; }
+[data-theme="dark"] .to-amber-50 { --tw-gradient-to: rgba(245, 158, 11, 0.1) !important; }
+
+[data-theme="dark"] .bg-orange-50 { background-color: rgba(249, 115, 22, 0.12) !important; }
+[data-theme="dark"] .bg-orange-100 { background-color: rgba(249, 115, 22, 0.2) !important; }
+[data-theme="dark"] .border-orange-200 { border-color: rgba(249, 115, 22, 0.3) !important; }
+[data-theme="dark"] .text-orange-500 { color: #fb923c !important; }
+[data-theme="dark"] .text-orange-700 { color: #fdba74 !important; }
+[data-theme="dark"] .from-orange-50 { --tw-gradient-from: rgba(249, 115, 22, 0.1) !important; }
+[data-theme="dark"] .to-orange-50 { --tw-gradient-to: rgba(249, 115, 22, 0.1) !important; }
+
+/* Violet */
+[data-theme="dark"] .bg-violet-50 { background-color: rgba(139, 92, 246, 0.12) !important; }
+[data-theme="dark"] .bg-violet-100 { background-color: rgba(139, 92, 246, 0.2) !important; }
+[data-theme="dark"] .border-violet-200 { border-color: rgba(139, 92, 246, 0.3) !important; }
+[data-theme="dark"] .text-violet-600 { color: #a78bfa !important; }
+[data-theme="dark"] .text-violet-700 { color: #c4b5fd !important; }
+[data-theme="dark"] .text-violet-800 { color: #ddd6fe !important; }
+[data-theme="dark"] .from-violet-50 { --tw-gradient-from: rgba(139, 92, 246, 0.1) !important; }
+[data-theme="dark"] .to-violet-50 { --tw-gradient-to: rgba(139, 92, 246, 0.1) !important; }
+
+/* Purple */
+[data-theme="dark"] .bg-purple-50 { background-color: rgba(168, 85, 247, 0.12) !important; }
+[data-theme="dark"] .bg-purple-100 { background-color: rgba(168, 85, 247, 0.2) !important; }
+[data-theme="dark"] .border-purple-200 { border-color: rgba(168, 85, 247, 0.3) !important; }
+[data-theme="dark"] .text-purple-500 { color: #c084fc !important; }
+[data-theme="dark"] .text-purple-600 { color: #c084fc !important; }
+[data-theme="dark"] .text-purple-700 { color: #d8b4fe !important; }
+[data-theme="dark"] .from-purple-50 { --tw-gradient-from: rgba(168, 85, 247, 0.1) !important; }
+[data-theme="dark"] .to-purple-50 { --tw-gradient-to: rgba(168, 85, 247, 0.1) !important; }
+
+/* Pink */
+[data-theme="dark"] .bg-pink-50 { background-color: rgba(236, 72, 153, 0.12) !important; }
+[data-theme="dark"] .bg-pink-100 { background-color: rgba(236, 72, 153, 0.2) !important; }
+[data-theme="dark"] .border-pink-200 { border-color: rgba(236, 72, 153, 0.3) !important; }
+[data-theme="dark"] .text-pink-600 { color: #f472b6 !important; }
+[data-theme="dark"] .from-pink-50 { --tw-gradient-from: rgba(236, 72, 153, 0.1) !important; }
+[data-theme="dark"] .to-pink-50 { --tw-gradient-to: rgba(236, 72, 153, 0.1) !important; }
+
+/* Cyan */
+[data-theme="dark"] .bg-cyan-50 { background-color: rgba(6, 182, 212, 0.12) !important; }
+[data-theme="dark"] .border-cyan-200 { border-color: rgba(6, 182, 212, 0.3) !important; }
+[data-theme="dark"] .from-cyan-50 { --tw-gradient-from: rgba(6, 182, 212, 0.1) !important; }
+[data-theme="dark"] .to-cyan-50 { --tw-gradient-to: rgba(6, 182, 212, 0.1) !important; }
+
+/* Rose / Teal */
+[data-theme="dark"] .from-rose-50 { --tw-gradient-from: rgba(244, 63, 94, 0.1) !important; }
+[data-theme="dark"] .from-teal-50 { --tw-gradient-from: rgba(20, 184, 166, 0.1) !important; }
+[data-theme="dark"] .via-emerald-50 { --tw-gradient-via: rgba(16, 185, 129, 0.1) !important; }
+[data-theme="dark"] .via-teal-50 { --tw-gradient-via: rgba(20, 184, 166, 0.1) !important; }
+
+/* Inputs : focus borders restent visibles */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #64748b;
+}
+
+/* Backdrop des modales : un peu plus sombre en dark */
+[data-theme="dark"] .bg-black\/50 { background-color: rgba(0, 0, 0, 0.7) !important; }
+[data-theme="dark"] .bg-black\/60 { background-color: rgba(0, 0, 0, 0.75) !important; }
+
+/* Shadows : moins visibles en dark, on ajoute du contraste avec une bordure subtile */
+[data-theme="dark"] .shadow-lg,
+[data-theme="dark"] .shadow-xl,
+[data-theme="dark"] .shadow-2xl {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
 @layer base {
   body {
     @apply bg-surface-secondary text-text antialiased;
