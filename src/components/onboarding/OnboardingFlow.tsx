@@ -176,8 +176,9 @@ export function OnboardingFlow({ onComplete, userName }: OnboardingFlowProps) {
         ))}
       </div>
 
-      {/* Content centered */}
-      <div className="relative z-10 h-full flex items-center justify-center px-4 py-20 overflow-y-auto">
+      {/* Content centered (scrollable when overflow) */}
+      <div className="relative z-10 h-full overflow-y-auto">
+        <div className="min-h-full flex items-center justify-center px-4 py-24">
         <div key={stepKey} className="w-full max-w-3xl animate-slide-up-fade">
           {/* STEP 0 — Welcome */}
           {step === 0 && (
@@ -408,6 +409,7 @@ export function OnboardingFlow({ onComplete, userName }: OnboardingFlowProps) {
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>
