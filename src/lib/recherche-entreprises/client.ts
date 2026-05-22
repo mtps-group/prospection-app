@@ -105,6 +105,28 @@ function monthsAgoToDate(months: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Resout un nom de ville en code INSEE de commune via geo.api.gouv.fr (gratuit, no auth).
+ * Retourne le code INSEE de la 1ere commune trouvee, ou null si non trouve.
+ * Permet de filtrer precisement par ville sans avoir besoin que l'user connaisse le CP.
+ */
+async function resolveCityToCommuneCode(cityName: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const url = `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(cityName)}&fields=code,nom,population&limit=5&boost=population`;
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!response.ok) return null;
+    const communes = await response.json() as Array<{ code: string; nom: string; population?: number }>;
+    if (!communes || communes.length === 0) return null;
+    // On prend la commune la plus peuplee (ex: 'Saint-Pierre' donne Saint-Pierre-de-la-Reunion)
+    return communes[0].code;
+  } catch {
+    return null;
+  }
+}
+
 function formatDirigeant(dirigeants: RawResult['dirigeants']): string | null {
   if (!dirigeants || dirigeants.length === 0) return null;
   const priority = ['Gérant', 'Président', 'Directeur général'];
@@ -155,13 +177,21 @@ export async function searchCompanies(filters: CompanySearchFilters): Promise<{
 
   if (filters.q) params.set('q', filters.q);
   if (filters.location) {
-    // Si numerique = code postal/departement, sinon = ville
-    if (/^\d{5}$/.test(filters.location)) {
-      params.set('code_postal', filters.location);
-    } else if (/^\d{2,3}$/.test(filters.location)) {
-      params.set('departement', filters.location);
+    const loc = filters.location.trim();
+    // Si numerique = code postal/departement, sinon = ville (resolution INSEE)
+    if (/^\d{5}$/.test(loc)) {
+      params.set('code_postal', loc);
+    } else if (/^\d{2,3}$/.test(loc)) {
+      params.set('departement', loc);
     } else {
-      params.set('q', `${filters.q || ''} ${filters.location}`.trim());
+      // Resoudre le nom de ville vers code INSEE pour un filtre precis
+      const communeCode = await resolveCityToCommuneCode(loc);
+      if (communeCode) {
+        params.set('code_commune', communeCode);
+      } else {
+        // Fallback : si on n'a pas pu resoudre, on l'ajoute au q (pas ideal)
+        params.set('q', `${filters.q || ''} ${loc}`.trim());
+      }
     }
   }
   if (filters.creationMaxMonths) {
