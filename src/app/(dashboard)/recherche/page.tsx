@@ -420,11 +420,47 @@ export default function RecherchePage() {
 
       {/* Results */}
       {searchData && (
-        <SearchResults
-          data={searchData}
-          query={currentQuery}
-          onExportCSV={handleExportCSV}
-        />
+        <>
+          {/* Navigation : retour vers la recherche */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  // Retourne au formulaire en gardant le mode courant
+                  setSearchData(null);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-violet-500/20 bg-white px-3.5 py-2 text-sm font-semibold text-text-secondary hover:bg-gray-50 hover:text-text hover:border-gray-300 transition-all"
+              >
+                <ArrowRight className="h-3.5 w-3.5 rotate-180" />
+                Modifier la recherche
+              </button>
+              <button
+                onClick={() => {
+                  // Reset complet : retour au mode picker
+                  setSearchData(null);
+                  setSearchMode(null);
+                  setPrefilledBusinessType('');
+                  setCurrentQuery('');
+                }}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary to-purple-500 px-3.5 py-2 text-sm font-bold text-white hover:opacity-90 shadow-md shadow-primary/20 transition-all"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Nouvelle recherche
+              </button>
+            </div>
+            {currentQuery && (
+              <span className="text-xs text-text-muted italic truncate max-w-[280px]">
+                Recherche actuelle : <span className="font-semibold text-text-secondary">{currentQuery}</span>
+              </span>
+            )}
+          </div>
+
+          <SearchResults
+            data={searchData}
+            query={currentQuery}
+            onExportCSV={handleExportCSV}
+          />
+        </>
       )}
 
       {/* Onboarding flow (premiere connexion uniquement) */}
