@@ -10,10 +10,12 @@ import { getPlanConfig } from '@/lib/constants';
 import { fr } from '@/i18n/fr';
 import type { SearchResponse } from '@/types';
 import type { PlanSlug } from '@/lib/constants';
-import { Search, Sparkles, ExternalLink, AlertCircle, Zap, ArrowRight, TrendingUp } from 'lucide-react';
+import { Search, Sparkles, ExternalLink, AlertCircle, ArrowRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Link from 'next/link';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
+import { SearchModePicker, type SearchMode } from '@/components/search/SearchModePicker';
+import { CompanySearchForm, type CompanySearchValues } from '@/components/search/CompanySearchForm';
 
 function GoogleSheetsIcon({ className }: { className?: string }) {
   return (
@@ -31,6 +33,7 @@ export default function RecherchePage() {
   const [currentQuery, setCurrentQuery] = useState('');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [prefilledBusinessType, setPrefilledBusinessType] = useState('');
+  const [searchMode, setSearchMode] = useState<SearchMode | null>(null);
   const { profile, refreshProfile } = useSupabase();
   const { addToast } = useToast();
   const searchParams = useSearchParams();
@@ -105,10 +108,49 @@ export default function RecherchePage() {
       }
 
       setSearchData(data);
-      refreshProfile(); // fire and forget, ne bloque pas le loading
+      refreshProfile();
       addToast(
         `${data.noWebsiteCount} entreprises sans site web trouvées !`,
         'success'
+      );
+    } catch {
+      addToast('Erreur de connexion au serveur', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompanySearch = async (values: CompanySearchValues) => {
+    setLoading(true);
+    setSearchData(null);
+    setCurrentQuery(`${values.businessType} ${values.city} ${values.nameQuery}`.trim());
+
+    try {
+      const response = await fetch('/api/companies/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.upgradeRequired) {
+          addToast(data.message || 'Plan Ultra requis', 'error');
+        } else {
+          addToast(data.error || 'Erreur lors de la recherche', 'error');
+        }
+        setLoading(false);
+        return;
+      }
+
+      setSearchData(data);
+      refreshProfile();
+      addToast(
+        data.totalFound > 0
+          ? `${data.totalFound} entreprises trouvées !`
+          : 'Aucune entreprise trouvée avec ces critères',
+        data.totalFound > 0 ? 'success' : 'info'
       );
     } catch {
       addToast('Erreur de connexion au serveur', 'error');
@@ -305,57 +347,66 @@ export default function RecherchePage() {
         </div>
       )}
 
-      {/* Search form */}
-      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-        <SearchForm
-          onSearch={handleSearch}
-          loading={loading}
-          disabled={isLimitReached}
-          initialBusinessType={prefilledBusinessType || businessTypeParam || ''}
-          initialCity={cityParam || ''}
-        />
-        {prefilledBusinessType && !searchData && !loading && (
-          <div className="mt-3 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/20 px-3 py-2 text-xs text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            Suggestion : ajoute juste ta ville et lance ta première recherche !
-          </div>
-        )}
-      </div>
+      {/* Si aucun mode selectionne et pas de recherche en cours -> picker */}
+      {!searchMode && !searchData && !loading && !businessTypeParam && (
+        <SearchModePicker onSelect={(mode) => setSearchMode(mode)} />
+      )}
 
-      {/* Quick tips when no results yet */}
-      {!searchData && !loading && (
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            {
-              icon: Search,
-              title: 'Recherche intelligente',
-              desc: 'Tapez un métier et une ville pour trouver les entreprises sans site web',
-              gradient: 'from-blue-500 to-cyan-500',
-              bgLight: 'from-blue-50 to-cyan-50',
-            },
-            {
-              icon: TrendingUp,
-              title: 'Score de priorité',
-              desc: 'Chaque résultat est noté pour vous aider à cibler les meilleurs prospects',
-              gradient: 'from-orange-500 to-amber-500',
-              bgLight: 'from-orange-50 to-amber-50',
-            },
-            {
-              icon: Zap,
-              title: 'Export en 1 clic',
-              desc: 'Téléchargez vos résultats en CSV, Google Sheets ou Notion instantanément',
-              gradient: 'from-green-500 to-emerald-500',
-              bgLight: 'from-green-50 to-emerald-50',
-            },
-          ].map((tip) => (
-            <div key={tip.title} className="group rounded-2xl border border-gray-100 bg-white p-5 hover:shadow-lg hover:border-gray-200 transition-all duration-300">
-              <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${tip.gradient} flex items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform`}>
-                <tip.icon className="h-5 w-5 text-white" />
+      {/* Si mode 'places' selectionne OU prefill onboarding OU param historique */}
+      {(searchMode === 'places' || (prefilledBusinessType && !searchMode) || (businessTypeParam && !searchMode)) && !searchData && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => { setSearchMode(null); setPrefilledBusinessType(''); }}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary hover:text-primary transition-colors"
+            >
+              ← Changer de mode
+            </button>
+          </div>
+          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <SearchForm
+              onSearch={handleSearch}
+              loading={loading}
+              disabled={isLimitReached}
+              initialBusinessType={prefilledBusinessType || businessTypeParam || ''}
+              initialCity={cityParam || ''}
+            />
+            {prefilledBusinessType && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/20 px-3 py-2 text-xs text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                Suggestion : ajoute juste ta ville et lance ta première recherche !
               </div>
-              <h3 className="font-bold text-text text-sm mb-1">{tip.title}</h3>
-              <p className="text-xs text-text-secondary leading-relaxed">{tip.desc}</p>
-            </div>
-          ))}
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Si mode 'companies' selectionne */}
+      {searchMode === 'companies' && !searchData && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSearchMode(null)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary hover:text-primary transition-colors"
+            >
+              ← Changer de mode
+            </button>
+            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-500/10 to-pink-500/10 border border-violet-500/20 px-3 py-1 text-xs font-bold text-violet-700 dark:text-violet-300">
+              <Sparkles className="h-3 w-3" />
+              Mode Entreprises récentes
+            </span>
+          </div>
+          <div className="rounded-2xl border-2 border-violet-200 dark:border-violet-500/30 bg-gradient-to-br from-violet-50/30 to-pink-50/30 dark:from-violet-500/5 dark:to-pink-500/5 p-6 shadow-sm">
+            <CompanySearchForm onSearch={handleCompanySearch} loading={loading} />
+          </div>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && !searchData && (
+        <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center">
+          <div className="inline-block h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin mb-3" />
+          <p className="text-sm text-text-secondary">Recherche en cours...</p>
         </div>
       )}
 

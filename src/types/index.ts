@@ -74,6 +74,15 @@ export interface SearchResult {
   rating: number | null;
   user_rating_count: number | null;
   social_profiles: SocialProfiles | null;
+  /** Champs SIRENE (uniquement pour les recherches mode 'companies') */
+  siret: string | null;
+  siren: string | null;
+  naf_code: string | null;
+  naf_label: string | null;
+  creation_date: string | null;
+  legal_form: string | null;
+  employees_range: string | null;
+  source: 'google_places' | 'companies' | null;
   created_at: string;
 }
 

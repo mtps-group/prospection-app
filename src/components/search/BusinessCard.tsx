@@ -14,7 +14,25 @@ import {
   ChevronRight,
   UserPlus,
   Check,
+  Sparkles,
 } from 'lucide-react';
+
+function getCreationLabel(dateStr: string | null): { label: string; tone: 'hot' | 'warm' | 'cold' } | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  const monthsAgo = Math.floor(
+    (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24 * 30.44)
+  );
+
+  if (monthsAgo < 0) return null;
+  if (monthsAgo < 3) return { label: `🔥 Créée il y a ${monthsAgo === 0 ? 'moins d\'1' : monthsAgo} mois`, tone: 'hot' };
+  if (monthsAgo < 6) return { label: `Créée il y a ${monthsAgo} mois`, tone: 'hot' };
+  if (monthsAgo < 12) return { label: `Créée il y a ${monthsAgo} mois`, tone: 'warm' };
+  if (monthsAgo < 24) return { label: `Créée il y a ${monthsAgo} mois`, tone: 'cold' };
+  return null;
+}
 
 interface BusinessCardProps {
   result: SearchResultClient;
@@ -102,14 +120,35 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspe
         </div>
       </div>
 
-      {/* Score badge */}
-      {!showWebsiteUrl && (
-        <div className={`mt-3 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${score.color}`}>
-          <span>{score.emoji}</span>
-          <span>{score.label}</span>
-          <span className="opacity-60">· {score.total}/100</span>
-        </div>
-      )}
+      {/* Score badge + Creation date */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {!showWebsiteUrl && (
+          <div className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${score.color}`}>
+            <span>{score.emoji}</span>
+            <span>{score.label}</span>
+            <span className="opacity-60">· {score.total}/100</span>
+          </div>
+        )}
+        {(() => {
+          const c = getCreationLabel(result.creation_date);
+          if (!c) return null;
+          const styles =
+            c.tone === 'hot' ? 'bg-gradient-to-r from-violet-500 to-pink-500 text-white border-transparent shadow-md shadow-violet-500/30 animate-pulse-glow' :
+            c.tone === 'warm' ? 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30' :
+            'bg-gray-50 dark:bg-white/5 text-text-secondary border-gray-200 dark:border-violet-500/15';
+          return (
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold ${styles}`}>
+              <Sparkles className="h-3 w-3" />
+              {c.label}
+            </span>
+          );
+        })()}
+        {result.legal_form && (
+          <span className="inline-flex items-center rounded-full bg-gray-50 dark:bg-white/5 text-text-muted border border-gray-200 dark:border-violet-500/15 px-2 py-0.5 text-[10px] font-medium">
+            {result.legal_form.split(',')[0].trim()}
+          </span>
+        )}
+      </div>
 
       <div className="mt-3 space-y-2">
         {result.formatted_address && (
