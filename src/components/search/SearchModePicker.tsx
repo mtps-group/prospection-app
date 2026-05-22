@@ -14,25 +14,10 @@ export function SearchModePicker({ onSelect }: SearchModePickerProps) {
   const { profile, loading } = useSupabase();
   const isUltraPlus = profile?.plan === 'ultra' || profile?.plan === 'agence';
 
-  // Pendant le chargement du profil, on affiche un skeleton plutôt
-  // que la version 'lockée' qui frustre les vrais users Ultra
+  // Tant que le profil n'est pas charge, on ne rend rien (evite le flash 'lock' et le skeleton lent)
+  // La page reste lisible (header, etc.) pendant ces ~200ms
   if (loading || !profile) {
-    return (
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="rounded-2xl border-2 border-gray-200 dark:border-violet-500/20 bg-white p-6 h-[260px] animate-pulse">
-          <div className="h-12 w-12 rounded-xl bg-gray-200 dark:bg-white/10 mb-3" />
-          <div className="h-5 w-32 bg-gray-200 dark:bg-white/10 rounded mb-2" />
-          <div className="h-3 w-full bg-gray-100 dark:bg-white/5 rounded mb-1" />
-          <div className="h-3 w-3/4 bg-gray-100 dark:bg-white/5 rounded" />
-        </div>
-        <div className="rounded-2xl border-2 border-gray-200 dark:border-violet-500/20 bg-white p-6 h-[260px] animate-pulse">
-          <div className="h-12 w-12 rounded-xl bg-gray-200 dark:bg-white/10 mb-3" />
-          <div className="h-5 w-32 bg-gray-200 dark:bg-white/10 rounded mb-2" />
-          <div className="h-3 w-full bg-gray-100 dark:bg-white/5 rounded mb-1" />
-          <div className="h-3 w-3/4 bg-gray-100 dark:bg-white/5 rounded" />
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
