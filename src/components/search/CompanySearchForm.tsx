@@ -44,9 +44,17 @@ export function CompanySearchForm({ onSearch, loading }: CompanySearchFormProps)
   const [nameQuery, setNameQuery] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // Au moins un critere doit etre saisi (sinon recherche trop large)
+  const hasAtLeastOneFilter =
+    !!businessType.trim() ||
+    !!city.trim() ||
+    !!nameQuery.trim() ||
+    !!natureJuridique ||
+    !!creationMaxMonths;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!businessType.trim() && !nameQuery.trim()) return;
+    if (!hasAtLeastOneFilter) return;
     onSearch({
       businessType: businessType.trim(),
       city: city.trim(),
@@ -61,20 +69,23 @@ export function CompanySearchForm({ onSearch, loading }: CompanySearchFormProps)
       {/* Champs principaux */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
-          label="Type d'activité"
+          label="Type d'activité (optionnel)"
           placeholder="boulangerie, restaurant, plombier..."
           value={businessType}
           onChange={(e) => setBusinessType(e.target.value)}
           icon={<Building className="h-4 w-4" />}
         />
         <Input
-          label="Ville ou code postal"
+          label="Ville ou code postal (optionnel)"
           placeholder="Paris, 75001, ou 75 (département)"
           value={city}
           onChange={(e) => setCity(e.target.value)}
           icon={<MapPin className="h-4 w-4" />}
         />
       </div>
+      <p className="text-xs text-text-muted -mt-2">
+        💡 Tu peux laisser un (ou les deux) champs vides — par exemple : juste « Lyon » + « moins de 3 mois » pour voir <strong>toutes</strong> les boîtes créées récemment à Lyon.
+      </p>
 
       {/* Date de création - le golden filter */}
       <div>
@@ -137,9 +148,15 @@ export function CompanySearchForm({ onSearch, loading }: CompanySearchFormProps)
         )}
       </div>
 
-      <Button type="submit" loading={loading} size="lg" className="w-full bg-gradient-to-r from-violet-500 to-pink-500 hover:from-violet-600 hover:to-pink-600 text-white shadow-lg shadow-violet-500/20">
+      <Button
+        type="submit"
+        loading={loading}
+        size="lg"
+        disabled={!hasAtLeastOneFilter}
+        className="w-full bg-gradient-to-r from-violet-500 to-pink-500 hover:from-violet-600 hover:to-pink-600 text-white shadow-lg shadow-violet-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+      >
         <Sparkles className="h-4 w-4" />
-        Trouver les opportunités
+        {hasAtLeastOneFilter ? 'Trouver les opportunités' : 'Renseigne au moins 1 critère'}
       </Button>
     </form>
   );

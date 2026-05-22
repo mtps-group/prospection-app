@@ -120,8 +120,10 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as SearchRequestBody;
     const { businessType, city, creationMaxMonths, natureJuridique, nameQuery } = body;
 
-    if (!businessType && !nameQuery) {
-      return NextResponse.json({ error: 'Type d\'activité ou nom requis' }, { status: 400 });
+    // Au moins un critere doit etre fourni pour eviter de retourner toute la France
+    const hasFilter = !!businessType || !!city || !!nameQuery || !!natureJuridique || !!creationMaxMonths;
+    if (!hasFilter) {
+      return NextResponse.json({ error: 'Au moins un critère de recherche requis' }, { status: 400 });
     }
 
     const rawQuery = [businessType, city, nameQuery].filter(Boolean).join(' ');
