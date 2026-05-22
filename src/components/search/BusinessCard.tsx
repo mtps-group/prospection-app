@@ -17,7 +17,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-function getCreationLabel(dateStr: string | null): { label: string; tone: 'hot' | 'warm' | 'cold' } | null {
+function getCreationLabel(dateStr: string | null): { label: string; tone: 'hot' | 'warm' | 'cool' | 'cold' | 'neutral' } | null {
   if (!dateStr) return null;
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return null;
@@ -27,11 +27,23 @@ function getCreationLabel(dateStr: string | null): { label: string; tone: 'hot' 
   );
 
   if (monthsAgo < 0) return null;
+
+  // Recente (< 6 mois) : badge anime
   if (monthsAgo < 3) return { label: `🔥 Créée il y a ${monthsAgo === 0 ? 'moins d\'1' : monthsAgo} mois`, tone: 'hot' };
-  if (monthsAgo < 6) return { label: `Créée il y a ${monthsAgo} mois`, tone: 'hot' };
+  if (monthsAgo < 6) return { label: `🔥 Créée il y a ${monthsAgo} mois`, tone: 'hot' };
+
+  // Encore recente (< 12 mois) : violet doux
   if (monthsAgo < 12) return { label: `Créée il y a ${monthsAgo} mois`, tone: 'warm' };
-  if (monthsAgo < 24) return { label: `Créée il y a ${monthsAgo} mois`, tone: 'cold' };
-  return null;
+
+  // Moderne (< 24 mois) : bleu
+  if (monthsAgo < 24) return { label: `Créée il y a ${monthsAgo} mois`, tone: 'cool' };
+
+  // Plus ancienne : on affiche en annee, format neutre mais lisible
+  const yearsAgo = Math.floor(monthsAgo / 12);
+  if (yearsAgo < 5) return { label: `Créée il y a ${yearsAgo} ans`, tone: 'cold' };
+
+  // Tres ancienne : on donne juste l'annee
+  return { label: `Créée en ${d.getFullYear()}`, tone: 'neutral' };
 }
 
 interface BusinessCardProps {
@@ -138,7 +150,9 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspe
           const styles =
             c.tone === 'hot' ? 'bg-gradient-to-r from-violet-500 to-pink-500 text-white border-transparent shadow-md shadow-violet-500/30 animate-pulse-glow' :
             c.tone === 'warm' ? 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30' :
-            'bg-gray-50 dark:bg-white/5 text-text-secondary border-gray-200 dark:border-violet-500/15';
+            c.tone === 'cool' ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30' :
+            c.tone === 'cold' ? 'bg-gray-100 dark:bg-white/5 text-text-secondary border-gray-200 dark:border-violet-500/15' :
+            'bg-gray-50 dark:bg-white/5 text-text-muted border-gray-200 dark:border-violet-500/10';
           return (
             <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold ${styles}`}>
               <Sparkles className="h-3 w-3" />
