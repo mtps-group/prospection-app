@@ -154,12 +154,16 @@ export default function RecherchePage() {
 
       setSearchData(data);
       refreshProfile();
-      addToast(
-        data.totalFound > 0
-          ? `${data.totalFound} entreprises trouvées !`
-          : 'Aucune entreprise trouvée avec ces critères',
-        data.totalFound > 0 ? 'success' : 'info'
-      );
+      if (data.totalFound > 0) {
+        addToast(`${data.totalFound} entreprises trouvées !`, 'success');
+      } else {
+        // 0 resultats : on affiche un message clair avec le diagnostic
+        const dbg = data.debug;
+        const diagnostic = dbg
+          ? ` (API: ${dbg.totalApi} trouvés, ${dbg.afterFilter} après filtre date, ville: ${dbg.resolvedCity || 'aucune'})`
+          : '';
+        addToast(`Aucun résultat${diagnostic}. Essayez d'élargir le filtre date ou changer de ville.`, 'info');
+      }
     } catch {
       addToast('Erreur de connexion au serveur', 'error');
     } finally {

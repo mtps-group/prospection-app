@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     if (businessType) qParts.push(businessType);
     if (nameQuery) qParts.push(nameQuery);
 
-    const { results: companies, total } = await searchCompanies({
+    const { results: companies, total, debug } = await searchCompanies({
       q: qParts.join(' ') || undefined,
       location: city || undefined,
       creationMaxMonths: creationMaxMonths || undefined,
@@ -149,6 +149,7 @@ export async function POST(request: NextRequest) {
         noWebsiteCount: 0,
         withWebsiteResults: [],
         withWebsiteCount: 0,
+        debug,
       });
     }
 

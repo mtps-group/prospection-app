@@ -180,8 +180,10 @@ function normalizeResult(raw: RawResult): CompanyResult {
 export async function searchCompanies(filters: CompanySearchFilters): Promise<{
   results: CompanyResult[];
   total: number;
+  debug: { url: string; totalApi: number; afterFilter: number; resolvedCity?: string };
 }> {
   const params = new URLSearchParams();
+  let resolvedCity: string | undefined;
 
   if (filters.q) params.set('q', filters.q);
   if (filters.location) {
@@ -189,16 +191,20 @@ export async function searchCompanies(filters: CompanySearchFilters): Promise<{
     // Si numerique = code postal/departement, sinon = ville (resolution INSEE)
     if (/^\d{5}$/.test(loc)) {
       params.set('code_postal', loc);
+      resolvedCity = `CP ${loc}`;
     } else if (/^\d{2,3}$/.test(loc)) {
       params.set('departement', loc);
+      resolvedCity = `Dpt ${loc}`;
     } else {
       // Resoudre le nom de ville vers code INSEE pour un filtre precis
       const communeCode = await resolveCityToCommuneCode(loc);
       if (communeCode) {
         params.set('code_commune', communeCode);
+        resolvedCity = `${loc} → ${communeCode}`;
       } else {
         // Fallback : si on n'a pas pu resoudre, on l'ajoute au q (pas ideal)
         params.set('q', `${filters.q || ''} ${loc}`.trim());
+        resolvedCity = `${loc} (non-résolu, full-text)`;
       }
     }
   }
@@ -254,15 +260,19 @@ export async function searchCompanies(filters: CompanySearchFilters): Promise<{
       });
     }
 
-    console.log('[recherche-entreprises]', {
+    const debug = {
       url: `${BASE_URL}?${params.toString()}`,
-      total_api: data.total_results || 0,
-      returned_after_filter: results.length,
-    });
+      totalApi: data.total_results || 0,
+      afterFilter: results.length,
+      resolvedCity,
+    };
+
+    console.log('[recherche-entreprises]', debug);
 
     return {
       results,
       total: data.total_results || 0,
+      debug,
     };
   } finally {
     clearTimeout(timeout);
