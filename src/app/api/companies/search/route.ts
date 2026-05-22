@@ -153,27 +153,49 @@ export async function POST(request: NextRequest) {
     // 5. Enrichissement Google Places en parallele (max 25 appels paralleles)
     const enriched = await Promise.allSettled(companies.map(c => enrichWithGooglePlaces(c)));
 
-    // 6. Creer la search en BDD
-    const { data: search, error: searchError } = await supabase
+    // 6. Creer la search en BDD (avec fallback si colonnes pas encore migrees)
+    const searchPayload: Record<string, unknown> = {
+      user_id: user.id,
+      query_business_type: businessType || nameQuery || '',
+      query_city: city || '',
+      raw_query: rawQuery,
+      total_results: total,
+      no_website_count: 0,
+      search_mode: 'companies',
+      filter_creation_date_max: creationMaxMonths || null,
+      filter_legal_form: natureJuridique || null,
+      filter_name_query: nameQuery || null,
+    };
+
+    let { data: search, error: searchError } = await supabase
       .from('searches')
-      .insert({
-        user_id: user.id,
-        query_business_type: businessType || nameQuery || '',
-        query_city: city || '',
-        raw_query: rawQuery,
-        total_results: total,
-        no_website_count: 0, // calcule plus tard
-        search_mode: 'companies',
-        filter_creation_date_max: creationMaxMonths || null,
-        filter_legal_form: natureJuridique || null,
-        filter_name_query: nameQuery || null,
-      })
+      .insert(searchPayload)
       .select()
       .single();
 
-    if (searchError) {
+    // Fallback : si migration 004 pas faite, on retire les nouvelles colonnes
+    if (searchError && /search_mode|filter_creation_date_max|filter_legal_form|filter_name_query/i.test(searchError.message)) {
+      console.warn('Migration 004 manquante sur table searches, fallback sans nouveaux champs');
+      const minimalPayload = {
+        user_id: user.id,
+        query_business_type: searchPayload.query_business_type,
+        query_city: searchPayload.query_city,
+        raw_query: searchPayload.raw_query,
+        total_results: searchPayload.total_results,
+        no_website_count: searchPayload.no_website_count,
+      };
+      const retry = await supabase.from('searches').insert(minimalPayload).select().single();
+      search = retry.data;
+      searchError = retry.error;
+    }
+
+    if (searchError || !search) {
       console.error('Error creating search:', searchError);
-      return NextResponse.json({ error: 'Erreur sauvegarde' }, { status: 500 });
+      return NextResponse.json({
+        error: 'Erreur BDD (searches)',
+        detail: searchError?.message || 'unknown',
+        hint: 'La migration 004 a-t-elle ete executee dans Supabase ?'
+      }, { status: 500 });
     }
 
     // 7. Build rows pour insertion
@@ -218,7 +240,41 @@ export async function POST(request: NextRequest) {
     });
 
     if (resultsToInsert.length > 0) {
-      await supabase.from('search_results').insert(resultsToInsert);
+      const { error: insertError } = await supabase.from('search_results').insert(resultsToInsert);
+      if (insertError) {
+        // Si colonnes SIRENE manquantes, retry en virant ces champs
+        if (/siret|naf_code|creation_date|legal_form|employees_range|source/i.test(insertError.message)) {
+          console.warn('Migration 004 manquante sur table search_results, fallback minimal');
+          const minimal = resultsToInsert.map(r => {
+            const cleaned = { ...r };
+            delete (cleaned as Record<string, unknown>).siret;
+            delete (cleaned as Record<string, unknown>).siren;
+            delete (cleaned as Record<string, unknown>).naf_code;
+            delete (cleaned as Record<string, unknown>).naf_label;
+            delete (cleaned as Record<string, unknown>).creation_date;
+            delete (cleaned as Record<string, unknown>).legal_form;
+            delete (cleaned as Record<string, unknown>).employees_range;
+            delete (cleaned as Record<string, unknown>).source;
+            return cleaned;
+          });
+          const retry = await supabase.from('search_results').insert(minimal);
+          if (retry.error) {
+            console.error('Insert fallback failed:', retry.error);
+            return NextResponse.json({
+              error: 'Erreur BDD (search_results)',
+              detail: retry.error.message,
+              hint: 'Verifie que la table search_results est OK',
+            }, { status: 500 });
+          }
+        } else {
+          console.error('Insert error:', insertError);
+          return NextResponse.json({
+            error: 'Erreur BDD (search_results)',
+            detail: insertError.message,
+            hint: 'La migration 004 a-t-elle ete executee dans Supabase ?'
+          }, { status: 500 });
+        }
+      }
     }
 
     // Update no_website_count
@@ -253,6 +309,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Companies search error:', error);
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'unknown';
+    return NextResponse.json({
+      error: 'Erreur serveur',
+      detail: message,
+    }, { status: 500 });
   }
 }

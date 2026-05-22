@@ -144,7 +144,9 @@ export default function RecherchePage() {
         if (data.upgradeRequired) {
           addToast(data.message || 'Plan Ultra requis', 'error');
         } else {
-          addToast(data.error || 'Erreur lors de la recherche', 'error');
+          const detail = data.detail ? ` (${data.detail})` : '';
+          const hint = data.hint ? ` — ${data.hint}` : '';
+          addToast((data.error || 'Erreur lors de la recherche') + detail + hint, 'error');
         }
         setLoading(false);
         return;
