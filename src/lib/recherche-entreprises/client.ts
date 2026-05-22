@@ -75,7 +75,9 @@ interface RawResult {
     siret: string;
     adresse: string | null;
     code_postal: string | null;
+    commune: string | null; // code INSEE
     libelle_commune: string | null;
+    departement: string | null;
     latitude: string | null;
     longitude: string | null;
     activite_principale: string | null;
@@ -151,7 +153,7 @@ function formatDirigeant(dirigeants: RawResult['dirigeants']): string | null {
   return d.qualite ? `${full} (${d.qualite})` : full;
 }
 
-function normalizeResult(raw: RawResult): CompanyResult {
+function normalizeResult(raw: RawResult): CompanyResult & { _siegeCommune: string | null; _siegeCodePostal: string | null; _siegeDept: string | null } {
   const siege = raw.siege || {} as RawResult['siege'];
 
   return {
@@ -163,118 +165,153 @@ function normalizeResult(raw: RawResult): CompanyResult {
     city: siege.libelle_commune || null,
     nafCode: siege.activite_principale || raw.activite_principale || null,
     nafLabel: siege.libelle_activite_principale || raw.libelle_activite_principale || null,
-    // IMPORTANT : on utilise la date de creation de l'ENTREPRISE (SIREN), pas du siege
-    // Le filtre date_creation_min de l'API s'applique sur la date de l'entreprise
     creationDate: raw.date_creation || siege.date_creation || null,
     legalForm: raw.libelle_nature_juridique || null,
     employeesRange: siege.libelle_tranche_effectif_salarie || raw.libelle_tranche_effectif_salarie || null,
     director: formatDirigeant(raw.dirigeants),
     latitude: siege.latitude ? parseFloat(siege.latitude) : null,
     longitude: siege.longitude ? parseFloat(siege.longitude) : null,
+    // Champs internes pour filtrage post-API (non exportes)
+    _siegeCommune: siege.commune || null,
+    _siegeCodePostal: siege.code_postal || null,
+    _siegeDept: siege.departement || null,
   };
 }
 
 /**
  * Cherche des entreprises selon les filtres fournis.
+ *
+ * IMPORTANT : l'API gouv (recherche-entreprises.api.gouv.fr) a des comportements
+ * surprenants : ses filtres location et date_creation_min sont SOUPLES (matching
+ * sur n'importe quel etablissement, et le filtre date est parfois ignore).
+ *
+ * On compense en fetchant plusieurs pages et en filtrant STRICTEMENT cote serveur
+ * sur le siege + la date de creation de l'entreprise.
  */
 export async function searchCompanies(filters: CompanySearchFilters): Promise<{
   results: CompanyResult[];
   total: number;
-  debug: { url: string; totalApi: number; afterFilter: number; resolvedCity?: string };
+  debug: { url: string; totalApi: number; afterFilter: number; resolvedCity?: string; pagesFetched: number };
 }> {
-  const params = new URLSearchParams();
+  const baseParams = new URLSearchParams();
   let resolvedCity: string | undefined;
+  let strictCommune: string | null = null;
+  let strictPostalCode: string | null = null;
+  let strictDept: string | null = null;
 
-  if (filters.q) params.set('q', filters.q);
+  if (filters.q) baseParams.set('q', filters.q);
   if (filters.location) {
     const loc = filters.location.trim();
-    // Si numerique = code postal/departement, sinon = ville (resolution INSEE)
     if (/^\d{5}$/.test(loc)) {
-      params.set('code_postal', loc);
+      baseParams.set('code_postal', loc);
+      strictPostalCode = loc;
       resolvedCity = `CP ${loc}`;
     } else if (/^\d{2,3}$/.test(loc)) {
-      params.set('departement', loc);
+      baseParams.set('departement', loc);
+      strictDept = loc.padStart(2, '0');
       resolvedCity = `Dpt ${loc}`;
     } else {
-      // Resoudre le nom de ville vers code INSEE pour un filtre precis
       const communeCode = await resolveCityToCommuneCode(loc);
       if (communeCode) {
-        params.set('code_commune', communeCode);
+        baseParams.set('code_commune', communeCode);
+        strictCommune = communeCode;
         resolvedCity = `${loc} → ${communeCode}`;
       } else {
-        // Fallback : si on n'a pas pu resoudre, on l'ajoute au q (pas ideal)
-        params.set('q', `${filters.q || ''} ${loc}`.trim());
+        baseParams.set('q', `${filters.q || ''} ${loc}`.trim());
         resolvedCity = `${loc} (non-résolu, full-text)`;
       }
     }
   }
   if (filters.creationMaxMonths) {
-    params.set('date_creation_min', monthsAgoToDate(filters.creationMaxMonths));
+    baseParams.set('date_creation_min', monthsAgoToDate(filters.creationMaxMonths));
   }
-  if (filters.natureJuridique) {
-    params.set('nature_juridique', filters.natureJuridique);
-  }
-  if (filters.activitePrincipale) {
-    params.set('activite_principale', filters.activitePrincipale);
-  }
-  if (filters.trancheEffectif) {
-    params.set('tranche_effectif_salarie', filters.trancheEffectif);
+  if (filters.natureJuridique) baseParams.set('nature_juridique', filters.natureJuridique);
+  if (filters.activitePrincipale) baseParams.set('activite_principale', filters.activitePrincipale);
+  if (filters.trancheEffectif) baseParams.set('tranche_effectif_salarie', filters.trancheEffectif);
+  baseParams.set('etat_administratif', 'A');
+  baseParams.set('per_page', '25');
+
+  // Cutoff strict pour le filtre date (si fourni)
+  let cutoffTime: number | null = null;
+  if (filters.creationMaxMonths) {
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - filters.creationMaxMonths);
+    cutoffTime = cutoff.getTime();
   }
 
-  // On veut uniquement les etablissements actifs
-  params.set('etat_administratif', 'A');
-  params.set('page', String(filters.page || 1));
-  params.set('per_page', String(filters.perPage || 25));
+  // Filtre strict sur 1 resultat
+  function matchesStrictFilters(r: ReturnType<typeof normalizeResult>): boolean {
+    // Filtre location : siege doit etre dans la commune/CP/dept demande
+    if (strictCommune && r._siegeCommune !== strictCommune) return false;
+    if (strictPostalCode && r._siegeCodePostal !== strictPostalCode) return false;
+    if (strictDept && r._siegeDept !== strictDept) return false;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(`${BASE_URL}?${params.toString()}`, {
-      signal: controller.signal,
-      headers: { 'Accept': 'application/json' },
-    });
-
-    if (!response.ok) {
-      console.error('recherche-entreprises API error:', response.status, await response.text());
-      throw new Error(`API gouv error: ${response.status}`);
+    // Filtre date : creation doit etre >= cutoff
+    if (cutoffTime !== null) {
+      if (!r.creationDate) return false;
+      const d = new Date(r.creationDate);
+      if (isNaN(d.getTime()) || d.getTime() < cutoffTime) return false;
     }
+    return true;
+  }
 
-    const data = (await response.json()) as RechercheEntreprisesResponse;
+  // Fetch multi-pages : jusqu'a 4 pages (100 resultats) ou jusqu'a avoir 25 matches
+  const MAX_PAGES = 4;
+  const allMatches: CompanyResult[] = [];
+  let totalApi = 0;
+  let pagesFetched = 0;
+  let lastUrl = '';
 
-    let results = (data.results || []).map(normalizeResult);
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const params = new URLSearchParams(baseParams);
+    params.set('page', String(page));
+    const url = `${BASE_URL}?${params.toString()}`;
+    lastUrl = url;
 
-    // Filet de securite : on filtre cote client pour garantir le respect strict du filtre date
-    // (au cas ou l'API gouv laisserait passer des resultats hors filtre)
-    // LENIENT : si la date est manquante ou invalide, on garde le resultat (on fait confiance
-    // au filtre cote API). On exclut UNIQUEMENT ceux dont on est sur qu'ils sont trop vieux.
-    if (filters.creationMaxMonths) {
-      const cutoff = new Date();
-      cutoff.setMonth(cutoff.getMonth() - filters.creationMaxMonths);
-      const cutoffTime = cutoff.getTime();
-      results = results.filter((r) => {
-        if (!r.creationDate) return true; // pas de date connue = on garde (l'API a deja filtre)
-        const d = new Date(r.creationDate);
-        if (isNaN(d.getTime())) return true; // date invalide = on garde
-        return d.getTime() >= cutoffTime; // exclut uniquement les dates trop anciennes confirmees
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' },
       });
+      if (!response.ok) break;
+      const data = (await response.json()) as RechercheEntreprisesResponse;
+      pagesFetched++;
+      totalApi = data.total_results || totalApi;
+
+      const pageResults = (data.results || []).map(normalizeResult);
+      for (const r of pageResults) {
+        if (matchesStrictFilters(r)) {
+          // Cleanup : on retire les champs internes avant export
+          const { _siegeCommune, _siegeCodePostal, _siegeDept, ...clean } = r;
+          void _siegeCommune; void _siegeCodePostal; void _siegeDept;
+          allMatches.push(clean);
+        }
+      }
+
+      if (allMatches.length >= 25) break;
+      if ((data.results || []).length === 0) break;
+    } catch (err) {
+      console.error('[recherche-entreprises] fetch error page', page, err);
+      break;
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const debug = {
-      url: `${BASE_URL}?${params.toString()}`,
-      totalApi: data.total_results || 0,
-      afterFilter: results.length,
-      resolvedCity,
-    };
-
-    console.log('[recherche-entreprises]', debug);
-
-    return {
-      results,
-      total: data.total_results || 0,
-      debug,
-    };
-  } finally {
-    clearTimeout(timeout);
   }
+
+  const debug = {
+    url: lastUrl,
+    totalApi,
+    afterFilter: allMatches.length,
+    resolvedCity,
+    pagesFetched,
+  };
+  console.log('[recherche-entreprises]', debug);
+
+  return {
+    results: allMatches.slice(0, 25),
+    total: totalApi,
+    debug,
+  };
 }
