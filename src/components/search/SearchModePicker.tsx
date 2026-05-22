@@ -12,13 +12,11 @@ interface SearchModePickerProps {
 
 export function SearchModePicker({ onSelect }: SearchModePickerProps) {
   const { profile, loading } = useSupabase();
-  const isUltraPlus = profile?.plan === 'ultra' || profile?.plan === 'agence';
-
-  // Tant que le profil n'est pas charge, on ne rend rien (evite le flash 'lock' et le skeleton lent)
-  // La page reste lisible (header, etc.) pendant ces ~200ms
-  if (loading || !profile) {
-    return null;
-  }
+  // Pendant le chargement du profil, on suppose Ultra (optimiste) pour eviter
+  // un flash 'lock' qui frustre les vrais users payants. Si le profil charge
+  // ensuite et que c'est Free/Premium, la carte se locke proprement.
+  // L'API gerera de toute facon la verif cote serveur si Free clique.
+  const isUltraPlus = (loading || !profile) || profile?.plan === 'ultra' || profile?.plan === 'agence';
 
   return (
     <div className="grid md:grid-cols-2 gap-4">
