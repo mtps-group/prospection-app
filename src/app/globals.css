@@ -250,11 +250,6 @@
 @layer base {
   body {
     @apply bg-surface-secondary text-text antialiased;
-    transition: background-color 200ms ease, color 200ms ease;
-  }
-  /* Smooth toutes les transitions de couleur lors du switch theme */
-  html[data-theme] * {
-    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
   }
 }
 
