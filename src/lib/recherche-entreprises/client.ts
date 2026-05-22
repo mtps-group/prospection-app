@@ -117,12 +117,20 @@ async function resolveCityToCommuneCode(cityName: string): Promise<string | null
     const url = `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(cityName)}&fields=code,nom,population&limit=5&boost=population`;
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn('[geo.api.gouv] non-ok:', response.status);
+      return null;
+    }
     const communes = await response.json() as Array<{ code: string; nom: string; population?: number }>;
-    if (!communes || communes.length === 0) return null;
+    if (!communes || communes.length === 0) {
+      console.warn('[geo.api.gouv] no commune found for:', cityName);
+      return null;
+    }
+    console.log('[geo.api.gouv] resolved:', cityName, '->', communes[0].nom, '(', communes[0].code, ')');
     // On prend la commune la plus peuplee (ex: 'Saint-Pierre' donne Saint-Pierre-de-la-Reunion)
     return communes[0].code;
-  } catch {
+  } catch (err) {
+    console.error('[geo.api.gouv] error:', err);
     return null;
   }
 }
@@ -232,17 +240,25 @@ export async function searchCompanies(filters: CompanySearchFilters): Promise<{
 
     // Filet de securite : on filtre cote client pour garantir le respect strict du filtre date
     // (au cas ou l'API gouv laisserait passer des resultats hors filtre)
+    // LENIENT : si la date est manquante ou invalide, on garde le resultat (on fait confiance
+    // au filtre cote API). On exclut UNIQUEMENT ceux dont on est sur qu'ils sont trop vieux.
     if (filters.creationMaxMonths) {
       const cutoff = new Date();
       cutoff.setMonth(cutoff.getMonth() - filters.creationMaxMonths);
       const cutoffTime = cutoff.getTime();
       results = results.filter((r) => {
-        if (!r.creationDate) return false; // pas de date connue = on exclut
+        if (!r.creationDate) return true; // pas de date connue = on garde (l'API a deja filtre)
         const d = new Date(r.creationDate);
-        if (isNaN(d.getTime())) return false;
-        return d.getTime() >= cutoffTime;
+        if (isNaN(d.getTime())) return true; // date invalide = on garde
+        return d.getTime() >= cutoffTime; // exclut uniquement les dates trop anciennes confirmees
       });
     }
+
+    console.log('[recherche-entreprises]', {
+      url: `${BASE_URL}?${params.toString()}`,
+      total_api: data.total_results || 0,
+      returned_after_filter: results.length,
+    });
 
     return {
       results,
