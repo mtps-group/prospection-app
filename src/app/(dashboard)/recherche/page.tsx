@@ -45,6 +45,12 @@ export default function RecherchePage() {
     }
   }, [profile]);
 
+  // Refresh profile au mount pour avoir le plan a jour (au cas ou il a change en BDD)
+  useEffect(() => {
+    refreshProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const sheetsUrlParam = searchParams.get('sheets_url');
   const exportErrorParam = searchParams.get('export_error');
 
