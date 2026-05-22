@@ -13,6 +13,7 @@ interface SearchRequestBody {
 }
 
 interface PlaceEnrichment {
+  placeId: string | null;
   phone: string | null;
   website: string | null;
   googleMapsUri: string | null;
@@ -25,9 +26,14 @@ interface PlaceEnrichment {
  * Enrichit une entreprise SIRENE avec les donnees Google Places (telephone, avis, site web)
  * en cherchant "nom + ville" sur Google Places et en prenant le meilleur match.
  */
+const EMPTY_ENRICHMENT: PlaceEnrichment = {
+  placeId: null, phone: null, website: null, googleMapsUri: null,
+  rating: null, userRatingCount: null, socials: null,
+};
+
 async function enrichWithGooglePlaces(company: CompanyResult): Promise<PlaceEnrichment> {
   if (!process.env.GOOGLE_PLACES_API_KEY) {
-    return { phone: null, website: null, googleMapsUri: null, rating: null, userRatingCount: null, socials: null };
+    return EMPTY_ENRICHMENT;
   }
 
   try {
@@ -40,7 +46,7 @@ async function enrichWithGooglePlaces(company: CompanyResult): Promise<PlaceEnri
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': process.env.GOOGLE_PLACES_API_KEY,
-        'X-Goog-FieldMask': 'places.displayName,places.nationalPhoneNumber,places.websiteUri,places.googleMapsUri,places.rating,places.userRatingCount,places.formattedAddress',
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.nationalPhoneNumber,places.websiteUri,places.googleMapsUri,places.rating,places.userRatingCount,places.formattedAddress',
       },
       body: JSON.stringify({
         textQuery: query,
@@ -50,7 +56,7 @@ async function enrichWithGooglePlaces(company: CompanyResult): Promise<PlaceEnri
     });
 
     if (!response.ok) {
-      return { phone: null, website: null, googleMapsUri: null, rating: null, userRatingCount: null, socials: null };
+      return EMPTY_ENRICHMENT;
     }
 
     const data = await response.json();
@@ -59,7 +65,7 @@ async function enrichWithGooglePlaces(company: CompanyResult): Promise<PlaceEnri
     const place = places[0];
 
     if (!place) {
-      return { phone: null, website: null, googleMapsUri: null, rating: null, userRatingCount: null, socials: null };
+      return EMPTY_ENRICHMENT;
     }
 
     // Scrape social links si site web present
@@ -71,6 +77,7 @@ async function enrichWithGooglePlaces(company: CompanyResult): Promise<PlaceEnri
     }
 
     return {
+      placeId: place.id || null,
       phone: place.nationalPhoneNumber || null,
       website: place.websiteUri || null,
       googleMapsUri: place.googleMapsUri || null,
@@ -79,7 +86,7 @@ async function enrichWithGooglePlaces(company: CompanyResult): Promise<PlaceEnri
       socials,
     };
   } catch {
-    return { phone: null, website: null, googleMapsUri: null, rating: null, userRatingCount: null, socials: null };
+    return EMPTY_ENRICHMENT;
   }
 }
 
@@ -177,14 +184,14 @@ export async function POST(request: NextRequest) {
 
     const resultsToInsert = companies.map((c, i) => {
       const e = enriched[i];
-      const enrichment: PlaceEnrichment = e.status === 'fulfilled' ? e.value : {
-        phone: null, website: null, googleMapsUri: null, rating: null, userRatingCount: null, socials: null,
-      };
+      const enrichment: PlaceEnrichment = e.status === 'fulfilled' ? e.value : EMPTY_ENRICHMENT;
 
       return {
         search_id: search.id,
         user_id: user.id,
-        google_place_id: c.siret, // on utilise SIRET en remplacement (unique)
+        // Vrai Google Place ID si trouve par enrichissement, fallback SIRET sinon
+        // (le SIRET ne marchera pas pour le panel detail Google Places mais identifie unique le row)
+        google_place_id: enrichment.placeId || c.siret,
         business_name: c.name,
         business_type: c.nafLabel || null,
         formatted_address: c.address ? `${c.address}, ${c.postalCode || ''} ${c.city || ''}`.trim() : null,

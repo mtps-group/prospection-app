@@ -70,7 +70,10 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspe
   }
 
   const score = computeScore(result);
-  const isClickable = !!onViewDetail && !!result.google_place_id;
+  // SIRET (14 chiffres) ne sont pas des Google Place IDs valides → on desactive le clic
+  // (les vrais Place IDs commencent toujours par une lettre, ex: 'ChIJ...')
+  const isValidPlaceId = !!result.google_place_id && !/^\d+$/.test(result.google_place_id);
+  const isClickable = !!onViewDetail && isValidPlaceId;
 
   return (
     <div
