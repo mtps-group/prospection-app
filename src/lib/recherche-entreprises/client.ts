@@ -133,7 +133,9 @@ function normalizeResult(raw: RawResult): CompanyResult {
     city: siege.libelle_commune || null,
     nafCode: siege.activite_principale || raw.activite_principale || null,
     nafLabel: siege.libelle_activite_principale || raw.libelle_activite_principale || null,
-    creationDate: siege.date_creation || raw.date_creation || null,
+    // IMPORTANT : on utilise la date de creation de l'ENTREPRISE (SIREN), pas du siege
+    // Le filtre date_creation_min de l'API s'applique sur la date de l'entreprise
+    creationDate: raw.date_creation || siege.date_creation || null,
     legalForm: raw.libelle_nature_juridique || null,
     employeesRange: siege.libelle_tranche_effectif_salarie || raw.libelle_tranche_effectif_salarie || null,
     director: formatDirigeant(raw.dirigeants),
@@ -196,8 +198,24 @@ export async function searchCompanies(filters: CompanySearchFilters): Promise<{
 
     const data = (await response.json()) as RechercheEntreprisesResponse;
 
+    let results = (data.results || []).map(normalizeResult);
+
+    // Filet de securite : on filtre cote client pour garantir le respect strict du filtre date
+    // (au cas ou l'API gouv laisserait passer des resultats hors filtre)
+    if (filters.creationMaxMonths) {
+      const cutoff = new Date();
+      cutoff.setMonth(cutoff.getMonth() - filters.creationMaxMonths);
+      const cutoffTime = cutoff.getTime();
+      results = results.filter((r) => {
+        if (!r.creationDate) return false; // pas de date connue = on exclut
+        const d = new Date(r.creationDate);
+        if (isNaN(d.getTime())) return false;
+        return d.getTime() >= cutoffTime;
+      });
+    }
+
     return {
-      results: (data.results || []).map(normalizeResult),
+      results,
       total: data.total_results || 0,
     };
   } finally {
