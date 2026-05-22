@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Phone, MapPin, Globe, Trash2, StickyNote, X, Check, Search, ArrowRight, LayoutList, LayoutGrid, Tag as TagIcon, Euro, TrendingUp } from 'lucide-react';
+import { Phone, MapPin, Globe, Trash2, StickyNote, X, Check, Search, ArrowRight, LayoutList, LayoutGrid, Tag as TagIcon, Euro, TrendingUp, Eye } from 'lucide-react';
 import { PROSPECT_STATUSES, type ProspectStatusKey, type Prospect, type ProspectTag } from '@/lib/crm/constants';
 import { MeetingModal } from '@/components/crm/MeetingModal';
 import { SignatureModal } from '@/components/crm/SignatureModal';
@@ -11,6 +11,8 @@ import { TagsManager } from '@/components/crm/TagsManager';
 import { ProspectTagsBar } from '@/components/crm/ProspectTagsBar';
 import { ReminderBadge } from '@/components/crm/ReminderBadge';
 import { KanbanView } from '@/components/crm/KanbanView';
+import { BusinessDetailPanel } from '@/components/search/BusinessDetailPanel';
+import type { SearchResultClient } from '@/types';
 
 type ViewMode = 'list' | 'kanban';
 
@@ -27,6 +29,39 @@ export default function CrmProspectsPage() {
   // State pour modales transitions
   const [meetingModal, setMeetingModal] = useState<{ prospect: Prospect } | null>(null);
   const [signatureModal, setSignatureModal] = useState<{ prospect: Prospect } | null>(null);
+
+  // State pour le panel detail (vue Google Places)
+  const [detailPanel, setDetailPanel] = useState<{
+    placeId: string;
+    businessName: string;
+    city?: string;
+    hasWebsite?: boolean;
+    websiteUrl?: string;
+    result: SearchResultClient;
+  } | null>(null);
+
+  function openDetail(prospect: Prospect) {
+    // Verifie que google_place_id est un vrai Place ID (pas un SIRET de 14 chiffres)
+    const isValidPlaceId = !!prospect.google_place_id && !/^\d+$/.test(prospect.google_place_id);
+    if (!isValidPlaceId) {
+      alert('Détails Google Places non disponibles pour ce prospect (SIRENE only). Ouvre son site web ou Google Maps depuis la carte.');
+      return;
+    }
+    const city = prospect.formatted_address?.split(',').slice(-2, -1)[0]?.trim().replace(/^\d{5}\s*/, '') || '';
+    // On adapte le Prospect en SearchResultClient (champs communs suffisent pour le panel)
+    const result = {
+      ...prospect,
+      is_blurred: false,
+    } as unknown as SearchResultClient;
+    setDetailPanel({
+      placeId: prospect.google_place_id,
+      businessName: prospect.business_name,
+      city,
+      hasWebsite: !!prospect.website_url,
+      websiteUrl: prospect.website_url || undefined,
+      result,
+    });
+  }
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -173,6 +208,7 @@ export default function CrmProspectsPage() {
         <KanbanView
           prospects={prospects}
           onStatusChange={updateStatus}
+          onProspectClick={openDetail}
         />
       )}
 
@@ -245,6 +281,13 @@ export default function CrmProspectsPage() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
+                          onClick={() => openDetail(prospect)}
+                          className="rounded-lg p-2 text-text-muted hover:text-primary hover:bg-primary/5 transition-all"
+                          title="Voir plus d'infos"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
                           onClick={() => { setEditingNotes(prospect.id); setNotesDraft(prospect.notes || ''); }}
                           className="rounded-lg p-2 text-text-muted hover:text-primary hover:bg-primary/5 transition-all"
                           title="Note"
@@ -254,6 +297,7 @@ export default function CrmProspectsPage() {
                         <button
                           onClick={() => deleteProspect(prospect.id)}
                           className="rounded-lg p-2 text-text-muted hover:text-red-500 hover:bg-red-50 transition-all"
+                          title="Supprimer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -382,6 +426,19 @@ export default function CrmProspectsPage() {
             setShowTagsManager(false);
             fetchAll();
           }}
+        />
+      )}
+
+      {/* Panel detail (Google Places info enrichies) */}
+      {detailPanel && (
+        <BusinessDetailPanel
+          placeId={detailPanel.placeId}
+          businessName={detailPanel.businessName}
+          city={detailPanel.city}
+          hasWebsite={detailPanel.hasWebsite}
+          websiteUrl={detailPanel.websiteUrl}
+          result={detailPanel.result}
+          onClose={() => setDetailPanel(null)}
         />
       )}
     </>
