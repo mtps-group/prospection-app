@@ -55,12 +55,16 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       console.error('signOut error:', err);
     }
 
-    // Vide localStorage/sessionStorage + hard reload
+    // Vide localStorage/sessionStorage
     try {
       localStorage.clear();
       sessionStorage.clear();
     } catch {}
-    window.location.href = '/login';
+
+    // Force une navigation HARD avec cache-busting (timestamp dans l'URL)
+    // - location.replace : pas d'entry historique (l'user peut pas faire 'retour' vers etat connecte)
+    // - ?t=timestamp : URL unique → bust le cache navigateur, force fresh fetch
+    window.location.replace('/login?t=' + Date.now());
   };
 
   const planBadge = profile?.plan === 'ultra'
