@@ -160,7 +160,7 @@ export default function RecherchePage() {
         // 0 resultats : on affiche un message clair avec le diagnostic
         const dbg = data.debug;
         const diagnostic = dbg
-          ? ` (API: ${dbg.totalApi} match, ${dbg.afterFilter} après filtre strict siège+date sur ${dbg.pagesFetched || 1} pages, ville: ${dbg.resolvedCity || 'aucune'})`
+          ? ` (INSEE: ${dbg.totalApi} entreprises au total avec ces critères, ville: ${dbg.resolvedCity || 'aucune'})`
           : '';
         addToast(`Aucun résultat${diagnostic}. Essayez d'élargir le filtre date ou changer de ville.`, 'info');
       }

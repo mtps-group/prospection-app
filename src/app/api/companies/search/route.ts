@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { searchCompanies, type CompanyResult } from '@/lib/recherche-entreprises/client';
+import { searchSireneWithCity, type SireneResult } from '@/lib/insee/client';
 import { extractSocialLinks } from '@/lib/social-scraper';
 import type { SearchResultClient, SocialProfiles } from '@/types';
+
+// Alias type pour minimiser les changements dans le reste du fichier
+type CompanyResult = SireneResult;
 
 interface SearchRequestBody {
   businessType?: string;
@@ -133,13 +136,30 @@ export async function POST(request: NextRequest) {
     if (businessType) qParts.push(businessType);
     if (nameQuery) qParts.push(nameQuery);
 
-    const { results: companies, total, debug } = await searchCompanies({
-      q: qParts.join(' ') || undefined,
-      location: city || undefined,
-      creationMaxMonths: creationMaxMonths || undefined,
-      natureJuridique: natureJuridique || undefined,
-      perPage: 25,
-    });
+    let companies: CompanyResult[] = [];
+    let total = 0;
+    let debug: { query?: string; url?: string; totalApi: number; afterFilter?: number; resolvedCity?: string; pagesFetched?: number } = { totalApi: 0 };
+
+    try {
+      const sireneResult = await searchSireneWithCity({
+        q: qParts.join(' ') || undefined,
+        city: city || undefined,
+        creationMaxMonths: creationMaxMonths || undefined,
+        natureJuridique: natureJuridique || undefined,
+        perPage: 25,
+      });
+      companies = sireneResult.results;
+      total = sireneResult.total;
+      debug = sireneResult.debug;
+    } catch (sireneError) {
+      console.error('INSEE Sirene failed:', sireneError);
+      const errMsg = sireneError instanceof Error ? sireneError.message : 'erreur inconnue';
+      return NextResponse.json({
+        error: 'Erreur API INSEE',
+        detail: errMsg,
+        hint: 'Verifie que INSEE_CLIENT_ID et INSEE_CLIENT_SECRET sont bien configures dans Vercel + que la souscription Sirene V3.11 est active',
+      }, { status: 500 });
+    }
 
     if (companies.length === 0) {
       return NextResponse.json({
