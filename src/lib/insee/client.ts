@@ -254,18 +254,52 @@ export async function searchSirene(filters: SireneFilters): Promise<{
   }
 
   const query = queryParts.join(' AND ');
-  const url = `${SIRENE_API}/siret?q=${encodeURIComponent(query)}&nombre=${filters.perPage || 25}`;
+  const isApiKey = !!process.env.INSEE_API_KEY;
 
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/json',
+  // Le nouveau portail INSEE (portail-api.insee.fr) a parfois besoin :
+  // - d'une URL differente (portail-api.insee.fr/...)
+  // - d'un header X-INSEE-Api-Key-Integration au lieu de Authorization: Bearer
+  // On essaie plusieurs combos et on garde le 1er qui marche
+  const attempts: Array<{ url: string; headers: Record<string, string>; desc: string }> = [
+    {
+      desc: 'Bearer + api.insee.fr',
+      url: `${SIRENE_API}/siret?q=${encodeURIComponent(query)}&nombre=${filters.perPage || 25}`,
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
     },
-  });
+    {
+      desc: 'X-INSEE-Api-Key-Integration + api.insee.fr',
+      url: `${SIRENE_API}/siret?q=${encodeURIComponent(query)}&nombre=${filters.perPage || 25}`,
+      headers: { 'X-INSEE-Api-Key-Integration': token, 'Accept': 'application/json' },
+    },
+    {
+      desc: 'Bearer + portail-api.insee.fr',
+      url: `https://portail-api.insee.fr/api-sirene/3.11/siret?q=${encodeURIComponent(query)}&nombre=${filters.perPage || 25}`,
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+    },
+    {
+      desc: 'X-INSEE-Api-Key-Integration + portail-api.insee.fr',
+      url: `https://portail-api.insee.fr/api-sirene/3.11/siret?q=${encodeURIComponent(query)}&nombre=${filters.perPage || 25}`,
+      headers: { 'X-INSEE-Api-Key-Integration': token, 'Accept': 'application/json' },
+    },
+  ];
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`INSEE Sirene error ${response.status}: ${text.slice(0, 200)}`);
+  let response: Response | null = null;
+  let lastError = '';
+  for (const attempt of attempts) {
+    const r = await fetch(attempt.url, { headers: attempt.headers });
+    if (r.ok) {
+      console.log('[INSEE] success:', attempt.desc);
+      response = r;
+      break;
+    }
+    const text = await r.text();
+    lastError = `${attempt.desc} → ${r.status}: ${text.slice(0, 150)}`;
+    console.log('[INSEE] failed:', lastError);
+    if (!isApiKey) break; // Si OAuth, on ne tente qu'une fois (le token devrait suffire)
+  }
+
+  if (!response) {
+    throw new Error(`INSEE Sirene auth failed après ${attempts.length} tentatives. Dernière erreur : ${lastError}`);
   }
 
   const data = (await response.json()) as SireneRawResponse;
