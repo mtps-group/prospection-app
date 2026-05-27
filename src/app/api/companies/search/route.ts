@@ -152,12 +152,11 @@ export async function POST(request: NextRequest) {
       total = sireneResult.total;
       debug = sireneResult.debug;
     } catch (sireneError) {
+      // Log technique pour le debug interne (visible dans Vercel logs)
       console.error('INSEE Sirene failed:', sireneError);
-      const errMsg = sireneError instanceof Error ? sireneError.message : 'erreur inconnue';
+      // Message user-friendly, pas de details techniques exposes
       return NextResponse.json({
-        error: 'Erreur API INSEE',
-        detail: errMsg,
-        hint: 'Verifie que INSEE_CLIENT_ID et INSEE_CLIENT_SECRET sont bien configures dans Vercel + que la souscription Sirene V3.11 est active',
+        error: 'Erreur lors de la recherche, veuillez réessayer dans quelques instants.',
       }, { status: 500 });
     }
 
@@ -215,9 +214,7 @@ export async function POST(request: NextRequest) {
     if (searchError || !search) {
       console.error('Error creating search:', searchError);
       return NextResponse.json({
-        error: 'Erreur BDD (searches)',
-        detail: searchError?.message || 'unknown',
-        hint: 'La migration 004 a-t-elle ete executee dans Supabase ?'
+        error: 'Erreur lors de la sauvegarde, veuillez réessayer.',
       }, { status: 500 });
     }
 
@@ -284,17 +281,13 @@ export async function POST(request: NextRequest) {
           if (retry.error) {
             console.error('Insert fallback failed:', retry.error);
             return NextResponse.json({
-              error: 'Erreur BDD (search_results)',
-              detail: retry.error.message,
-              hint: 'Verifie que la table search_results est OK',
+              error: 'Erreur lors de la sauvegarde, veuillez réessayer.',
             }, { status: 500 });
           }
         } else {
           console.error('Insert error:', insertError);
           return NextResponse.json({
-            error: 'Erreur BDD (search_results)',
-            detail: insertError.message,
-            hint: 'La migration 004 a-t-elle ete executee dans Supabase ?'
+            error: 'Erreur lors de la sauvegarde, veuillez réessayer.',
           }, { status: 500 });
         }
       }
@@ -331,11 +324,10 @@ export async function POST(request: NextRequest) {
       blurredCount: 0,
     });
   } catch (error) {
+    // Log technique pour debug interne uniquement
     console.error('Companies search error:', error);
-    const message = error instanceof Error ? error.message : 'unknown';
     return NextResponse.json({
-      error: 'Erreur serveur',
-      detail: message,
+      error: 'Erreur lors de la recherche, veuillez réessayer plus tard.',
     }, { status: 500 });
   }
 }

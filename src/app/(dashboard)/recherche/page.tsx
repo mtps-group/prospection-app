@@ -144,9 +144,7 @@ export default function RecherchePage() {
         if (data.upgradeRequired) {
           addToast(data.message || 'Plan Ultra requis', 'error');
         } else {
-          const detail = data.detail ? ` (${data.detail})` : '';
-          const hint = data.hint ? ` — ${data.hint}` : '';
-          addToast((data.error || 'Erreur lors de la recherche') + detail + hint, 'error');
+          addToast(data.error || 'Erreur lors de la recherche, veuillez réessayer.', 'error');
         }
         setLoading(false);
         return;
@@ -157,12 +155,7 @@ export default function RecherchePage() {
       if (data.totalFound > 0) {
         addToast(`${data.totalFound} entreprises trouvées !`, 'success');
       } else {
-        // 0 resultats : on affiche un message clair avec le diagnostic
-        const dbg = data.debug;
-        const diagnostic = dbg
-          ? ` (INSEE: ${dbg.totalApi} entreprises au total avec ces critères, ville: ${dbg.resolvedCity || 'aucune'})`
-          : '';
-        addToast(`Aucun résultat${diagnostic}. Essayez d'élargir le filtre date ou changer de ville.`, 'info');
+        addToast('Aucun résultat avec ces critères. Essayez d\'élargir le filtre date ou de changer de ville.', 'info');
       }
     } catch {
       addToast('Erreur de connexion au serveur', 'error');
