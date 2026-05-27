@@ -12,7 +12,18 @@ const SIRENE_API = 'https://api.insee.fr/api-sirene/3.11';
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
-async function getAccessToken(): Promise<string> {
+/**
+ * Recupere le bearer token a utiliser pour l'API SIRENE.
+ * 2 modes supportes :
+ *  1. INSEE_API_KEY directe (le plus simple) → utilisee telle quelle
+ *  2. INSEE_CLIENT_ID + INSEE_CLIENT_SECRET (OAuth Client Credentials) → fetch un token
+ */
+async function getBearerToken(): Promise<string> {
+  // Mode 1 : API key directe (recommande, plus simple)
+  const apiKey = process.env.INSEE_API_KEY;
+  if (apiKey) return apiKey;
+
+  // Mode 2 : OAuth Client Credentials flow (avec cache 1h)
   if (cachedToken && Date.now() < cachedToken.expiresAt - 60_000) {
     return cachedToken.value;
   }
@@ -20,7 +31,7 @@ async function getAccessToken(): Promise<string> {
   const clientId = process.env.INSEE_CLIENT_ID;
   const clientSecret = process.env.INSEE_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
-    throw new Error('INSEE_CLIENT_ID ou INSEE_CLIENT_SECRET manquant dans les env vars Vercel');
+    throw new Error('Auth INSEE manquante : ajoute INSEE_API_KEY OU (INSEE_CLIENT_ID + INSEE_CLIENT_SECRET) dans les env vars Vercel');
   }
 
   const body = new URLSearchParams({
@@ -202,7 +213,7 @@ export async function searchSirene(filters: SireneFilters): Promise<{
   total: number;
   debug: { query: string; totalApi: number; resolvedCity?: string };
 }> {
-  const token = await getAccessToken();
+  const token = await getBearerToken();
 
   // Build Lucene query : on filtre par SIEGE uniquement + actif
   const queryParts: string[] = [
