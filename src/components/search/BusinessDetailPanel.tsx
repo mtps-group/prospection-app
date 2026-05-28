@@ -301,81 +301,79 @@ export function BusinessDetailPanel({
               <section>
                 <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
                   <Phone className="h-4 w-4 text-text-muted" />
-                  {fr.detail.coordonnees}
+                  Coordonnées
                 </h3>
                 <div className="space-y-2">
                   {/* Nom */}
-                  <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2">
-                    <div className="flex items-center gap-2 text-sm min-w-0">
-                      <Building2 className="h-4 w-4 flex-shrink-0 text-text-muted" />
-                      <span className="font-medium text-text truncate">{businessName}</span>
+                  <div className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 hover:border-gray-200 hover:shadow-sm transition-all">
+                    <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="h-4 w-4 text-text-secondary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] uppercase tracking-wide font-bold text-text-muted">Entreprise</p>
+                      <p className="text-sm font-semibold text-text truncate">{businessName}</p>
                     </div>
                     <button
                       onClick={() => copyToClipboard(businessName, 'name')}
-                      className="flex-shrink-0 p-1 rounded hover:bg-gray-200 transition-colors"
+                      className="flex-shrink-0 rounded-lg p-1.5 text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
                       title="Copier"
                     >
-                      {copiedField === 'name'
-                        ? <Check className="h-3.5 w-3.5 text-green-600" />
-                        : <Copy className="h-3.5 w-3.5 text-text-muted" />}
+                      {copiedField === 'name' ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                     </button>
                   </div>
 
+                  {/* Téléphone (en 2e car le plus actionable) */}
+                  {detail.nationalPhoneNumber && (
+                    <a
+                      href={`tel:${detail.internationalPhoneNumber || detail.nationalPhoneNumber}`}
+                      className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 hover:border-blue-200 hover:shadow-md hover:shadow-blue-500/5 transition-all"
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Phone className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase tracking-wide font-bold text-text-muted">Téléphone — clic pour appeler</p>
+                        <p className="text-sm font-bold text-blue-600">{detail.nationalPhoneNumber}</p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.preventDefault(); copyToClipboard(detail.nationalPhoneNumber!, 'phone'); }}
+                        className="flex-shrink-0 rounded-lg p-1.5 text-text-muted hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        title="Copier"
+                      >
+                        {copiedField === 'phone' ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </a>
+                  )}
+
                   {/* Adresse */}
                   {detail.formattedAddress && (
-                    <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2">
-                      <div className="flex items-start gap-2 text-sm min-w-0">
-                        <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5 text-text-muted" />
-                        <span className="text-text-secondary">{detail.formattedAddress}</span>
+                    <div className="group flex items-start gap-3 rounded-xl border border-gray-100 bg-white p-3 hover:border-gray-200 hover:shadow-sm transition-all">
+                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase tracking-wide font-bold text-text-muted">Adresse</p>
+                        <p className="text-sm text-text-secondary leading-snug">{detail.formattedAddress}</p>
+                        {detail.googleMapsUri && (
+                          <a
+                            href={detail.googleMapsUri}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-1 text-xs font-semibold text-primary hover:text-primary-hover"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            Voir sur Google Maps
+                          </a>
+                        )}
                       </div>
                       <button
                         onClick={() => copyToClipboard(detail.formattedAddress!, 'address')}
-                        className="flex-shrink-0 p-1 rounded hover:bg-gray-200 transition-colors"
+                        className="flex-shrink-0 rounded-lg p-1.5 text-text-muted hover:text-primary hover:bg-primary/5 transition-colors"
                         title="Copier"
                       >
-                        {copiedField === 'address'
-                          ? <Check className="h-3.5 w-3.5 text-green-600" />
-                          : <Copy className="h-3.5 w-3.5 text-text-muted" />}
+                        {copiedField === 'address' ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                       </button>
                     </div>
-                  )}
-
-                  {/* Téléphone */}
-                  {detail.nationalPhoneNumber && (
-                    <div className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-3 py-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-4 w-4 flex-shrink-0 text-text-muted" />
-                        <a
-                          href={`tel:${detail.internationalPhoneNumber || detail.nationalPhoneNumber}`}
-                          className="text-primary hover:text-primary-hover font-medium"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {detail.nationalPhoneNumber}
-                        </a>
-                      </div>
-                      <button
-                        onClick={() => copyToClipboard(detail.nationalPhoneNumber!, 'phone')}
-                        className="flex-shrink-0 p-1 rounded hover:bg-gray-200 transition-colors"
-                        title="Copier"
-                      >
-                        {copiedField === 'phone'
-                          ? <Check className="h-3.5 w-3.5 text-green-600" />
-                          : <Copy className="h-3.5 w-3.5 text-text-muted" />}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Google Maps */}
-                  {detail.googleMapsUri && (
-                    <a
-                      href={detail.googleMapsUri}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary-hover font-medium mt-1"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      {fr.results.voirSurGoogleMaps}
-                    </a>
                   )}
                 </div>
               </section>
@@ -385,55 +383,101 @@ export function BusinessDetailPanel({
                 const statusInfo = getBusinessStatusLabel(detail.businessStatus);
                 if (!statusInfo) return null;
                 const StatusIcon = statusInfo.icon;
+                const bgClasses =
+                  detail.businessStatus === 'OPERATIONAL' ? 'from-green-50 to-emerald-50 border-green-200' :
+                  detail.businessStatus === 'CLOSED_TEMPORARILY' ? 'from-amber-50 to-orange-50 border-amber-200' :
+                  'from-red-50 to-rose-50 border-red-200';
+                const iconBg =
+                  detail.businessStatus === 'OPERATIONAL' ? 'from-green-500 to-emerald-500' :
+                  detail.businessStatus === 'CLOSED_TEMPORARILY' ? 'from-amber-500 to-orange-500' :
+                  'from-red-500 to-rose-500';
                 return (
-                  <section>
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
-                      {fr.detail.statut}
-                    </h3>
-                    <div className={`flex items-center gap-2 text-sm ${statusInfo.color}`}>
-                      <StatusIcon className="h-4 w-4" />
-                      <span className="font-medium">{statusInfo.label}</span>
+                  <div className={`rounded-2xl border bg-gradient-to-br ${bgClasses} p-4 flex items-center gap-3`}>
+                    <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${iconBg} flex items-center justify-center shadow-md flex-shrink-0`}>
+                      <StatusIcon className="h-5 w-5 text-white" />
                     </div>
-                  </section>
+                    <div>
+                      <p className="text-xs text-text-muted font-medium uppercase tracking-wide">État</p>
+                      <p className={`text-sm font-bold ${statusInfo.color}`}>{statusInfo.label}</p>
+                    </div>
+                  </div>
                 );
               })()}
 
               {/* 3. HORAIRES */}
-              {(detail.regularOpeningHours || detail.currentOpeningHours) && (
-                <section>
-                  <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
-                    <Clock className="h-4 w-4 text-text-muted" />
-                    {fr.detail.horaires}
-                  </h3>
-                  {(detail.currentOpeningHours?.openNow !== undefined ||
-                    detail.regularOpeningHours?.openNow !== undefined) && (
-                    <div className="mb-2">
-                      <Badge
-                        variant={
-                          (detail.currentOpeningHours?.openNow ?? detail.regularOpeningHours?.openNow)
-                            ? 'success'
-                            : 'error'
-                        }
-                      >
-                        {(detail.currentOpeningHours?.openNow ?? detail.regularOpeningHours?.openNow)
-                          ? fr.detail.ouvertMaintenant
-                          : fr.detail.fermeMaintenant}
-                      </Badge>
+              {(detail.regularOpeningHours || detail.currentOpeningHours) && (() => {
+                const lines = detail.regularOpeningHours?.weekdayDescriptions
+                  || detail.currentOpeningHours?.weekdayDescriptions || [];
+                const isOpen = detail.currentOpeningHours?.openNow ?? detail.regularOpeningHours?.openNow;
+                // Determine today (Google returns Monday first, JS Sunday=0)
+                const todayIdx = (new Date().getDay() + 6) % 7;
+                const dayNames = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+                const todayDay = dayNames[todayIdx];
+
+                return (
+                  <section>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
+                      <Clock className="h-4 w-4 text-text-muted" />
+                      Horaires d&apos;ouverture
+                    </h3>
+                    <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
+                      {/* Header avec statut */}
+                      {isOpen !== undefined && (
+                        <div className={`px-4 py-3 flex items-center justify-between ${
+                          isOpen
+                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100'
+                            : 'bg-gradient-to-r from-red-50 to-orange-50 border-b border-red-100'
+                        }`}>
+                          <div className="flex items-center gap-2">
+                            <div className={`h-2 w-2 rounded-full ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                            <span className={`text-sm font-bold ${isOpen ? 'text-green-700' : 'text-red-700'}`}>
+                              {isOpen ? 'Ouvert maintenant' : 'Fermé actuellement'}
+                            </span>
+                          </div>
+                          <span className="text-xs text-text-muted">
+                            {new Date().toLocaleDateString('fr-FR', { weekday: 'long' })}
+                          </span>
+                        </div>
+                      )}
+                      {/* Liste des jours */}
+                      <div className="divide-y divide-gray-50">
+                        {lines.map((line, idx) => {
+                          const match = line.match(/^([^:]+):\s*(.+)$/);
+                          const dayName = (match?.[1] || line).trim();
+                          const hours = (match?.[2] || '').trim();
+                          const isToday = dayName.toLowerCase().includes(todayDay);
+                          const isClosed = hours.toLowerCase().includes('fermé') || hours.toLowerCase().includes('closed');
+
+                          return (
+                            <div
+                              key={idx}
+                              className={`flex items-center justify-between px-4 py-2.5 ${
+                                isToday ? 'bg-primary/5' : ''
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm capitalize ${isToday ? 'font-bold text-primary' : 'font-medium text-text-secondary'}`}>
+                                  {dayName}
+                                </span>
+                                {isToday && (
+                                  <span className="text-[10px] font-bold uppercase tracking-wide bg-gradient-to-r from-primary to-purple-500 text-white px-1.5 py-0.5 rounded-full">
+                                    Aujourd&apos;hui
+                                  </span>
+                                )}
+                              </div>
+                              <span className={`text-sm font-mono tabular-nums ${
+                                isClosed ? 'text-text-muted italic' : isToday ? 'font-semibold text-text' : 'text-text-secondary'
+                              }`}>
+                                {hours || '—'}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  )}
-                  <div className="space-y-1">
-                    {(
-                      detail.regularOpeningHours?.weekdayDescriptions ||
-                      detail.currentOpeningHours?.weekdayDescriptions ||
-                      []
-                    ).map((line, idx) => (
-                      <p key={idx} className="text-sm text-text-secondary">
-                        {line}
-                      </p>
-                    ))}
-                  </div>
-                </section>
-              )}
+                  </section>
+                );
+              })()}
 
               {/* 4a. Bannière Ultra (si pas Ultra) */}
               {!detail.isUltra && (
@@ -662,30 +706,38 @@ export function BusinessDetailPanel({
 
               {/* 6. NOTE GOOGLE + AVIS COUNT */}
               {detail.rating && (
-                <section>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1">
+                <div className="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-orange-50 p-4 flex items-center gap-4">
+                  <div className="flex flex-col items-center justify-center bg-white rounded-xl shadow-sm border border-amber-100 px-4 py-3 min-w-[80px]">
+                    <span className="text-3xl font-black text-amber-600">{detail.rating.toFixed(1)}</span>
+                    <div className="flex items-center gap-0.5 mt-1">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                           key={star}
-                          className={`h-5 w-5 ${
+                          className={`h-3 w-3 ${
                             star <= Math.round(detail.rating!)
                               ? 'text-amber-400 fill-amber-400'
-                              : 'text-gray-200'
+                              : 'text-gray-200 fill-gray-200'
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-lg font-bold text-text">
-                      {detail.rating.toFixed(1)}
-                    </span>
-                    {detail.userRatingCount && (
-                      <span className="text-sm text-text-muted">
-                        ({detail.userRatingCount} {fr.results.avis})
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">Note Google</p>
+                    {detail.userRatingCount ? (
+                      <p className="text-sm text-text-secondary mt-0.5">
+                        <strong className="text-text">{detail.userRatingCount}</strong> avis clients
+                      </p>
+                    ) : (
+                      <p className="text-sm text-text-muted mt-0.5">Aucun avis pour le moment</p>
+                    )}
+                    {detail.userRatingCount && detail.userRatingCount > 50 && (
+                      <span className="inline-flex items-center gap-1 mt-1 rounded-full bg-green-100 border border-green-200 text-green-700 px-2 py-0.5 text-[10px] font-bold">
+                        ✓ Beaucoup d&apos;avis
                       </span>
                     )}
                   </div>
-                </section>
+                </div>
               )}
 
               {/* 7. PHOTOS */}
