@@ -91,12 +91,29 @@ function extractEmailFromHtml(html: string): string | null {
     } catch { /* continuer */ }
   }
 
-  // 2. Entités HTML et obfuscation courante
+  // 2. Priorite : liens mailto: (les plus fiables)
+  const mailtoMatches = html.match(/mailto:([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/gi) || [];
+  for (const m of mailtoMatches) {
+    const email = m.replace(/^mailto:/i, '').toLowerCase().trim();
+    if (isValidEmail(email)) return email;
+  }
+
+  // 3. Meta tags & JSON-LD (souvent dans les sites modernes)
+  const jsonLdMatch = html.match(/"email"\s*:\s*"([^"]+)"/i);
+  if (jsonLdMatch && isValidEmail(jsonLdMatch[1])) {
+    return jsonLdMatch[1].toLowerCase().trim();
+  }
+
+  // 4. Entites HTML + obfuscation classique
   const decoded = html
     .replace(/&#64;/g, '@').replace(/&#x40;/gi, '@')
     .replace(/&#46;/g, '.').replace(/&#x2e;/gi, '.')
+    .replace(/&commat;/gi, '@').replace(/&period;/gi, '.')
     .replace(/\s*\[at\]\s*/gi, '@').replace(/\s*\(at\)\s*/gi, '@')
-    .replace(/\s*\[dot\]\s*/gi, '.').replace(/\s*\(dot\)\s*/gi, '.');
+    .replace(/\s*\{at\}\s*/gi, '@').replace(/\s+@\s+/g, '@')
+    .replace(/\s*\[dot\]\s*/gi, '.').replace(/\s*\(dot\)\s*/gi, '.')
+    .replace(/\s*\{dot\}\s*/gi, '.').replace(/\s+\.\s+/g, '.')
+    .replace(/\s*\barobase\b\s*/gi, '@').replace(/\s*\bpoint\b\s*/gi, '.');
 
   const emails = decoded.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g) || [];
   const valid = emails.filter(isValidEmail);
@@ -159,8 +176,16 @@ async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null
       `${base.origin}/contact`,
       `${base.origin}/nous-contacter`,
       `${base.origin}/contactez-nous`,
+      `${base.origin}/contact-us`,
       `${base.origin}/contact.html`,
       `${base.origin}/contact.php`,
+      `${base.origin}/mentions-legales`,
+      `${base.origin}/mentions`,
+      `${base.origin}/legal`,
+      `${base.origin}/legal-notice`,
+      `${base.origin}/about`,
+      `${base.origin}/a-propos`,
+      `${base.origin}/qui-sommes-nous`,
     );
   } catch { return null; }
 
@@ -185,12 +210,8 @@ async function scrapeEmailFromWebsite(websiteUrl: string): Promise<string | null
 }
 
 // ── Scraping email depuis Pages Jaunes ────────────────────────────────────────
+// 2 etapes : 1) page de resultats pour trouver le lien fiche, 2) fiche detaillee
 async function scrapeEmailFromPagesJaunes(businessName: string, city: string): Promise<string | null> {
-  const urls = [
-    `https://www.pagesjaunes.fr/recherche?quoiqui=${encodeURIComponent(businessName)}&ou=${encodeURIComponent(city)}`,
-    `https://www.pagesjaunes.fr/pagesblanches/recherche?quoiqui=${encodeURIComponent(businessName)}&ou=${encodeURIComponent(city)}`,
-  ];
-
   const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -198,15 +219,50 @@ async function scrapeEmailFromPagesJaunes(businessName: string, city: string): P
     'Referer': 'https://www.pagesjaunes.fr/',
   };
 
-  for (const url of urls) {
+  const searchUrls = [
+    `https://www.pagesjaunes.fr/recherche?quoiqui=${encodeURIComponent(businessName)}&ou=${encodeURIComponent(city)}`,
+    `https://www.pagesjaunes.fr/pagesblanches/recherche?quoiqui=${encodeURIComponent(businessName)}&ou=${encodeURIComponent(city)}`,
+  ];
+
+  for (const searchUrl of searchUrls) {
     try {
       const controller = new AbortController();
       const tid = setTimeout(() => controller.abort(), 7000);
-      const res = await fetch(url, { signal: controller.signal, headers });
+      const res = await fetch(searchUrl, { signal: controller.signal, headers });
       clearTimeout(tid);
       if (!res.ok) continue;
-      const email = extractEmailFromHtml(await res.text());
-      if (email) return email;
+      const searchHtml = await res.text();
+
+      // 1. Tenter d'extraire un email direct depuis les resultats (parfois present)
+      const directEmail = extractEmailFromHtml(searchHtml);
+      if (directEmail) return directEmail;
+
+      // 2. Trouver le lien vers la fiche detaillee du 1er resultat
+      const ficheLinks: string[] = [];
+      const patterns = [
+        /href="(\/pros\/[^"]+)"/g,
+        /href="(\/pagesblanches\/[^"]+)"/g,
+        /href="(https:\/\/www\.pagesjaunes\.fr\/pros\/[^"]+)"/g,
+      ];
+      for (const pattern of patterns) {
+        let m;
+        while ((m = pattern.exec(searchHtml)) !== null && ficheLinks.length < 3) {
+          ficheLinks.push(m[1].startsWith('http') ? m[1] : `https://www.pagesjaunes.fr${m[1]}`);
+        }
+      }
+
+      // 3. Visiter les 3 premieres fiches max et extraire l'email
+      for (const ficheUrl of ficheLinks.slice(0, 3)) {
+        try {
+          const ctrl2 = new AbortController();
+          const tid2 = setTimeout(() => ctrl2.abort(), 6000);
+          const ficheRes = await fetch(ficheUrl, { signal: ctrl2.signal, headers });
+          clearTimeout(tid2);
+          if (!ficheRes.ok) continue;
+          const ficheEmail = extractEmailFromHtml(await ficheRes.text());
+          if (ficheEmail) return ficheEmail;
+        } catch { continue; }
+      }
     } catch { continue; }
   }
   return null;
