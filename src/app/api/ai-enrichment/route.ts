@@ -18,7 +18,7 @@ const EMAIL_BLACKLIST = [
 interface AiEnrichmentResult { type: string; content: string; }
 
 interface RequestBody {
-  type: 'profile' | 'email' | 'mail' | 'dirigeant';
+  type: 'profile' | 'email' | 'mail' | 'dirigeant' | 'siret';
   businessName: string;
   city: string;
   activite?: string;
@@ -28,6 +28,46 @@ interface RequestBody {
   phone?: string;
   hasWebsite?: boolean;
   websiteUrl?: string;
+}
+
+/**
+ * Trouve le SIRET (et le SIREN) d'une entreprise via l'API publique
+ * recherche-entreprises.api.gouv.fr (gratuit, no auth).
+ * On cherche par nom + ville, on prend le 1er resultat ou.
+ */
+async function findSiret(businessName: string, city: string): Promise<string | null> {
+  try {
+    const params = new URLSearchParams();
+    params.set('q', businessName);
+    if (city) {
+      // Si CP (5 chiffres) on filtre par code_postal, sinon par texte libre
+      if (/^\d{5}$/.test(city.trim())) {
+        params.set('code_postal', city.trim());
+      } else {
+        params.set('q', `${businessName} ${city}`);
+      }
+    }
+    params.set('per_page', '5');
+    params.set('etat_administratif', 'A');
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(
+      `https://recherche-entreprises.api.gouv.fr/search?${params.toString()}`,
+      { signal: controller.signal, headers: { Accept: 'application/json' } }
+    );
+    clearTimeout(timeout);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    const first = data?.results?.[0];
+    if (!first) return null;
+    // SIRET du siege (= 9 chiffres SIREN + 5 chiffres NIC)
+    const siret = first.siege?.siret || `${first.siren}00000`;
+    return siret || null;
+  } catch {
+    return null;
+  }
 }
 
 function isValidEmail(email: string): boolean {
@@ -400,6 +440,12 @@ Aucune explication.`;
       }
 
       result = { type: 'dirigeant', content: foundDirigeant || 'non trouvé' };
+    }
+
+    // ── SIRET ─────────────────────────────────────────────────────────────────
+    else if (type === 'siret') {
+      const foundSiret = await findSiret(businessName, city);
+      result = { type: 'siret', content: foundSiret || 'non trouvé' };
     }
 
     else {

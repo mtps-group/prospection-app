@@ -110,6 +110,9 @@ export function BusinessDetailPanel({
   const [aiDirigeant, setAiDirigeant] = useState<string | null>(null);
   const [aiDirigeantLoading, setAiDirigeantLoading] = useState(false);
   const [aiDirigeantError, setAiDirigeantError] = useState<string | null>(null);
+  const [aiSiret, setAiSiret] = useState<string | null>(null);
+  const [aiSiretLoading, setAiSiretLoading] = useState(false);
+  const [aiSiretError, setAiSiretError] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -218,6 +221,31 @@ export function BusinessDetailPanel({
     }
   };
 
+  const searchSiret = async () => {
+    setAiSiret(null);
+    setAiSiretError(null);
+    setAiSiretLoading(true);
+    const timeout = setTimeout(() => {
+      setAiSiretLoading(false);
+      setAiSiretError('Délai dépassé (> 15s). Réessayez.');
+    }, 15000);
+    try {
+      const res = await fetch('/api/ai-enrichment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'siret', ...buildAiPayload() }),
+      });
+      const data = await res.json();
+      if (res.ok) setAiSiret(data.content);
+      else setAiSiretError(data.error || 'Erreur lors de la recherche');
+    } catch {
+      setAiSiretError('Erreur de connexion');
+    } finally {
+      clearTimeout(timeout);
+      setAiSiretLoading(false);
+    }
+  };
+
   // Extrait la ville depuis une adresse formatée française
   function extractCityFromAddress(address: string): string {
     // Ex: "12 Rue de la Paix, 75001 Paris, France" → "Paris"
@@ -247,6 +275,8 @@ export function BusinessDetailPanel({
       setAiMailError(null);
       setAiDirigeant(null);
       setAiDirigeantError(null);
+      setAiSiret(null);
+      setAiSiretError(null);
 
       try {
         const res = await fetch(`/api/place-details?placeId=${encodeURIComponent(placeId)}`, { signal });
@@ -743,6 +773,72 @@ export function BusinessDetailPanel({
                         )
                       ) : (
                         <p className="text-xs text-indigo-600 opacity-70">Recherche le dirigeant sur societe.com, infogreffe.fr et pappers.fr.</p>
+                      )}
+                    </div>
+
+                    {/* ── RECHERCHE SIRET ── */}
+                    <div className="rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-purple-50 p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-violet-600" />
+                          <span className="text-sm font-semibold text-violet-800">Recherche SIRET</span>
+                        </div>
+                        {!aiSiretLoading && !aiSiret && !aiSiretError && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={searchSiret}
+                            className="border-violet-300 text-violet-700 hover:bg-violet-100 hover:border-violet-400"
+                          >
+                            <Search className="h-3.5 w-3.5 mr-1" />
+                            Chercher
+                          </Button>
+                        )}
+                        {aiSiretError && (
+                          <button onClick={() => { setAiSiretError(null); searchSiret(); }} className="text-xs text-violet-500 hover:text-violet-700 underline">Réessayer</button>
+                        )}
+                        {aiSiret && aiSiret !== 'non trouvé' && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => setAiSiret(null)}
+                              className="p-1.5 rounded-lg hover:bg-violet-100 transition-colors"
+                              title="Nouvelle recherche"
+                            >
+                              <Search className="h-4 w-4 text-violet-400" />
+                            </button>
+                            <button
+                              onClick={() => copyToClipboard(aiSiret, 'ai-siret')}
+                              className="p-1.5 rounded-lg hover:bg-violet-100 transition-colors"
+                              title="Copier"
+                            >
+                              {copiedField === 'ai-siret'
+                                ? <Check className="h-4 w-4 text-green-600" />
+                                : <Copy className="h-4 w-4 text-violet-500" />}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {aiSiretLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-violet-600 animate-pulse">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Recherche en cours...</span>
+                        </div>
+                      ) : aiSiretError ? (
+                        <p className="text-xs text-red-500">{aiSiretError}</p>
+                      ) : aiSiret ? (
+                        aiSiret === 'non trouvé' ? (
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm text-violet-600 opacity-70">Aucun SIRET trouvé</p>
+                            <button onClick={() => setAiSiret(null)} className="text-xs text-violet-500 hover:text-violet-700 underline">Réessayer</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 rounded-lg bg-white/60 border border-violet-200 px-3 py-2">
+                            <Building2 className="h-4 w-4 text-violet-500 flex-shrink-0" />
+                            <span className="text-sm font-mono font-semibold text-violet-800 tracking-wide">{aiSiret}</span>
+                          </div>
+                        )
+                      ) : (
+                        <p className="text-xs text-violet-600 opacity-70">Trouve le SIRET officiel de l&apos;entreprise (registre INSEE).</p>
                       )}
                     </div>
                   </div>
