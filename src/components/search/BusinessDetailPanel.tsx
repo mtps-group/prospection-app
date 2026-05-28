@@ -295,117 +295,9 @@ export function BusinessDetailPanel({
             </div>
           )}
 
-          {/* Score de priorité */}
-          {result && !hasWebsite && (
-            (() => {
-              const score = computeScore(result);
-              return (
-                <section className={`rounded-xl border p-4 ${score.color}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="flex items-center gap-2 text-sm font-semibold">
-                      <TrendingUp className="h-4 w-4" />
-                      Score de priorité
-                    </h3>
-                    <div className="flex items-center gap-1.5 font-bold text-lg">
-                      <span>{score.emoji}</span>
-                      <span>{score.total}/100</span>
-                    </div>
-                  </div>
-                  <p className="text-sm font-semibold mb-3">{score.label}</p>
-                  <div className="space-y-2">
-                    {score.details.map((d) => (
-                      <div key={d.label} className="flex items-center justify-between text-xs">
-                        <span className="opacity-80">{d.label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="opacity-60 text-right max-w-[140px] truncate">{d.description}</span>
-                          <span className="font-bold w-10 text-right">{d.points}/{d.maxPoints}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })()
-          )}
-
           {detail && !loading && (
             <>
-              {/* Bannière Ultra si pas Ultra */}
-              {!detail.isUltra && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-center gap-3">
-                  <Crown className="h-5 w-5 text-amber-500 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-amber-800">Photos & avis disponibles en Ultra</p>
-                    <p className="text-xs text-amber-600">Passez au plan Ultra pour voir les photos et les avis clients.</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Photos carousel */}
-              {detail.photos && detail.photos.length > 0 && (
-                <section>
-                  <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
-                    <Camera className="h-4 w-4 text-text-muted" />
-                    {fr.detail.photos}
-                  </h3>
-                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-                    {detail.photos.map((photo, idx) => (
-                      <div
-                        key={idx}
-                        className="flex-shrink-0 w-48 h-32 rounded-lg overflow-hidden bg-gray-100"
-                      >
-                        {photo.photoUrl ? (
-                          <img
-                            src={photo.photoUrl}
-                            alt={`${businessName} photo ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-text-muted">
-                            <Camera className="h-8 w-8" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* Editorial Summary */}
-              {detail.editorialSummary?.text && (
-                <section>
-                  <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
-                    <Building2 className="h-4 w-4 text-text-muted" />
-                    {fr.detail.presentation}
-                  </h3>
-                  <div className="rounded-lg bg-gray-50 p-4">
-                    <p className="text-sm text-text-secondary leading-relaxed">
-                      {detail.editorialSummary.text}
-                    </p>
-                  </div>
-                </section>
-              )}
-
-              {/* Business Status */}
-              {detail.businessStatus && (() => {
-                const statusInfo = getBusinessStatusLabel(detail.businessStatus);
-                if (!statusInfo) return null;
-                const StatusIcon = statusInfo.icon;
-                return (
-                  <section>
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
-                      {fr.detail.statut}
-                    </h3>
-                    <div className={`flex items-center gap-2 text-sm ${statusInfo.color}`}>
-                      <StatusIcon className="h-4 w-4" />
-                      <span className="font-medium">{statusInfo.label}</span>
-                    </div>
-                  </section>
-                );
-              })()}
-
-              {/* Contact Info */}
+              {/* 1. COORDONNÉES */}
               <section>
                 <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
                   <Phone className="h-4 w-4 text-text-muted" />
@@ -488,7 +380,73 @@ export function BusinessDetailPanel({
                 </div>
               </section>
 
-              {/* Section Outils Ultra */}
+              {/* 2. STATUT */}
+              {detail.businessStatus && (() => {
+                const statusInfo = getBusinessStatusLabel(detail.businessStatus);
+                if (!statusInfo) return null;
+                const StatusIcon = statusInfo.icon;
+                return (
+                  <section>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
+                      {fr.detail.statut}
+                    </h3>
+                    <div className={`flex items-center gap-2 text-sm ${statusInfo.color}`}>
+                      <StatusIcon className="h-4 w-4" />
+                      <span className="font-medium">{statusInfo.label}</span>
+                    </div>
+                  </section>
+                );
+              })()}
+
+              {/* 3. HORAIRES */}
+              {(detail.regularOpeningHours || detail.currentOpeningHours) && (
+                <section>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
+                    <Clock className="h-4 w-4 text-text-muted" />
+                    {fr.detail.horaires}
+                  </h3>
+                  {(detail.currentOpeningHours?.openNow !== undefined ||
+                    detail.regularOpeningHours?.openNow !== undefined) && (
+                    <div className="mb-2">
+                      <Badge
+                        variant={
+                          (detail.currentOpeningHours?.openNow ?? detail.regularOpeningHours?.openNow)
+                            ? 'success'
+                            : 'error'
+                        }
+                      >
+                        {(detail.currentOpeningHours?.openNow ?? detail.regularOpeningHours?.openNow)
+                          ? fr.detail.ouvertMaintenant
+                          : fr.detail.fermeMaintenant}
+                      </Badge>
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    {(
+                      detail.regularOpeningHours?.weekdayDescriptions ||
+                      detail.currentOpeningHours?.weekdayDescriptions ||
+                      []
+                    ).map((line, idx) => (
+                      <p key={idx} className="text-sm text-text-secondary">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* 4a. Bannière Ultra (si pas Ultra) */}
+              {!detail.isUltra && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 flex items-center gap-3">
+                  <Crown className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-800">Outils avancés disponibles en Ultra</p>
+                    <p className="text-xs text-amber-600">Passez Ultra pour la recherche email, dirigeant et SIRET.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* 4b. Section Outils Ultra */}
               {detail.isUltra && (
                 <section>
                   <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
@@ -669,7 +627,40 @@ export function BusinessDetailPanel({
 
 
 
-              {/* Rating */}
+              {/* 5. SCORE DE PRIORITÉ (entreprises sans site web) */}
+              {result && !hasWebsite && (
+                (() => {
+                  const score = computeScore(result);
+                  return (
+                    <section className={`rounded-xl border p-4 ${score.color}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold">
+                          <TrendingUp className="h-4 w-4" />
+                          Score de priorité
+                        </h3>
+                        <div className="flex items-center gap-1.5 font-bold text-lg">
+                          <span>{score.emoji}</span>
+                          <span>{score.total}/100</span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-semibold mb-3">{score.label}</p>
+                      <div className="space-y-2">
+                        {score.details.map((d) => (
+                          <div key={d.label} className="flex items-center justify-between text-xs">
+                            <span className="opacity-80">{d.label}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="opacity-60 text-right max-w-[140px] truncate">{d.description}</span>
+                              <span className="font-bold w-10 text-right">{d.points}/{d.maxPoints}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })()
+              )}
+
+              {/* 6. NOTE GOOGLE + AVIS COUNT */}
               {detail.rating && (
                 <section>
                   <div className="flex items-center gap-3">
@@ -697,44 +688,53 @@ export function BusinessDetailPanel({
                 </section>
               )}
 
-              {/* Opening Hours */}
-              {(detail.regularOpeningHours || detail.currentOpeningHours) && (
+              {/* 7. PHOTOS */}
+              {detail.photos && detail.photos.length > 0 && (
                 <section>
                   <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
-                    <Clock className="h-4 w-4 text-text-muted" />
-                    {fr.detail.horaires}
+                    <Camera className="h-4 w-4 text-text-muted" />
+                    {fr.detail.photos}
                   </h3>
-                  {(detail.currentOpeningHours?.openNow !== undefined ||
-                    detail.regularOpeningHours?.openNow !== undefined) && (
-                    <div className="mb-2">
-                      <Badge
-                        variant={
-                          (detail.currentOpeningHours?.openNow ?? detail.regularOpeningHours?.openNow)
-                            ? 'success'
-                            : 'error'
-                        }
+                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+                    {detail.photos.map((photo, idx) => (
+                      <div
+                        key={idx}
+                        className="flex-shrink-0 w-48 h-32 rounded-lg overflow-hidden bg-gray-100"
                       >
-                        {(detail.currentOpeningHours?.openNow ?? detail.regularOpeningHours?.openNow)
-                          ? fr.detail.ouvertMaintenant
-                          : fr.detail.fermeMaintenant}
-                      </Badge>
-                    </div>
-                  )}
-                  <div className="space-y-1">
-                    {(
-                      detail.regularOpeningHours?.weekdayDescriptions ||
-                      detail.currentOpeningHours?.weekdayDescriptions ||
-                      []
-                    ).map((line, idx) => (
-                      <p key={idx} className="text-sm text-text-secondary">
-                        {line}
-                      </p>
+                        {photo.photoUrl ? (
+                          <img
+                            src={photo.photoUrl}
+                            alt={`${businessName} photo ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-text-muted">
+                            <Camera className="h-8 w-8" />
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </section>
               )}
 
-              {/* Reviews */}
+              {/* Présentation editoriale (bonus contexte) */}
+              {detail.editorialSummary?.text && (
+                <section>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
+                    <Building2 className="h-4 w-4 text-text-muted" />
+                    {fr.detail.presentation}
+                  </h3>
+                  <div className="rounded-lg bg-gray-50 p-4">
+                    <p className="text-sm text-text-secondary leading-relaxed">
+                      {detail.editorialSummary.text}
+                    </p>
+                  </div>
+                </section>
+              )}
+
+              {/* 8. AVIS DÉTAILLÉS */}
               {detail.reviews && detail.reviews.length > 0 && (
                 <section>
                   <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
