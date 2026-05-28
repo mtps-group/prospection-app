@@ -502,199 +502,166 @@ export function BusinessDetailPanel({
                   </h3>
 
                   <div className="space-y-3">
-                    {/* ── RECHERCHE EMAIL ── */}
-                    <div className="rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-purple-50 p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <AtSign className="h-4 w-4 text-violet-600" />
-                          <span className="text-sm font-semibold text-violet-800">Recherche email</span>
+                    {/* ── RECHERCHE EMAIL ── BLEU */}
+                    <div className="group rounded-2xl border border-gray-100 bg-white p-4 hover:border-blue-200 hover:shadow-md hover:shadow-blue-500/5 transition-all">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md shadow-blue-500/20 flex-shrink-0">
+                            <AtSign className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-text">Email professionnel</p>
+                            {aiEmailLoading && (
+                              <p className="text-xs text-text-muted flex items-center gap-1 mt-0.5">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Recherche...
+                              </p>
+                            )}
+                            {aiEmailError && !aiEmailLoading && (
+                              <p className="text-xs text-red-500 mt-0.5">{aiEmailError}</p>
+                            )}
+                            {aiEmail && aiEmail !== 'non trouvé' && !aiEmailLoading && (
+                              <a href={`mailto:${aiEmail}`} className="block text-xs font-medium text-blue-600 hover:text-blue-700 truncate mt-0.5">{aiEmail}</a>
+                            )}
+                            {aiEmail === 'non trouvé' && (
+                              <p className="text-xs text-text-muted mt-0.5">Aucun email trouvé</p>
+                            )}
+                          </div>
                         </div>
-                        {!aiEmailLoading && !aiEmail && !aiEmailError && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={searchAiEmail}
-                            className="border-violet-300 text-violet-700 hover:bg-violet-100 hover:border-violet-400"
-                          >
-                            <Search className="h-3.5 w-3.5 mr-1" />
-                            Chercher
-                          </Button>
-                        )}
-                        {aiEmailError && (
-                          <button onClick={() => { setAiEmailError(null); searchAiEmail(); }} className="text-xs text-violet-500 hover:text-violet-700 underline">Réessayer</button>
-                        )}
-                        {aiEmail && aiEmail !== 'non trouvé' && (
-                          <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {!aiEmailLoading && !aiEmail && !aiEmailError && (
                             <button
-                              onClick={() => setAiEmail(null)}
-                              className="p-1.5 rounded-lg hover:bg-violet-100 transition-colors"
-                              title="Nouvelle recherche"
+                              onClick={searchAiEmail}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:shadow-md hover:shadow-blue-500/30 transition-all"
                             >
-                              <Search className="h-4 w-4 text-violet-400" />
+                              <Search className="h-3 w-3" />
+                              Chercher
                             </button>
-                          <button
-                            onClick={() => copyToClipboard(aiEmail, 'ai-email')}
-                            className="p-1.5 rounded-lg hover:bg-violet-100 transition-colors"
-                            title="Copier"
-                          >
-                            {copiedField === 'ai-email'
-                              ? <Check className="h-4 w-4 text-green-600" />
-                              : <Copy className="h-4 w-4 text-violet-500" />}
-                          </button>
-                          </div>
-                        )}
-                      </div>
-                      {aiEmailLoading ? (
-                        <div className="flex items-center gap-2 text-sm text-violet-600 animate-pulse">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Recherche en cours (~20s)...</span>
+                          )}
+                          {(aiEmailError || aiEmail === 'non trouvé') && (
+                            <button onClick={() => { setAiEmail(null); setAiEmailError(null); searchAiEmail(); }} className="inline-flex items-center gap-1 rounded-lg border border-blue-200 text-blue-600 px-2.5 py-1.5 text-xs font-semibold hover:bg-blue-50">
+                              Réessayer
+                            </button>
+                          )}
+                          {aiEmail && aiEmail !== 'non trouvé' && (
+                            <button
+                              onClick={() => copyToClipboard(aiEmail, 'ai-email')}
+                              className="rounded-lg p-1.5 text-blue-500 hover:bg-blue-50 transition-colors"
+                              title="Copier"
+                            >
+                              {copiedField === 'ai-email' ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                            </button>
+                          )}
                         </div>
-                      ) : aiEmailError ? (
-                        <p className="text-xs text-red-500">{aiEmailError}</p>
-                      ) : aiEmail ? (
-                        aiEmail === 'non trouvé' ? (
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm text-violet-600 opacity-70">Aucun email trouvé</p>
-                            <button onClick={() => setAiEmail(null)} className="text-xs text-violet-500 hover:text-violet-700 underline">Réessayer</button>
-                          </div>
-                        ) : (
-                          <a href={`mailto:${aiEmail}`} className="text-sm font-medium text-violet-700 hover:text-violet-900 underline">{aiEmail}</a>
-                        )
-                      ) : (
-                        <p className="text-xs text-violet-600 opacity-70">Recherche l&apos;email sur le site web, Pages Jaunes et annuaires.</p>
-                      )}
+                      </div>
                     </div>
 
-                    {/* ── RECHERCHE DIRIGEANT ── */}
-                    <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <UserCircle className="h-4 w-4 text-indigo-600" />
-                          <span className="text-sm font-semibold text-indigo-800">Recherche dirigeant</span>
+                    {/* ── RECHERCHE DIRIGEANT ── VIOLET / PINK */}
+                    <div className="group rounded-2xl border border-gray-100 bg-white p-4 hover:border-purple-200 hover:shadow-md hover:shadow-purple-500/5 transition-all">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md shadow-purple-500/20 flex-shrink-0">
+                            <UserCircle className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-text">Dirigeant</p>
+                            {aiDirigeantLoading && (
+                              <p className="text-xs text-text-muted flex items-center gap-1 mt-0.5">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Recherche...
+                              </p>
+                            )}
+                            {aiDirigeantError && !aiDirigeantLoading && (
+                              <p className="text-xs text-red-500 mt-0.5">{aiDirigeantError}</p>
+                            )}
+                            {aiDirigeant && aiDirigeant !== 'non trouvé' && !aiDirigeantLoading && (
+                              <p className="text-xs font-semibold text-purple-700 truncate mt-0.5">{aiDirigeant}</p>
+                            )}
+                            {aiDirigeant === 'non trouvé' && (
+                              <p className="text-xs text-text-muted mt-0.5">Aucun dirigeant trouvé</p>
+                            )}
+                          </div>
                         </div>
-                        {!aiDirigeantLoading && !aiDirigeant && !aiDirigeantError && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={searchDirigeant}
-                            className="border-indigo-300 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-400"
-                          >
-                            <Search className="h-3.5 w-3.5 mr-1" />
-                            Chercher
-                          </Button>
-                        )}
-                        {aiDirigeantError && (
-                          <button onClick={() => { setAiDirigeantError(null); searchDirigeant(); }} className="text-xs text-indigo-500 hover:text-indigo-700 underline">Réessayer</button>
-                        )}
-                        {aiDirigeant && aiDirigeant !== 'non trouvé' && (
-                          <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {!aiDirigeantLoading && !aiDirigeant && !aiDirigeantError && (
                             <button
-                              onClick={() => setAiDirigeant(null)}
-                              className="p-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
-                              title="Nouvelle recherche"
+                              onClick={searchDirigeant}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:shadow-md hover:shadow-purple-500/30 transition-all"
                             >
-                              <Search className="h-4 w-4 text-indigo-400" />
+                              <Search className="h-3 w-3" />
+                              Chercher
                             </button>
+                          )}
+                          {(aiDirigeantError || aiDirigeant === 'non trouvé') && (
+                            <button onClick={() => { setAiDirigeant(null); setAiDirigeantError(null); searchDirigeant(); }} className="inline-flex items-center gap-1 rounded-lg border border-purple-200 text-purple-600 px-2.5 py-1.5 text-xs font-semibold hover:bg-purple-50">
+                              Réessayer
+                            </button>
+                          )}
+                          {aiDirigeant && aiDirigeant !== 'non trouvé' && (
                             <button
                               onClick={() => copyToClipboard(aiDirigeant, 'ai-dirigeant')}
-                              className="p-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                              className="rounded-lg p-1.5 text-purple-500 hover:bg-purple-50 transition-colors"
                               title="Copier"
                             >
-                              {copiedField === 'ai-dirigeant'
-                                ? <Check className="h-4 w-4 text-green-600" />
-                                : <Copy className="h-4 w-4 text-indigo-500" />}
+                              {copiedField === 'ai-dirigeant' ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                             </button>
-                          </div>
-                        )}
-                      </div>
-                      {aiDirigeantLoading ? (
-                        <div className="flex items-center gap-2 text-sm text-indigo-600 animate-pulse">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Recherche en cours (~20s)...</span>
+                          )}
                         </div>
-                      ) : aiDirigeantError ? (
-                        <p className="text-xs text-red-500">{aiDirigeantError}</p>
-                      ) : aiDirigeant ? (
-                        aiDirigeant === 'non trouvé' ? (
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm text-indigo-600 opacity-70">Aucun dirigeant trouvé</p>
-                            <button onClick={() => setAiDirigeant(null)} className="text-xs text-indigo-500 hover:text-indigo-700 underline">Réessayer</button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 rounded-lg bg-white/60 border border-indigo-200 px-3 py-2">
-                            <UserCircle className="h-4 w-4 text-indigo-500 flex-shrink-0" />
-                            <span className="text-sm font-medium text-indigo-800">{aiDirigeant}</span>
-                          </div>
-                        )
-                      ) : (
-                        <p className="text-xs text-indigo-600 opacity-70">Recherche le dirigeant sur societe.com, infogreffe.fr et pappers.fr.</p>
-                      )}
+                      </div>
                     </div>
 
-                    {/* ── RECHERCHE SIRET ── */}
-                    <div className="rounded-xl border border-violet-100 bg-gradient-to-br from-violet-50 to-purple-50 p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-violet-600" />
-                          <span className="text-sm font-semibold text-violet-800">Recherche SIRET</span>
+                    {/* ── RECHERCHE SIRET ── AMBRE / ORANGE */}
+                    <div className="group rounded-2xl border border-gray-100 bg-white p-4 hover:border-amber-200 hover:shadow-md hover:shadow-amber-500/5 transition-all">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20 flex-shrink-0">
+                            <Building2 className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-text">SIRET</p>
+                            {aiSiretLoading && (
+                              <p className="text-xs text-text-muted flex items-center gap-1 mt-0.5">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Recherche...
+                              </p>
+                            )}
+                            {aiSiretError && !aiSiretLoading && (
+                              <p className="text-xs text-red-500 mt-0.5">{aiSiretError}</p>
+                            )}
+                            {aiSiret && aiSiret !== 'non trouvé' && !aiSiretLoading && (
+                              <p className="text-xs font-mono font-semibold text-amber-700 truncate mt-0.5 tracking-wide">{aiSiret}</p>
+                            )}
+                            {aiSiret === 'non trouvé' && (
+                              <p className="text-xs text-text-muted mt-0.5">Aucun SIRET trouvé</p>
+                            )}
+                          </div>
                         </div>
-                        {!aiSiretLoading && !aiSiret && !aiSiretError && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={searchSiret}
-                            className="border-violet-300 text-violet-700 hover:bg-violet-100 hover:border-violet-400"
-                          >
-                            <Search className="h-3.5 w-3.5 mr-1" />
-                            Chercher
-                          </Button>
-                        )}
-                        {aiSiretError && (
-                          <button onClick={() => { setAiSiretError(null); searchSiret(); }} className="text-xs text-violet-500 hover:text-violet-700 underline">Réessayer</button>
-                        )}
-                        {aiSiret && aiSiret !== 'non trouvé' && (
-                          <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {!aiSiretLoading && !aiSiret && !aiSiretError && (
                             <button
-                              onClick={() => setAiSiret(null)}
-                              className="p-1.5 rounded-lg hover:bg-violet-100 transition-colors"
-                              title="Nouvelle recherche"
+                              onClick={searchSiret}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:shadow-md hover:shadow-amber-500/30 transition-all"
                             >
-                              <Search className="h-4 w-4 text-violet-400" />
+                              <Search className="h-3 w-3" />
+                              Chercher
                             </button>
+                          )}
+                          {(aiSiretError || aiSiret === 'non trouvé') && (
+                            <button onClick={() => { setAiSiret(null); setAiSiretError(null); searchSiret(); }} className="inline-flex items-center gap-1 rounded-lg border border-amber-200 text-amber-600 px-2.5 py-1.5 text-xs font-semibold hover:bg-amber-50">
+                              Réessayer
+                            </button>
+                          )}
+                          {aiSiret && aiSiret !== 'non trouvé' && (
                             <button
                               onClick={() => copyToClipboard(aiSiret, 'ai-siret')}
-                              className="p-1.5 rounded-lg hover:bg-violet-100 transition-colors"
+                              className="rounded-lg p-1.5 text-amber-500 hover:bg-amber-50 transition-colors"
                               title="Copier"
                             >
-                              {copiedField === 'ai-siret'
-                                ? <Check className="h-4 w-4 text-green-600" />
-                                : <Copy className="h-4 w-4 text-violet-500" />}
+                              {copiedField === 'ai-siret' ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                             </button>
-                          </div>
-                        )}
-                      </div>
-                      {aiSiretLoading ? (
-                        <div className="flex items-center gap-2 text-sm text-violet-600 animate-pulse">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Recherche en cours...</span>
+                          )}
                         </div>
-                      ) : aiSiretError ? (
-                        <p className="text-xs text-red-500">{aiSiretError}</p>
-                      ) : aiSiret ? (
-                        aiSiret === 'non trouvé' ? (
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm text-violet-600 opacity-70">Aucun SIRET trouvé</p>
-                            <button onClick={() => setAiSiret(null)} className="text-xs text-violet-500 hover:text-violet-700 underline">Réessayer</button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 rounded-lg bg-white/60 border border-violet-200 px-3 py-2">
-                            <Building2 className="h-4 w-4 text-violet-500 flex-shrink-0" />
-                            <span className="text-sm font-mono font-semibold text-violet-800 tracking-wide">{aiSiret}</span>
-                          </div>
-                        )
-                      ) : (
-                        <p className="text-xs text-violet-600 opacity-70">Trouve le SIRET officiel de l&apos;entreprise (registre INSEE).</p>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </section>
