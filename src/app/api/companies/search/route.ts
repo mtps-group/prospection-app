@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { searchSireneWithCity, type SireneResult } from '@/lib/insee/client';
+import { searchPappersWithCity, type PappersSearchResult } from '@/lib/pappers/search';
 import { extractSocialLinks } from '@/lib/social-scraper';
 import type { SearchResultClient, SocialProfiles } from '@/types';
 
 // Alias type pour minimiser les changements dans le reste du fichier
-type CompanyResult = SireneResult;
+type CompanyResult = PappersSearchResult;
 
 interface SearchRequestBody {
   businessType?: string;
@@ -141,19 +141,19 @@ export async function POST(request: NextRequest) {
     let debug: { query?: string; url?: string; totalApi: number; afterFilter?: number; resolvedCity?: string; pagesFetched?: number } = { totalApi: 0 };
 
     try {
-      const sireneResult = await searchSireneWithCity({
+      const pappersResult = await searchPappersWithCity({
         q: qParts.join(' ') || undefined,
         city: city || undefined,
         creationMaxMonths: creationMaxMonths || undefined,
-        natureJuridique: natureJuridique || undefined,
-        perPage: 25,
+        formeJuridique: natureJuridique || undefined,
+        perPage: 100, // Max Pappers = 100 resultats par recherche
       });
-      companies = sireneResult.results;
-      total = sireneResult.total;
-      debug = sireneResult.debug;
-    } catch (sireneError) {
+      companies = pappersResult.results;
+      total = pappersResult.total;
+      debug = pappersResult.debug;
+    } catch (pappersError) {
       // Log technique pour le debug interne (visible dans Vercel logs)
-      console.error('INSEE Sirene failed:', sireneError);
+      console.error('Pappers search failed:', pappersError);
       // Message user-friendly, pas de details techniques exposes
       return NextResponse.json({
         error: 'Erreur lors de la recherche, veuillez réessayer dans quelques instants.',
