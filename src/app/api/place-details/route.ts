@@ -44,6 +44,8 @@ const BASE_FIELDS = [
 ].join(',');
 
 // Champs supplémentaires pour Ultra
+// 'reviews' donne tous les sous-champs y compris originalText (le texte dans
+// la langue d'origine du commentaire, non traduit)
 const ULTRA_FIELDS = [
   ...BASE_FIELDS.split(','),
   'reviews',

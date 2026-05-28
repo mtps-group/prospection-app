@@ -57,6 +57,7 @@ interface PlaceDetailReview {
   name: string;
   rating: number;
   text?: { text: string; languageCode: string };
+  originalText?: { text: string; languageCode: string };
   authorAttribution?: { displayName: string };
   publishTime: string;
   relativePublishTimeDescription: string;
@@ -816,9 +817,9 @@ export function BusinessDetailPanel({
                             ))}
                           </div>
                         </div>
-                        {review.text?.text && (
+                        {(review.originalText?.text || review.text?.text) && (
                           <p className="text-sm text-text-secondary leading-relaxed line-clamp-3">
-                            {review.text.text}
+                            {review.originalText?.text || review.text?.text}
                           </p>
                         )}
                         <p className="text-xs text-text-muted">
