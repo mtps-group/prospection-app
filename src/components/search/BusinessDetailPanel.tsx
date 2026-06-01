@@ -109,6 +109,18 @@ export function BusinessDetailPanel({
   const [aiSiretLoading, setAiSiretLoading] = useState(false);
   const [aiSiretError, setAiSiretError] = useState<string | null>(null);
 
+  // Meta Ads check
+  type MetaAdsData = {
+    hasActiveAds: boolean;
+    count: number;
+    pageName: string | null;
+    ads: Array<{ id: string; pageName: string | null; bodies: string[]; publisherPlatforms: string[]; startTime: string | null; url: string | null }>;
+    platforms: string[];
+  };
+  const [metaAds, setMetaAds] = useState<MetaAdsData | null>(null);
+  const [metaAdsLoading, setMetaAdsLoading] = useState(false);
+  const [metaAdsError, setMetaAdsError] = useState<string | null>(null);
+
   // Audit du site
   type WebsiteAuditData = {
     url: string;
@@ -199,6 +211,34 @@ export function BusinessDetailPanel({
     }
   };
 
+  const checkMetaAdsRun = async () => {
+    setMetaAds(null);
+    setMetaAdsError(null);
+    setMetaAdsLoading(true);
+    const cityFromAddress = detail?.formattedAddress
+      ? detail.formattedAddress.split(',').slice(-2, -1)[0]?.trim().replace(/^\d{5}\s*/, '') || ''
+      : city || '';
+    const timeout = setTimeout(() => {
+      setMetaAdsLoading(false);
+      setMetaAdsError('Délai dépassé. Réessayez.');
+    }, 15000);
+    try {
+      const res = await fetch('/api/meta-ads-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessName, city: cityFromAddress }),
+      });
+      const data = await res.json();
+      if (res.ok) setMetaAds(data);
+      else setMetaAdsError(data.error || 'Erreur lors de la vérification');
+    } catch {
+      setMetaAdsError('Erreur de connexion');
+    } finally {
+      clearTimeout(timeout);
+      setMetaAdsLoading(false);
+    }
+  };
+
   const runWebsiteAudit = async () => {
     const url = websiteUrl || detail?.websiteUri;
     if (!url) return;
@@ -277,6 +317,8 @@ export function BusinessDetailPanel({
       setAiDirigeant(null);
       setAudit(null);
       setAuditError(null);
+      setMetaAds(null);
+      setMetaAdsError(null);
       setAiDirigeantError(null);
       setAiSiret(null);
       setAiSiretError(null);
@@ -715,6 +757,75 @@ export function BusinessDetailPanel({
                           )}
                         </div>
                       </div>
+                    </div>
+
+                    {/* ── PUBS META (Facebook/Instagram) ── INDIGO / SKY */}
+                    <div className="group rounded-2xl border border-gray-100 bg-white p-4 hover:border-sky-200 hover:shadow-md hover:shadow-sky-500/5 transition-all">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-500 flex items-center justify-center shadow-md shadow-sky-500/20 flex-shrink-0">
+                            <Send className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-text">Pubs Meta (FB/Insta)</p>
+                            {metaAdsLoading && (
+                              <p className="text-xs text-text-muted flex items-center gap-1 mt-0.5">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Vérification...
+                              </p>
+                            )}
+                            {metaAdsError && !metaAdsLoading && (
+                              <p className="text-xs text-red-500 mt-0.5">{metaAdsError}</p>
+                            )}
+                            {metaAds && metaAds.hasActiveAds && !metaAdsLoading && (
+                              <p className="text-xs font-semibold text-sky-700 mt-0.5">
+                                ✅ {metaAds.count} pub{metaAds.count > 1 ? 's' : ''} active{metaAds.count > 1 ? 's' : ''}
+                                {metaAds.pageName && <span className="text-text-muted font-normal"> · {metaAds.pageName}</span>}
+                              </p>
+                            )}
+                            {metaAds && !metaAds.hasActiveAds && !metaAdsLoading && (
+                              <p className="text-xs text-text-muted mt-0.5">Aucune pub active détectée</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {!metaAdsLoading && !metaAds && !metaAdsError && (
+                            <button
+                              onClick={checkMetaAdsRun}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-indigo-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:shadow-md hover:shadow-sky-500/30 transition-all"
+                            >
+                              <Search className="h-3 w-3" />
+                              Vérifier
+                            </button>
+                          )}
+                          {(metaAdsError || (metaAds && !metaAds.hasActiveAds)) && (
+                            <button onClick={() => { setMetaAds(null); setMetaAdsError(null); checkMetaAdsRun(); }} className="inline-flex items-center gap-1 rounded-lg border border-sky-200 text-sky-600 px-2.5 py-1.5 text-xs font-semibold hover:bg-sky-50">
+                              Réessayer
+                            </button>
+                          )}
+                          {metaAds && metaAds.hasActiveAds && metaAds.ads[0]?.url && (
+                            <a
+                              href={metaAds.ads[0].url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-1.5 text-xs font-semibold hover:bg-sky-100"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              Voir
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      {/* Plateformes detaillees si pubs actives */}
+                      {metaAds && metaAds.hasActiveAds && metaAds.platforms.length > 0 && (
+                        <div className="mt-3 flex items-center gap-1.5 flex-wrap pl-12">
+                          {metaAds.platforms.map((p) => (
+                            <span key={p} className="text-[10px] font-bold uppercase tracking-wide bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </section>
