@@ -121,6 +121,8 @@ export function BusinessDetailPanel({
     platforms: string[];
     latestActivity: string | null;
     earliestActivity: string | null;
+    rawCount?: number;
+    rawPageNames?: string[];
   };
   const [metaAds, setMetaAds] = useState<MetaAdsData | null>(null);
   const [metaAdsLoading, setMetaAdsLoading] = useState(false);
@@ -798,7 +800,14 @@ export function BusinessDetailPanel({
                               </p>
                             )}
                             {metaAds && !metaAds.hasEverAdvertised && !metaAdsLoading && (
-                              <p className="text-xs text-text-muted mt-0.5">❌ Jamais fait de pub Meta</p>
+                              <>
+                                <p className="text-xs text-text-muted mt-0.5">❌ Jamais fait de pub Meta</p>
+                                {(metaAds.rawCount ?? 0) > 0 && metaAds.rawPageNames && metaAds.rawPageNames.length > 0 && (
+                                  <p className="text-[10px] text-text-muted/70 mt-0.5 italic">
+                                    {metaAds.rawCount} résultat{(metaAds.rawCount ?? 0) > 1 ? 's' : ''} ignoré{(metaAds.rawCount ?? 0) > 1 ? 's' : ''} (nom différent) : {metaAds.rawPageNames.slice(0, 3).join(', ')}{metaAds.rawPageNames.length > 3 ? '…' : ''}
+                                  </p>
+                                )}
+                              </>
                             )}
                           </div>
                         </div>

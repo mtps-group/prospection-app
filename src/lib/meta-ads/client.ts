@@ -32,6 +32,10 @@ export interface MetaAdsCheckResult {
   latestActivity: string | null;
   /** Date la plus ancienne d'activite (ISO) */
   earliestActivity: string | null;
+  /** Debug : nombre brut renvoye par l'API avant filtrage */
+  rawCount?: number;
+  /** Debug : pages trouvees (pour comprendre les faux negatifs) */
+  rawPageNames?: string[];
 }
 
 interface RawAd {
@@ -64,10 +68,11 @@ export async function checkMetaAds(
   const searchTerms = city ? `${businessName} ${city}` : businessName;
 
   // ALL = on recupere actives + inactives (historique complet)
+  // Note : ad_reached_countries attend une valeur simple "FR", pas un JSON array
   const params = new URLSearchParams({
     access_token: token,
     search_terms: searchTerms,
-    ad_reached_countries: '["FR"]',
+    ad_reached_countries: 'FR',
     ad_active_status: 'ALL',
     ad_type: 'ALL',
     fields: 'id,page_name,ad_creative_bodies,ad_creative_link_titles,publisher_platforms,ad_delivery_start_time,ad_delivery_stop_time,ad_snapshot_url',
@@ -94,6 +99,8 @@ export async function checkMetaAds(
       platforms: [],
       latestActivity: null,
       earliestActivity: null,
+      rawCount: 0,
+      rawPageNames: [],
     };
 
     if (!response.ok) {
@@ -110,29 +117,46 @@ export async function checkMetaAds(
     }
 
     const rawAds = data.data || [];
+    const rawPageNames = Array.from(
+      new Set(rawAds.map((a) => a.page_name).filter((n): n is string => !!n)),
+    );
 
-    // Filtre : on garde uniquement les ads dont le page_name match raisonnablement
-    // pour eviter les faux positifs (ex: "Boulangerie Dupont" tape large)
+    // Filtre tolerant : on tokenize le nom du business et on accepte
+    // toute page dont le nom partage au moins un token significatif (>= 4 chars)
+    // ou qui matche en substring dans un sens ou l'autre.
+    const STOP_WORDS = new Set([
+      'le', 'la', 'les', 'l', 'un', 'une', 'des', 'de', 'du', 'd', 'a', 'au', 'aux',
+      'et', 'ou', 'mr', 'mme', 'sas', 'sarl', 'eurl', 'sa', 'sci', 'snc',
+      'restaurant', 'boulangerie', 'patisserie', 'cafe', 'bar', 'salon', 'garage',
+      'pharmacie', 'boucherie', 'coiffeur', 'magasin', 'maison', 'chez',
+    ]);
+    const tokenize = (s: string) =>
+      s
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter((t) => t.length >= 4 && !STOP_WORDS.has(t));
+
+    const businessTokens = new Set(tokenize(businessName));
     const businessLower = businessName.toLowerCase();
+
     const matchingAds = rawAds.filter((ad) => {
       if (!ad.page_name) return false;
       const pageLower = ad.page_name.toLowerCase();
-      // Match si le page_name contient le nom ou inversement
-      return pageLower.includes(businessLower) || businessLower.includes(pageLower.split(' ')[0]);
+      if (pageLower.includes(businessLower) || businessLower.includes(pageLower)) {
+        return true;
+      }
+      const pageTokens = tokenize(ad.page_name);
+      return pageTokens.some((t) => businessTokens.has(t));
     });
 
     if (matchingAds.length === 0) {
       return {
-        hasEverAdvertised: false,
-        hasActiveAds: false,
-        activeCount: 0,
-        inactiveCount: 0,
-        totalCount: 0,
-        pageName: null,
-        ads: [],
-        platforms: [],
-        latestActivity: null,
-        earliestActivity: null,
+        ...EMPTY_RESULT,
+        rawCount: rawAds.length,
+        rawPageNames: rawPageNames.slice(0, 10),
       };
     }
 
@@ -188,6 +212,8 @@ export async function checkMetaAds(
       platforms: Array.from(platforms),
       latestActivity,
       earliestActivity,
+      rawCount: rawAds.length,
+      rawPageNames: rawPageNames.slice(0, 10),
     };
   } catch (err) {
     console.error('checkMetaAds error:', err);
@@ -202,6 +228,8 @@ export async function checkMetaAds(
       platforms: [],
       latestActivity: null,
       earliestActivity: null,
+      rawCount: 0,
+      rawPageNames: [],
     };
   }
 }
