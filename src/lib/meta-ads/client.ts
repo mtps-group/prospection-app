@@ -54,21 +54,7 @@ interface ApiResponse {
   error?: { message: string; code: number };
 }
 
-export async function checkMetaAds(
-  businessName: string,
-  city?: string,
-): Promise<MetaAdsCheckResult> {
-  const token = process.env.META_ACCESS_TOKEN;
-  if (!token) {
-    throw new Error('META_ACCESS_TOKEN manquant dans les env vars Vercel');
-  }
-
-  // Construire la query : nom + ville pour reduire les faux positifs
-  // (ex: 'Boulangerie Dupont Angers' est plus precis que 'Boulangerie Dupont')
-  const searchTerms = city ? `${businessName} ${city}` : businessName;
-
-  // ALL = on recupere actives + inactives (historique complet)
-  // Note : ad_reached_countries attend une valeur simple "FR", pas un JSON array
+async function fetchAds(token: string, searchTerms: string): Promise<{ ok: boolean; ads: RawAd[]; error?: string }> {
   const params = new URLSearchParams({
     access_token: token,
     search_terms: searchTerms,
@@ -78,45 +64,71 @@ export async function checkMetaAds(
     fields: 'id,page_name,ad_creative_bodies,ad_creative_link_titles,publisher_platforms,ad_delivery_start_time,ad_delivery_stop_time,ad_snapshot_url',
     limit: '50',
   });
-
   const url = `${API_BASE}?${params.toString()}`;
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
-
   try {
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
-
-    const EMPTY_RESULT: MetaAdsCheckResult = {
-      hasEverAdvertised: false,
-      hasActiveAds: false,
-      activeCount: 0,
-      inactiveCount: 0,
-      totalCount: 0,
-      pageName: null,
-      ads: [],
-      platforms: [],
-      latestActivity: null,
-      earliestActivity: null,
-      rawCount: 0,
-      rawPageNames: [],
-    };
-
     if (!response.ok) {
       const text = await response.text();
-      console.error('Meta Ads API error:', response.status, text.slice(0, 200));
-      return EMPTY_RESULT;
+      console.error('[meta-ads] HTTP error', response.status, text.slice(0, 300));
+      return { ok: false, ads: [], error: `HTTP ${response.status}` };
     }
-
     const data = (await response.json()) as ApiResponse;
-
     if (data.error) {
-      console.error('Meta Ads API error response:', data.error);
-      return EMPTY_RESULT;
+      console.error('[meta-ads] API error', data.error);
+      return { ok: false, ads: [], error: data.error.message };
     }
+    return { ok: true, ads: data.data || [] };
+  } catch (err) {
+    clearTimeout(timeout);
+    console.error('[meta-ads] fetch threw', err);
+    return { ok: false, ads: [], error: String(err) };
+  }
+}
 
-    const rawAds = data.data || [];
+export async function checkMetaAds(
+  businessName: string,
+  city?: string,
+): Promise<MetaAdsCheckResult> {
+  const token = process.env.META_ACCESS_TOKEN;
+  if (!token) {
+    throw new Error('META_ACCESS_TOKEN manquant dans les env vars Vercel');
+  }
+
+  // Strategie : 1ere tentative avec ville (precis), 2eme sans ville (large)
+  // car la ville Google Maps != ville affichee sur la page Meta dans plein de cas
+  // (ex: business a Mesanger, page Facebook = "... | Ancenis")
+  console.log('[meta-ads] check', { businessName, city });
+  let attempt = await fetchAds(token, city ? `${businessName} ${city}` : businessName);
+  console.log('[meta-ads] attempt1', { count: attempt.ads.length, ok: attempt.ok });
+
+  // Fallback : si la 1ere tentative renvoie 0, on retente sans ville
+  if (attempt.ok && attempt.ads.length === 0 && city) {
+    attempt = await fetchAds(token, businessName);
+    console.log('[meta-ads] attempt2 (no city)', { count: attempt.ads.length, ok: attempt.ok });
+  }
+
+  const EMPTY_RESULT: MetaAdsCheckResult = {
+    hasEverAdvertised: false,
+    hasActiveAds: false,
+    activeCount: 0,
+    inactiveCount: 0,
+    totalCount: 0,
+    pageName: null,
+    ads: [],
+    platforms: [],
+    latestActivity: null,
+    earliestActivity: null,
+    rawCount: 0,
+    rawPageNames: [],
+  };
+
+  if (!attempt.ok) return EMPTY_RESULT;
+
+  try {
+    const rawAds = attempt.ads;
     const rawPageNames = Array.from(
       new Set(rawAds.map((a) => a.page_name).filter((n): n is string => !!n)),
     );
