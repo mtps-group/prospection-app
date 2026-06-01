@@ -20,11 +20,18 @@ export interface MetaAdItem {
 }
 
 export interface MetaAdsCheckResult {
+  hasEverAdvertised: boolean;
   hasActiveAds: boolean;
-  count: number;
+  activeCount: number;
+  inactiveCount: number;
+  totalCount: number;
   pageName: string | null;
   ads: MetaAdItem[];
   platforms: string[];
+  /** Date la plus recente d'activite (ISO) */
+  latestActivity: string | null;
+  /** Date la plus ancienne d'activite (ISO) */
+  earliestActivity: string | null;
 }
 
 interface RawAd {
@@ -34,6 +41,7 @@ interface RawAd {
   ad_creative_link_titles?: string[];
   publisher_platforms?: string[];
   ad_delivery_start_time?: string;
+  ad_delivery_stop_time?: string;
   ad_snapshot_url?: string;
 }
 
@@ -55,14 +63,15 @@ export async function checkMetaAds(
   // (ex: 'Boulangerie Dupont Angers' est plus precis que 'Boulangerie Dupont')
   const searchTerms = city ? `${businessName} ${city}` : businessName;
 
+  // ALL = on recupere actives + inactives (historique complet)
   const params = new URLSearchParams({
     access_token: token,
     search_terms: searchTerms,
     ad_reached_countries: '["FR"]',
-    ad_active_status: 'ACTIVE',
+    ad_active_status: 'ALL',
     ad_type: 'ALL',
-    fields: 'id,page_name,ad_creative_bodies,ad_creative_link_titles,publisher_platforms,ad_delivery_start_time,ad_snapshot_url',
-    limit: '10',
+    fields: 'id,page_name,ad_creative_bodies,ad_creative_link_titles,publisher_platforms,ad_delivery_start_time,ad_delivery_stop_time,ad_snapshot_url',
+    limit: '50',
   });
 
   const url = `${API_BASE}?${params.toString()}`;
@@ -74,17 +83,30 @@ export async function checkMetaAds(
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
 
+    const EMPTY_RESULT: MetaAdsCheckResult = {
+      hasEverAdvertised: false,
+      hasActiveAds: false,
+      activeCount: 0,
+      inactiveCount: 0,
+      totalCount: 0,
+      pageName: null,
+      ads: [],
+      platforms: [],
+      latestActivity: null,
+      earliestActivity: null,
+    };
+
     if (!response.ok) {
       const text = await response.text();
       console.error('Meta Ads API error:', response.status, text.slice(0, 200));
-      return { hasActiveAds: false, count: 0, pageName: null, ads: [], platforms: [] };
+      return EMPTY_RESULT;
     }
 
     const data = (await response.json()) as ApiResponse;
 
     if (data.error) {
       console.error('Meta Ads API error response:', data.error);
-      return { hasActiveAds: false, count: 0, pageName: null, ads: [], platforms: [] };
+      return EMPTY_RESULT;
     }
 
     const rawAds = data.data || [];
@@ -100,10 +122,34 @@ export async function checkMetaAds(
     });
 
     if (matchingAds.length === 0) {
-      return { hasActiveAds: false, count: 0, pageName: null, ads: [], platforms: [] };
+      return {
+        hasEverAdvertised: false,
+        hasActiveAds: false,
+        activeCount: 0,
+        inactiveCount: 0,
+        totalCount: 0,
+        pageName: null,
+        ads: [],
+        platforms: [],
+        latestActivity: null,
+        earliestActivity: null,
+      };
     }
 
-    // Agreger les plateformes uniques
+    // Active = pas de date de fin
+    const now = Date.now();
+    const activeAds = matchingAds.filter((a) => {
+      if (!a.ad_delivery_stop_time) return true;
+      const stop = new Date(a.ad_delivery_stop_time).getTime();
+      return isNaN(stop) || stop > now;
+    });
+    const inactiveAds = matchingAds.filter((a) => {
+      if (!a.ad_delivery_stop_time) return false;
+      const stop = new Date(a.ad_delivery_stop_time).getTime();
+      return !isNaN(stop) && stop <= now;
+    });
+
+    // Plateformes uniques (de toutes les pubs)
     const platforms = new Set<string>();
     for (const ad of matchingAds) {
       for (const p of ad.publisher_platforms || []) {
@@ -111,7 +157,18 @@ export async function checkMetaAds(
       }
     }
 
-    const ads: MetaAdItem[] = matchingAds.slice(0, 5).map((ad) => ({
+    // Dates min/max d'activite
+    const dates = matchingAds
+      .map((a) => a.ad_delivery_start_time)
+      .filter((d): d is string => !!d)
+      .map((d) => new Date(d).getTime())
+      .filter((t) => !isNaN(t));
+    const latestActivity = dates.length ? new Date(Math.max(...dates)).toISOString() : null;
+    const earliestActivity = dates.length ? new Date(Math.min(...dates)).toISOString() : null;
+
+    // On retourne en priorite les pubs ACTIVES dans la liste detail
+    const orderedAds = [...activeAds, ...inactiveAds];
+    const ads: MetaAdItem[] = orderedAds.slice(0, 5).map((ad) => ({
       id: ad.id,
       pageName: ad.page_name || null,
       bodies: ad.ad_creative_bodies || [],
@@ -121,14 +178,30 @@ export async function checkMetaAds(
     }));
 
     return {
-      hasActiveAds: true,
-      count: matchingAds.length,
+      hasEverAdvertised: true,
+      hasActiveAds: activeAds.length > 0,
+      activeCount: activeAds.length,
+      inactiveCount: inactiveAds.length,
+      totalCount: matchingAds.length,
       pageName: matchingAds[0].page_name || null,
       ads,
       platforms: Array.from(platforms),
+      latestActivity,
+      earliestActivity,
     };
   } catch (err) {
     console.error('checkMetaAds error:', err);
-    return { hasActiveAds: false, count: 0, pageName: null, ads: [], platforms: [] };
+    return {
+      hasEverAdvertised: false,
+      hasActiveAds: false,
+      activeCount: 0,
+      inactiveCount: 0,
+      totalCount: 0,
+      pageName: null,
+      ads: [],
+      platforms: [],
+      latestActivity: null,
+      earliestActivity: null,
+    };
   }
 }

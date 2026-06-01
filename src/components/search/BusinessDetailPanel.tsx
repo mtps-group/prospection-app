@@ -111,11 +111,16 @@ export function BusinessDetailPanel({
 
   // Meta Ads check
   type MetaAdsData = {
+    hasEverAdvertised: boolean;
     hasActiveAds: boolean;
-    count: number;
+    activeCount: number;
+    inactiveCount: number;
+    totalCount: number;
     pageName: string | null;
     ads: Array<{ id: string; pageName: string | null; bodies: string[]; publisherPlatforms: string[]; startTime: string | null; url: string | null }>;
     platforms: string[];
+    latestActivity: string | null;
+    earliestActivity: string | null;
   };
   const [metaAds, setMetaAds] = useState<MetaAdsData | null>(null);
   const [metaAdsLoading, setMetaAdsLoading] = useState(false);
@@ -779,12 +784,21 @@ export function BusinessDetailPanel({
                             )}
                             {metaAds && metaAds.hasActiveAds && !metaAdsLoading && (
                               <p className="text-xs font-semibold text-sky-700 mt-0.5">
-                                ✅ {metaAds.count} pub{metaAds.count > 1 ? 's' : ''} active{metaAds.count > 1 ? 's' : ''}
-                                {metaAds.pageName && <span className="text-text-muted font-normal"> · {metaAds.pageName}</span>}
+                                ✅ {metaAds.activeCount} pub{metaAds.activeCount > 1 ? 's' : ''} active{metaAds.activeCount > 1 ? 's' : ''}
+                                {metaAds.inactiveCount > 0 && (
+                                  <span className="text-text-muted font-normal"> · {metaAds.inactiveCount} passée{metaAds.inactiveCount > 1 ? 's' : ''}</span>
+                                )}
+                                {metaAds.pageName && <span className="text-text-muted font-normal block truncate">{metaAds.pageName}</span>}
                               </p>
                             )}
-                            {metaAds && !metaAds.hasActiveAds && !metaAdsLoading && (
-                              <p className="text-xs text-text-muted mt-0.5">Aucune pub active détectée</p>
+                            {metaAds && !metaAds.hasActiveAds && metaAds.hasEverAdvertised && !metaAdsLoading && (
+                              <p className="text-xs font-semibold text-amber-600 mt-0.5">
+                                ⏸️ {metaAds.inactiveCount} pub{metaAds.inactiveCount > 1 ? 's' : ''} passée{metaAds.inactiveCount > 1 ? 's' : ''} (rien en cours)
+                                {metaAds.pageName && <span className="text-text-muted font-normal block truncate">{metaAds.pageName}</span>}
+                              </p>
+                            )}
+                            {metaAds && !metaAds.hasEverAdvertised && !metaAdsLoading && (
+                              <p className="text-xs text-text-muted mt-0.5">❌ Jamais fait de pub Meta</p>
                             )}
                           </div>
                         </div>
@@ -798,12 +812,12 @@ export function BusinessDetailPanel({
                               Vérifier
                             </button>
                           )}
-                          {(metaAdsError || (metaAds && !metaAds.hasActiveAds)) && (
+                          {(metaAdsError || (metaAds && !metaAds.hasEverAdvertised)) && (
                             <button onClick={() => { setMetaAds(null); setMetaAdsError(null); checkMetaAdsRun(); }} className="inline-flex items-center gap-1 rounded-lg border border-sky-200 text-sky-600 px-2.5 py-1.5 text-xs font-semibold hover:bg-sky-50">
                               Réessayer
                             </button>
                           )}
-                          {metaAds && metaAds.hasActiveAds && metaAds.ads[0]?.url && (
+                          {metaAds && metaAds.hasEverAdvertised && metaAds.ads[0]?.url && (
                             <a
                               href={metaAds.ads[0].url}
                               target="_blank"
@@ -816,14 +830,26 @@ export function BusinessDetailPanel({
                           )}
                         </div>
                       </div>
-                      {/* Plateformes detaillees si pubs actives */}
-                      {metaAds && metaAds.hasActiveAds && metaAds.platforms.length > 0 && (
-                        <div className="mt-3 flex items-center gap-1.5 flex-wrap pl-12">
-                          {metaAds.platforms.map((p) => (
-                            <span key={p} className="text-[10px] font-bold uppercase tracking-wide bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">
-                              {p}
-                            </span>
-                          ))}
+                      {/* Plateformes detaillees + bibliotheque Meta */}
+                      {metaAds && metaAds.hasEverAdvertised && (
+                        <div className="mt-3 pl-12 space-y-2">
+                          {metaAds.platforms.length > 0 && (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {metaAds.platforms.map((p) => (
+                                <span key={p} className="text-[10px] font-bold uppercase tracking-wide bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">
+                                  {p}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {metaAds.latestActivity && (
+                            <p className="text-[11px] text-text-muted">
+                              Dernière pub : {new Date(metaAds.latestActivity).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              {metaAds.earliestActivity && metaAds.earliestActivity !== metaAds.latestActivity && (
+                                <> · 1ère pub : {new Date(metaAds.earliestActivity).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</>
+                              )}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
