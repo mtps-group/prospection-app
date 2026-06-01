@@ -109,6 +109,27 @@ export function BusinessDetailPanel({
   const [aiSiretLoading, setAiSiretLoading] = useState(false);
   const [aiSiretError, setAiSiretError] = useState<string | null>(null);
 
+  // Audit du site
+  type WebsiteAuditData = {
+    url: string;
+    https: boolean;
+    mobileFriendly: boolean;
+    technology: string | null;
+    hasTitle: boolean;
+    hasMetaDescription: boolean;
+    hasFavicon: boolean;
+    estimatedAge: string | null;
+    performanceScore: number | null;
+    seoScore: number | null;
+    accessibilityScore: number | null;
+    bestPracticesScore: number | null;
+    recommendations: string[];
+    warnings: string[];
+  };
+  const [audit, setAudit] = useState<WebsiteAuditData | null>(null);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
+
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
@@ -178,6 +199,33 @@ export function BusinessDetailPanel({
     }
   };
 
+  const runWebsiteAudit = async () => {
+    const url = websiteUrl || detail?.websiteUri;
+    if (!url) return;
+    setAudit(null);
+    setAuditError(null);
+    setAuditLoading(true);
+    const timeout = setTimeout(() => {
+      setAuditLoading(false);
+      setAuditError('Délai dépassé (> 60s). Le site est peut-être trop lent.');
+    }, 60000);
+    try {
+      const res = await fetch('/api/website-audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (res.ok) setAudit(data);
+      else setAuditError(data.error || 'Erreur lors de l\'audit');
+    } catch {
+      setAuditError('Erreur de connexion');
+    } finally {
+      clearTimeout(timeout);
+      setAuditLoading(false);
+    }
+  };
+
   const searchSiret = async () => {
     setAiSiret(null);
     setAiSiretError(null);
@@ -227,6 +275,8 @@ export function BusinessDetailPanel({
       setAiEmail(null);
       setAiEmailError(null);
       setAiDirigeant(null);
+      setAudit(null);
+      setAuditError(null);
       setAiDirigeantError(null);
       setAiSiret(null);
       setAiSiretError(null);
@@ -670,7 +720,146 @@ export function BusinessDetailPanel({
                 </section>
               )}
 
+              {/* 4c. AUDIT DU SITE (Ultra + a un site web) */}
+              {detail.isUltra && hasWebsite && (websiteUrl || detail?.websiteUri) && (
+                <section>
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-text mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-5 h-5 rounded-md bg-gradient-to-br from-rose-500 to-red-500 flex items-center justify-center flex-shrink-0">
+                        <TrendingUp className="h-3 w-3 text-white" />
+                      </div>
+                      <span>Audit du site</span>
+                    </div>
+                  </h3>
 
+                  <div className="rounded-2xl border border-gray-100 bg-white p-4">
+                    {/* Header avec bouton ou loading */}
+                    {!audit && !auditLoading && !auditError && (
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-rose-500 to-red-500 flex items-center justify-center shadow-md shadow-rose-500/20 flex-shrink-0">
+                            <TrendingUp className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-text">Analyser le site existant</p>
+                            <p className="text-xs text-text-muted mt-0.5">Performance, SEO, technologie, mobile-friendly...</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={runWebsiteAudit}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-500 to-red-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:shadow-md hover:shadow-rose-500/30 transition-all flex-shrink-0"
+                        >
+                          <Search className="h-3 w-3" />
+                          Lancer l&apos;audit
+                        </button>
+                      </div>
+                    )}
+
+                    {auditLoading && (
+                      <div className="flex items-center gap-3">
+                        <Loader2 className="h-5 w-5 animate-spin text-rose-500" />
+                        <div>
+                          <p className="text-sm font-semibold text-text">Audit en cours...</p>
+                          <p className="text-xs text-text-muted">~20-30 secondes (Lighthouse + checks techniques)</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {auditError && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-red-600">{auditError}</p>
+                        <button onClick={() => { setAuditError(null); runWebsiteAudit(); }} className="text-xs text-rose-600 hover:text-rose-800 underline font-semibold">Réessayer</button>
+                      </div>
+                    )}
+
+                    {audit && (
+                      <div className="space-y-4">
+                        {/* Scores Lighthouse en grille */}
+                        {(audit.performanceScore !== null || audit.seoScore !== null) && (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {[
+                              { label: 'Performance', value: audit.performanceScore, icon: '⚡' },
+                              { label: 'SEO', value: audit.seoScore, icon: '🔍' },
+                              { label: 'Accessibilité', value: audit.accessibilityScore, icon: '♿' },
+                              { label: 'Best Practices', value: audit.bestPracticesScore, icon: '✨' },
+                            ].map((m) => {
+                              if (m.value === null) return null;
+                              const color = m.value >= 90 ? 'text-green-600 bg-green-50 border-green-200'
+                                : m.value >= 50 ? 'text-amber-600 bg-amber-50 border-amber-200'
+                                : 'text-red-600 bg-red-50 border-red-200';
+                              return (
+                                <div key={m.label} className={`rounded-xl border p-3 text-center ${color}`}>
+                                  <div className="text-2xl mb-0.5">{m.icon}</div>
+                                  <div className="text-2xl font-black tabular-nums">{m.value}</div>
+                                  <div className="text-[10px] font-semibold uppercase tracking-wide opacity-80">{m.label}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Checks rapides */}
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {[
+                            { ok: audit.https, label: audit.https ? 'HTTPS sécurisé' : 'PAS de HTTPS' },
+                            { ok: audit.mobileFriendly, label: audit.mobileFriendly ? 'Mobile-friendly' : 'Pas optimisé mobile' },
+                            { ok: audit.hasTitle, label: audit.hasTitle ? 'Titre SEO présent' : 'Titre SEO manquant' },
+                            { ok: audit.hasMetaDescription, label: audit.hasMetaDescription ? 'Meta description OK' : 'Meta description manquante' },
+                          ].map((b, i) => (
+                            <div
+                              key={i}
+                              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 ${
+                                b.ok
+                                  ? 'border-green-200 bg-green-50 text-green-700'
+                                  : 'border-red-200 bg-red-50 text-red-700'
+                              }`}
+                            >
+                              {b.ok ? <CheckCircle className="h-3.5 w-3.5 flex-shrink-0" /> : <XCircle className="h-3.5 w-3.5 flex-shrink-0" />}
+                              <span className="text-[11px] font-semibold">{b.label}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Technologie détectée */}
+                        {audit.technology && (
+                          <div className="rounded-lg bg-gray-50 border border-gray-100 p-3">
+                            <div className="flex items-center gap-2">
+                              <Building2 className="h-4 w-4 text-text-muted" />
+                              <span className="text-xs font-semibold text-text">Technologie : <span className="font-bold">{audit.technology}</span></span>
+                            </div>
+                            {audit.estimatedAge && (
+                              <p className="text-[11px] text-text-muted mt-1 ml-6">{audit.estimatedAge}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Recommandations */}
+                        {audit.recommendations.length > 0 && (
+                          <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
+                            <p className="text-xs font-bold text-amber-800 mb-2">💡 Points d&apos;amélioration</p>
+                            <ul className="space-y-1">
+                              {audit.recommendations.map((r, i) => (
+                                <li key={i} className="text-xs text-amber-900 flex items-start gap-1.5">
+                                  <span className="text-amber-500 mt-0.5">•</span>
+                                  <span>{r}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Bouton refaire */}
+                        <button
+                          onClick={() => { setAudit(null); runWebsiteAudit(); }}
+                          className="text-xs text-rose-600 hover:text-rose-800 underline font-semibold"
+                        >
+                          Refaire l&apos;audit
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
 
               {/* 5. SCORE DE PRIORITÉ (entreprises sans site web) */}
               {result && !hasWebsite && (
