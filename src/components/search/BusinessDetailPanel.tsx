@@ -475,6 +475,33 @@ export function BusinessDetailPanel({
                       </button>
                     </div>
                   )}
+
+                  {/* Site web */}
+                  {(websiteUrl || detail?.websiteUri) && (
+                    <a
+                      href={websiteUrl || detail?.websiteUri}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 hover:border-green-200 hover:shadow-md hover:shadow-green-500/5 transition-all"
+                    >
+                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Globe className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase tracking-wide font-bold text-text-muted">Site web — clic pour ouvrir</p>
+                        <p className="text-sm font-bold text-green-600 truncate">
+                          {(websiteUrl || detail?.websiteUri)?.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.preventDefault(); copyToClipboard((websiteUrl || detail?.websiteUri)!, 'website'); }}
+                        className="flex-shrink-0 rounded-lg p-1.5 text-text-muted hover:text-green-600 hover:bg-green-50 transition-colors"
+                        title="Copier"
+                      >
+                        {copiedField === 'website' ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </a>
+                  )}
                 </div>
               </section>
 
@@ -1166,24 +1193,8 @@ export function BusinessDetailPanel({
                 </section>
               )}
 
-              {/* Website status */}
-              {hasWebsite ? (
-                <div className="rounded-lg border-2 border-dashed border-green-200 bg-green-50 p-4 text-center">
-                  <Globe className="mx-auto h-8 w-8 text-green-500 mb-2" />
-                  <p className="text-sm font-semibold text-green-700">Cette entreprise a un site web</p>
-                  {(websiteUrl || detail?.websiteUri) && (
-                    <a
-                      href={websiteUrl || detail?.websiteUri}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 underline mt-1"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      {(websiteUrl || detail?.websiteUri)?.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-                    </a>
-                  )}
-                </div>
-              ) : (
+              {/* Bannière "pas de site = prospect ideal" (le site web s'affiche deja dans Coordonnees) */}
+              {!hasWebsite && (
                 <div className="rounded-lg border-2 border-dashed border-red-200 bg-red-50 p-4 text-center">
                   <Globe className="mx-auto h-8 w-8 text-red-400 mb-2" />
                   <p className="text-sm font-semibold text-red-700">{fr.results.pasDeSiteWeb}</p>
