@@ -774,7 +774,7 @@ export function BusinessDetailPanel({
                             <Send className="h-4 w-4 text-white" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-text">Pubs Meta (FB/Insta)</p>
+                            <p className="text-sm font-bold text-text">Meta ads (FB/Insta)</p>
                             {metaAdsLoading && (
                               <p className="text-xs text-text-muted flex items-center gap-1 mt-0.5">
                                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -801,7 +801,7 @@ export function BusinessDetailPanel({
                             )}
                             {metaAds && !metaAds.hasEverAdvertised && !metaAdsLoading && (
                               <>
-                                <p className="text-xs text-text-muted mt-0.5">❌ Jamais fait de pub Meta</p>
+                                <p className="text-xs text-text-muted mt-0.5">❌ Jamais fait de meta ads</p>
                                 {(metaAds.rawCount ?? 0) > 0 && metaAds.rawPageNames && metaAds.rawPageNames.length > 0 && (
                                   <p className="text-[10px] text-text-muted/70 mt-0.5 italic">
                                     {metaAds.rawCount} résultat{(metaAds.rawCount ?? 0) > 1 ? 's' : ''} ignoré{(metaAds.rawCount ?? 0) > 1 ? 's' : ''} (nom différent) : {metaAds.rawPageNames.slice(0, 3).join(', ')}{metaAds.rawPageNames.length > 3 ? '…' : ''}
