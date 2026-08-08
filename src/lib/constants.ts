@@ -71,6 +71,16 @@ export function getPlanConfig(plan: PlanSlug) {
   return PLANS[plan] || PLANS.free;
 }
 
+/**
+ * Mode "Entreprises récentes" (recherche par date de création).
+ * Désactivé temporairement : passer à `true` pour le réafficher.
+ *
+ * Quand c'est `false` : le sélecteur de mode est masqué et la recherche
+ * standard s'affiche directement (un sélecteur à une seule carte n'aurait
+ * aucun intérêt). Le code du mode reste en place, rien à réécrire.
+ */
+export const COMPANIES_SEARCH_MODE_ENABLED = false;
+
 export const GOOGLE_PLACES_FIELD_MASK = [
   'places.id',
   'places.displayName',

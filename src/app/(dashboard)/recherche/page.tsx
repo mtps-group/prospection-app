@@ -6,7 +6,7 @@ import { SearchForm } from '@/components/search/SearchForm';
 import { SearchResults } from '@/components/search/SearchResults';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useToast } from '@/providers/ToastProvider';
-import { getPlanConfig } from '@/lib/constants';
+import { getPlanConfig, COMPANIES_SEARCH_MODE_ENABLED } from '@/lib/constants';
 import { fr } from '@/i18n/fr';
 import type { SearchResponse } from '@/types';
 import type { PlanSlug } from '@/lib/constants';
@@ -352,22 +352,28 @@ export default function RecherchePage() {
         </div>
       )}
 
-      {/* Si aucun mode selectionne et pas de recherche en cours -> picker */}
-      {!searchMode && !searchData && !loading && !businessTypeParam && (
+      {/* Si aucun mode selectionne et pas de recherche en cours -> picker.
+          Masque quand le mode 'Entreprises recentes' est desactive : un
+          selecteur a une seule carte n'aurait aucun interet. */}
+      {COMPANIES_SEARCH_MODE_ENABLED && !searchMode && !searchData && !loading && !businessTypeParam && (
         <SearchModePicker onSelect={(mode) => setSearchMode(mode)} />
       )}
 
-      {/* Si mode 'places' selectionne OU prefill onboarding OU param historique */}
-      {(searchMode === 'places' || (prefilledBusinessType && !searchMode) || (businessTypeParam && !searchMode)) && !searchData && (
+      {/* Si mode 'places' selectionne OU prefill onboarding OU param historique.
+          Quand le mode 'Entreprises recentes' est desactive, c'est le seul
+          formulaire : on l'affiche directement, sans passer par le selecteur. */}
+      {(!COMPANIES_SEARCH_MODE_ENABLED || searchMode === 'places' || (prefilledBusinessType && !searchMode) || (businessTypeParam && !searchMode)) && !searchData && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => { setSearchMode(null); setPrefilledBusinessType(''); }}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary hover:text-primary transition-colors"
-            >
-              ← Changer de mode
-            </button>
-          </div>
+          {COMPANIES_SEARCH_MODE_ENABLED && (
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => { setSearchMode(null); setPrefilledBusinessType(''); }}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary hover:text-primary transition-colors"
+              >
+                ← Changer de mode
+              </button>
+            </div>
+          )}
           <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             <SearchForm
               onSearch={handleSearch}
@@ -387,7 +393,7 @@ export default function RecherchePage() {
       )}
 
       {/* Si mode 'companies' selectionne */}
-      {searchMode === 'companies' && !searchData && (
+      {COMPANIES_SEARCH_MODE_ENABLED && searchMode === 'companies' && !searchData && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <button
