@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { searchPlaces, filterNoWebsite, getPrimaryType } from '@/lib/google-places/client';
 import { extractSocialLinks } from '@/lib/social-scraper';
 import { getPlanConfig } from '@/lib/constants';
+import { blurResults } from '@/lib/search-response';
 import type { PlanSlug } from '@/lib/constants';
 import type { SearchResultClient, SocialProfiles } from '@/types';
 
@@ -180,22 +181,7 @@ export async function POST(request: NextRequest) {
 
     const noWebsiteList = noWebsiteResults || [];
 
-    const clientResults: SearchResultClient[] = noWebsiteList.map((r, index) => {
-      if (index < visibleCount) {
-        return { ...r, is_blurred: false };
-      }
-      return {
-        ...r,
-        business_name: 'Entreprise masquee',
-        formatted_address: '*** Adresse masquee ***',
-        phone_national: '** ** ** ** **',
-        phone_international: null,
-        google_maps_uri: null,
-        rating: r.rating,
-        user_rating_count: null,
-        is_blurred: true,
-      };
-    });
+    const clientResults: SearchResultClient[] = blurResults(noWebsiteList, visibleCount);
 
     // Entreprises AVEC site web
     const { data: withWebsiteResults } = await supabase
@@ -207,23 +193,7 @@ export async function POST(request: NextRequest) {
 
     const withWebsiteList = withWebsiteResults || [];
 
-    const clientWithWebsite: SearchResultClient[] = withWebsiteList.map((r, index) => {
-      if (index < visibleCount) {
-        return { ...r, is_blurred: false };
-      }
-      return {
-        ...r,
-        business_name: 'Entreprise masquee',
-        formatted_address: '*** Adresse masquee ***',
-        phone_national: '** ** ** ** **',
-        phone_international: null,
-        google_maps_uri: null,
-        website_url: null,
-        rating: r.rating,
-        user_rating_count: null,
-        is_blurred: true,
-      };
-    });
+    const clientWithWebsite: SearchResultClient[] = blurResults(withWebsiteList, visibleCount, { maskWebsite: true });
 
     return NextResponse.json({
       searchId: search.id,

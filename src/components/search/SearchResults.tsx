@@ -73,6 +73,8 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
     if (res.ok) {
       setProspectIds(prev => new Set([...prev, result.google_place_id]));
       addToast(`${result.business_name} ajouté aux prospects !`, 'success');
+    } else {
+      addToast(`Impossible d'ajouter ${result.business_name} aux prospects`, 'error');
     }
   }, [prospectIds, addToast]);
 

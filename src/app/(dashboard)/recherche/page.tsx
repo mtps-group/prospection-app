@@ -60,6 +60,32 @@ export default function RecherchePage() {
   // Auto-lancer la recherche depuis l'historique
   const businessTypeParam = searchParams.get('businessType');
   const cityParam = searchParams.get('city');
+  const searchIdParam = searchParams.get('searchId');
+
+  // Recharge les resultats STOCKES d'une recherche passee (clic depuis l'historique).
+  // Ne relance PAS de recherche Google Places et ne consomme PAS le quota.
+  const loadSavedSearch = async (searchId: string) => {
+    setLoading(true);
+    setSearchData(null);
+
+    try {
+      const response = await fetch(`/api/history/${searchId}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        addToast(data.error || 'Impossible de charger cette recherche', 'error');
+        setLoading(false);
+        return;
+      }
+
+      setCurrentQuery(`${data.query.businessType} ${data.query.city}`);
+      setSearchData(data);
+    } catch {
+      addToast('Erreur de connexion au serveur', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (sheetsUrlParam) {
@@ -76,7 +102,10 @@ export default function RecherchePage() {
       setOauthError(messages[exportErrorParam] || 'Erreur lors de l\'export Google Sheets.');
       window.history.replaceState({}, '', '/recherche');
     }
-    if (businessTypeParam && cityParam) {
+    if (searchIdParam) {
+      loadSavedSearch(searchIdParam);
+      window.history.replaceState({}, '', '/recherche');
+    } else if (businessTypeParam && cityParam) {
       handleSearch(businessTypeParam, cityParam);
       window.history.replaceState({}, '', '/recherche');
     }
@@ -346,7 +375,7 @@ export default function RecherchePage() {
             </span>
           ) : (
             <span>
-              <strong>{searchesRemaining}</strong> {fr.billing.recherchesRestantes} (plan gratuit)
+              <strong>{searchesRemaining}</strong> {searchesRemaining && searchesRemaining > 1 ? fr.billing.recherchesRestantes : 'recherche restante'} (plan gratuit)
             </span>
           )}
         </div>

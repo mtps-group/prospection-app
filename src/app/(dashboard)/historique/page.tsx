@@ -90,7 +90,7 @@ export default function HistoriquePage() {
           {searches.map((search, index) => (
             <Link
               key={search.id}
-              href={`/recherche?businessType=${encodeURIComponent(search.query_business_type)}&city=${encodeURIComponent(search.query_city)}`}
+              href={`/recherche?searchId=${search.id}`}
             >
               <div className="group rounded-2xl border border-gray-100 bg-white p-5 hover:shadow-xl hover:border-gray-200 hover:-translate-y-0.5 cursor-pointer transition-all duration-300">
                 <div className="flex items-center justify-between gap-4">
