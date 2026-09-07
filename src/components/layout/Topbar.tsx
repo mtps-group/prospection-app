@@ -67,7 +67,9 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     window.location.replace('/login?t=' + Date.now());
   };
 
-  const planBadge = profile?.plan === 'ultra'
+  const planBadge = profile?.plan === 'agence'
+    ? { label: 'Agence', icon: Crown, class: 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' }
+    : profile?.plan === 'ultra'
     ? { label: 'Ultra', icon: Crown, class: 'bg-gradient-to-r from-amber-400 to-orange-400 text-gray-900' }
     : profile?.plan === 'premium'
     ? { label: 'Premium', icon: Zap, class: 'bg-gradient-to-r from-primary to-purple-500 text-white' }
@@ -90,7 +92,6 @@ export function Topbar({ onMenuClick }: TopbarProps) {
       >
         <Search className="h-4 w-4" />
         <span>Recherche rapide...</span>
-        <kbd className="ml-6 text-xs bg-white dark:bg-[#15102e] rounded px-1.5 py-0.5 border border-gray-200 dark:border-violet-500/20 text-text-muted font-mono">Ctrl+K</kbd>
       </Link>
 
       {/* Right side */}

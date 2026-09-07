@@ -31,7 +31,7 @@ export default function SignupPage() {
     }
 
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caracteres');
+      setError('Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
 
@@ -72,16 +72,16 @@ export default function SignupPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
             <Mail className="h-6 w-6 text-green-600" />
           </div>
-          <h2 className="text-xl font-bold text-text mb-2">Verifiez votre email</h2>
+          <h2 className="text-xl font-bold text-text mb-2">Vérifiez votre email</h2>
           <p className="text-sm text-text-secondary">
-            Un email de confirmation a ete envoye a <strong>{email}</strong>.
+            Un email de confirmation a été envoyé à <strong>{email}</strong>.
             Cliquez sur le lien pour activer votre compte.
           </p>
           <Link
             href="/login"
             className="mt-4 inline-block text-sm font-semibold text-primary hover:text-primary-hover"
           >
-            Retour a la connexion
+            Retour à la connexion
           </Link>
         </div>
       </Card>
@@ -92,7 +92,7 @@ export default function SignupPage() {
     <Card>
       <h1 className="text-2xl font-bold text-text mb-2">{fr.auth.inscription}</h1>
       <p className="text-sm text-text-secondary mb-6">
-        Creez votre compte et commencez a prospecter gratuitement
+        Créez votre compte et commencez à prospecter gratuitement
       </p>
 
       <form onSubmit={handleSignup} className="space-y-4">

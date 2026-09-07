@@ -7,14 +7,14 @@ export default function NotFound() {
         <div className="text-8xl font-black text-primary/20 mb-4">404</div>
         <h1 className="text-2xl font-bold text-text mb-2">Page introuvable</h1>
         <p className="text-text-secondary mb-6">
-          La page que vous cherchez n&apos;existe pas ou a ete deplacee.
+          La page que vous cherchez n&apos;existe pas ou a été déplacée.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/"
             className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg bg-primary text-white font-medium hover:bg-primary-hover transition-colors"
           >
-            Retour a l&apos;accueil
+            Retour à l&apos;accueil
           </Link>
           <Link
             href="/recherche"

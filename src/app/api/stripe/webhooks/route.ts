@@ -3,11 +3,29 @@ import { stripe } from '@/lib/stripe/client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import Stripe from 'stripe';
 
-// Résout le plan depuis un price ID
+// Résout le plan depuis un price ID.
+// Source de vérité : STRIPE_PLANS (les 3 tarifs vendus) + les anciens tarifs
+// encore actifs chez des abonnés existants. Un price ID inconnu tombe en
+// premium avec un log d'erreur — il ne doit plus arriver depuis l'allowlist
+// de create-checkout.
+import { STRIPE_PLANS } from '@/lib/stripe/config';
+
+const PRICE_TO_PLAN: Record<string, 'premium' | 'ultra' | 'agence'> = {
+  [STRIPE_PLANS.premium.priceId]: 'premium',
+  [STRIPE_PLANS.ultra.priceId]: 'ultra',
+  [STRIPE_PLANS.agence.priceId]: 'agence',
+  // Anciens tarifs (39,99 € et 59 €) : abonnements souscrits avant la hausse
+  price_1TAViSHDs8WJU7EjvR0QSe5X: 'premium',
+  price_1TAVlGHDs8WJU7EjO2KSxbOK: 'ultra',
+};
+
 function resolvePlan(priceId: string | null | undefined): 'premium' | 'ultra' | 'agence' {
-  if (priceId === process.env.STRIPE_ULTRA_PRICE_ID) return 'ultra';
-  if (priceId === process.env.STRIPE_AGENCE_PRICE_ID) return 'agence';
-  return 'premium';
+  const plan = priceId ? PRICE_TO_PLAN[priceId] : undefined;
+  if (!plan) {
+    console.error(`resolvePlan: price ID inconnu "${priceId}", fallback premium`);
+    return 'premium';
+  }
+  return plan;
 }
 
 // Trouve le user_id via stripe_customer_id — fiable même si subscriptions est vide

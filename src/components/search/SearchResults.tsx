@@ -111,10 +111,11 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // Jamais les lignes masquées du floutage
           results: [
             ...data.results,
             ...(data.withWebsiteResults ?? []),
-          ],
+          ].filter((r) => !r.is_blurred),
           query: query || '',
         }),
       });
@@ -129,6 +130,9 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
       if (json.sheetUrl) {
         setSheetsUrl(json.sheetUrl);
         window.open(json.sheetUrl, '_blank');
+      } else {
+        // Échec (session expirée, 403, 500...) : ne plus rester silencieux
+        setExportError(json.error || 'Erreur lors de l\'export Google Sheets');
       }
     } catch {
       setExportError('Erreur lors de l\'export Google Sheets');
@@ -145,7 +149,15 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
       const res = await fetch('/api/notion/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ results: data.results, query: query || '' }),
+        body: JSON.stringify({
+          // Même périmètre que l'export Sheets : les deux onglets, sans les
+          // lignes masquées du floutage
+          results: [
+            ...data.results,
+            ...(data.withWebsiteResults ?? []),
+          ].filter((r) => !r.is_blurred),
+          query: query || '',
+        }),
       });
       const json = await res.json();
 
@@ -170,20 +182,6 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
   };
 
   const totalResults = data.results.length + (data.withWebsiteResults?.length ?? 0);
-  if (totalResults === 0) {
-    return (
-      <div className="text-center py-12">
-        <AlertCircle className="mx-auto h-12 w-12 text-text-muted mb-4" />
-        <h3 className="text-lg font-semibold text-text mb-1">
-          {fr.results.aucunResultat}
-        </h3>
-        <p className="text-sm text-text-secondary max-w-md mx-auto">
-          {fr.results.aucunResultatDescription}
-        </p>
-      </div>
-    );
-  }
-
   const rawResults = activeTab === 'no-website' ? data.results : (data.withWebsiteResults || []);
 
   const activeResults = useMemo(() => {
@@ -206,6 +204,22 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
     });
     return [...sorted, ...blurred];
   }, [rawResults, sortBy, noSocialsOnly, isUltra, activeTab]);
+
+  // Early return APRES tous les hooks (sinon leur nombre varie entre rendus
+  // et React leve "Rendered more hooks than during the previous render").
+  if (totalResults === 0) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="mx-auto h-12 w-12 text-text-muted mb-4" />
+        <h3 className="text-lg font-semibold text-text mb-1">
+          {fr.results.aucunResultat}
+        </h3>
+        <p className="text-sm text-text-secondary max-w-md mx-auto">
+          {fr.results.aucunResultatDescription}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -284,7 +298,7 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
           )}
         </div>
 
-        {true && (
+        {isPaid && (
           <div className="flex items-center gap-2 flex-wrap">
             {onExportCSV && (
               <Button variant="outline" size="sm" onClick={onExportCSV}>

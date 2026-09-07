@@ -39,15 +39,21 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id);
+        const u = session.user;
+        setUser(u);
+        // Ne jamais await un appel Supabase DANS le callback onAuthStateChange :
+        // il tourne sous le verrou d'auth et peut interbloquer (loading infini
+        // après un refresh de token). On sort l'appel de la pile du callback.
+        setTimeout(() => {
+          fetchProfile(u.id).finally(() => setLoading(false));
+        }, 0);
       } else {
         setUser(null);
         setProfile(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => {

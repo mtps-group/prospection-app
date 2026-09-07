@@ -14,10 +14,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorise' }, { status: 401 });
     }
 
-    const { priceId } = await request.json();
+    const { priceId } = await request.json().catch(() => ({}));
 
-    if (!priceId) {
-      return NextResponse.json({ error: 'Prix requis' }, { status: 400 });
+    // Allowlist : uniquement les 3 tarifs actuellement vendus. Sans elle,
+    // n'importe quel price ID du compte Stripe (ancien tarif, prix de test)
+    // pouvait etre achete et donnait un plan payant via le webhook.
+    const { STRIPE_PLANS } = await import('@/lib/stripe/config');
+    const allowedPriceIds: string[] = [
+      STRIPE_PLANS.premium.priceId,
+      STRIPE_PLANS.ultra.priceId,
+      STRIPE_PLANS.agence.priceId,
+    ];
+    if (!priceId || !allowedPriceIds.includes(priceId)) {
+      return NextResponse.json({ error: 'Prix invalide' }, { status: 400 });
     }
 
     const customerId = await createOrRetrieveCustomer(user.id, user.email!);

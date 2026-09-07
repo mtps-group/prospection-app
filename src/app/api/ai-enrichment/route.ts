@@ -333,8 +333,8 @@ export async function POST(request: NextRequest) {
   const { data: profile } = await supabase
     .from('profiles').select('plan').eq('id', user.id).single();
 
-  if (!profile || profile.plan !== 'ultra') {
-    return NextResponse.json({ error: 'Fonctionnalité réservée au plan Ultra' }, { status: 403 });
+  if (!profile || (profile.plan !== 'ultra' && profile.plan !== 'agence')) {
+    return NextResponse.json({ error: 'Fonctionnalité réservée aux plans Ultra et Agence' }, { status: 403 });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;

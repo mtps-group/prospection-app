@@ -65,9 +65,13 @@ export function PricingCards() {
     try {
       const response = await fetch('/api/stripe/create-portal', { method: 'POST' });
       const data = await response.json();
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        addToast(data.error || 'Impossible d\'ouvrir le portail de facturation', 'error');
+      }
     } catch {
-      addToast('Erreur', 'error');
+      addToast('Erreur de connexion', 'error');
     }
   };
 

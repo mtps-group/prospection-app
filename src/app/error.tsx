@@ -20,14 +20,14 @@ export default function Error({
         <AlertTriangle className="mx-auto h-16 w-16 text-amber-500 mb-4" />
         <h1 className="text-2xl font-bold text-text mb-2">Une erreur est survenue</h1>
         <p className="text-text-secondary mb-6">
-          Quelque chose s&apos;est mal passe. Veuillez reessayer ou contacter le support si le probleme persiste.
+          Quelque chose s&apos;est mal passé. Veuillez réessayer ou contacter le support si le problème persiste.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
             className="inline-flex items-center justify-center px-6 py-2.5 rounded-lg bg-primary text-white font-medium hover:bg-primary-hover transition-colors"
           >
-            Reessayer
+            Réessayer
           </button>
           <a
             href="/"

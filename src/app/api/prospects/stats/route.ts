@@ -154,7 +154,9 @@ export async function GET(request: NextRequest) {
   }
 
   // 8. Conversion globale (created -> signed)
-  const created = byStatus['a_contacter'] + byStatus['contacte'] + byStatus['interesse'] + byStatus['rdv_pris'] + byStatus['signe'];
+  // Le dénominateur inclut les prospects perdus (pas_interesse) — sinon
+  // marquer des prospects comme perdus faisait MONTER le taux de conversion.
+  const created = byStatus['a_contacter'] + byStatus['contacte'] + byStatus['interesse'] + byStatus['rdv_pris'] + byStatus['signe'] + byStatus['pas_interesse'];
   const conversionRate = created > 0 ? Math.round((byStatus['signe'] / created) * 1000) / 10 : 0;
 
   // 9. Taux de closing REEL : RDV pris -> Signe (efficacite commerciale en RDV)

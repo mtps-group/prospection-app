@@ -181,6 +181,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Aucun fichier audio fourni' }, { status: 400 });
   }
 
+  // Le fichier est chargé intégralement en mémoire avant l'upload Gemini :
+  // sans plafond, un gros fichier fait tomber la fonction (OOM).
+  const MAX_AUDIO_BYTES = 25 * 1024 * 1024; // 25 Mo (~30 min de MP3 128 kbps)
+  if (audioFile.size > MAX_AUDIO_BYTES) {
+    return NextResponse.json(
+      { error: 'Fichier trop volumineux (25 Mo maximum). Compressez l\'audio en MP3 ou coupez l\'enregistrement.' },
+      { status: 413 }
+    );
+  }
+
   const allowedTypes = [
     'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave',
     'audio/ogg', 'audio/flac', 'audio/aac', 'audio/mp4',

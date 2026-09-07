@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_APP_URL!));
-  }
-
-  const notionAuthUrl = `https://api.notion.com/v1/oauth/authorize?client_id=${process.env.NOTION_CLIENT_ID}&response_type=code&owner=user&redirect_uri=${encodeURIComponent(process.env.NOTION_REDIRECT_URI!)}&state=${user.id}`;
-
-  return NextResponse.redirect(notionAuthUrl);
-}
+// Route orpheline neutralisee lors de la revue securite du 2026-09-03.
+// Ancienne implementation dans l'historique git. Les flux actifs :
+// - Notion : token manuel via /compte + /api/notion/export
+// - Google Sheets : OAuth via /api/google-sheets/* 
+// - Email/dirigeant/SIRET : /api/ai-enrichment
+const gone = () => NextResponse.json({ error: 'Route retiree' }, { status: 410 });
+export const GET = gone;
+export const POST = gone;

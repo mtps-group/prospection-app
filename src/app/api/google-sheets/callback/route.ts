@@ -36,9 +36,11 @@ export async function GET(request: NextRequest) {
         .eq('id', user.id);
     }
 
-    // Rediriger vers l'export
+    // Rediriger vers l'export — sans access token dans l'URL (fuite logs /
+    // historique navigateur) : la route GET le regénère depuis le refresh
+    // token stocké ci-dessus.
     return NextResponse.redirect(
-      `${appUrl}/api/google-sheets/export?exportId=${exportId}&access_token=${encodeURIComponent(tokens.access_token!)}`
+      `${appUrl}/api/google-sheets/export?exportId=${encodeURIComponent(exportId ?? '')}`
     );
   } catch (error) {
     console.error('Google Sheets callback error:', error);

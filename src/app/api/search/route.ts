@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { searchPlaces, filterNoWebsite, getPrimaryType } from '@/lib/google-places/client';
 import { extractSocialLinks } from '@/lib/social-scraper';
 import { getPlanConfig } from '@/lib/constants';
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Limite de recherches atteinte',
-          message: `Vous avez utilise vos ${plan.maxSearchesLifetime} recherches gratuites. Passez a Premium pour des recherches illimitees.`,
+          message: `Vous avez utilisé vos ${plan.maxSearchesLifetime} recherches gratuites. Passez à Premium pour des recherches illimitées.`,
           upgradeRequired: true,
         },
         { status: 429 }
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (!businessType || !city) {
       return NextResponse.json(
-        { error: 'Type d\'activite et ville requis' },
+        { error: 'Type d\'activité et ville requis' },
         { status: 400 }
       );
     }
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     // 5. Call Google Places API
     const maxPages = profile.plan === 'free' ? 1 : 3;
-    const detailed = profile.plan === 'ultra';
+    const detailed = profile.plan === 'ultra' || profile.plan === 'agence';
 
     const allPlaces = await searchPlaces({
       query: rawQuery,
@@ -162,11 +163,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 9. Increment search counter
-    await supabase
-      .from('profiles')
-      .update({ total_searches_used: profile.total_searches_used + 1 })
-      .eq('id', user.id);
+    // 9. Increment search counter — atomique via RPC (service role), la policy
+    // RLS n'autorise plus l'utilisateur a modifier ce compteur lui-meme.
+    const admin = createAdminClient();
+    const { error: rpcError } = await admin.rpc('increment_search_count', { uid: user.id });
+    if (rpcError) {
+      // Migration 005 pas encore executee : fallback non atomique via service role
+      await admin
+        .from('profiles')
+        .update({ total_searches_used: profile.total_searches_used + 1 })
+        .eq('id', user.id);
+    }
 
     // 10. Build client response
     const visibleCount = plan.visibleResults;

@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     .eq('id', user.id)
     .single();
 
-  const isUltra = profile?.plan === 'ultra';
+  const isUltra = profile?.plan === 'ultra' || profile?.plan === 'agence';
   const fieldMask = isUltra ? ULTRA_FIELDS : BASE_FIELDS;
   const cacheKey = `${placeId}:${isUltra ? 'ultra' : 'base'}`;
 

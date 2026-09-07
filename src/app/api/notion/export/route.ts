@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
 import { createClient } from '@/lib/supabase/server';
+import { getPlanConfig, type PlanSlug } from '@/lib/constants';
 
 export const maxDuration = 60;
 
@@ -32,9 +33,18 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('notion_token, notion_database_id')
+    .select('notion_token, notion_database_id, plan')
     .eq('id', user.id)
     .single();
+
+  // Gating serveur : les exports sont une feature payante (PLANS.free.canExport = false)
+  const planConfig = getPlanConfig((profile?.plan ?? 'free') as PlanSlug);
+  if (!planConfig.canExportNotion) {
+    return NextResponse.json(
+      { error: 'Les exports sont réservés aux plans payants. Passez à Premium pour les débloquer.', upgradeRequired: true },
+      { status: 403 }
+    );
+  }
 
   if (!profile?.notion_token || !profile?.notion_database_id) {
     return NextResponse.json({
@@ -43,9 +53,14 @@ export async function POST(request: NextRequest) {
     }, { status: 400 });
   }
 
-  const { results, query } = await request.json();
+  const { results, query } = await request.json().catch(() => ({}));
 
-  if (!results || !Array.isArray(results) || results.length === 0) {
+  // Ne jamais exporter les lignes masquées du floutage
+  const exportableResults = Array.isArray(results)
+    ? results.filter((r: { is_blurred?: boolean }) => !r?.is_blurred)
+    : [];
+
+  if (exportableResults.length === 0) {
     return NextResponse.json({ error: 'Aucun résultat à exporter' }, { status: 400 });
   }
 
@@ -59,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Ajout des pages une par une (évite le rate-limiting Notion)
     let successCount = 0;
-    const toExport = results.slice(0, 50);
+    const toExport = exportableResults.slice(0, 50);
 
     for (const r of toExport) {
       try {
@@ -96,6 +111,15 @@ export async function POST(request: NextRequest) {
     }
 
     const databaseUrl = `https://notion.so/${databaseId.replace(/-/g, '')}`;
+
+    // 0 page créée = échec réel (propriétés de la base incompatibles, etc.),
+    // pas un succès silencieux.
+    if (successCount === 0) {
+      return NextResponse.json({
+        error: 'Aucune ligne n\'a pu être créée dans Notion. Vérifiez que votre base contient les propriétés Nom (titre), Adresse, Téléphone, Type, Note et Source.',
+        needsSetup: true,
+      }, { status: 422 });
+    }
 
     return NextResponse.json({
       success: true,

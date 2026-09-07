@@ -66,15 +66,22 @@ export default function CrmProspectsPage() {
   useEffect(() => { fetchAll(); }, []);
 
   async function fetchAll() {
-    const [pRes, tRes] = await Promise.all([
-      fetch('/api/prospects'),
-      fetch('/api/prospects/tags'),
-    ]);
-    const pData = await pRes.json();
-    const tData = await tRes.json();
-    setProspects(pData.prospects || []);
-    setAllTags(tData.tags || []);
-    setLoading(false);
+    try {
+      const [pRes, tRes] = await Promise.all([
+        fetch('/api/prospects'),
+        fetch('/api/prospects/tags'),
+      ]);
+      const pData = pRes.ok ? await pRes.json() : {};
+      const tData = tRes.ok ? await tRes.json() : {};
+      setProspects(pData.prospects || []);
+      setAllTags(tData.tags || []);
+    } catch {
+      // Échec réseau : ne pas laisser les skeletons tourner à vie
+      setProspects([]);
+      setAllTags([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   // Met a jour le statut d'un prospect ; intercepte rdv_pris/signe pour ouvrir une modale

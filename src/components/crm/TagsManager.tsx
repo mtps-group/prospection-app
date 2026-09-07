@@ -19,11 +19,16 @@ export function TagsManager({ onClose, onChange }: TagsManagerProps) {
   useEffect(() => { fetchTags(); }, []);
 
   async function fetchTags() {
-    const res = await fetch('/api/prospects/tags');
-    const data = await res.json();
-    setTags(data.tags || []);
-    setLoading(false);
-    if (onChange) onChange(data.tags || []);
+    try {
+      const res = await fetch('/api/prospects/tags');
+      const data = res.ok ? await res.json() : {};
+      setTags(data.tags || []);
+      if (onChange) onChange(data.tags || []);
+    } catch {
+      setTags([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function createTag() {

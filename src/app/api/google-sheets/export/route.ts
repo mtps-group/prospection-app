@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { createClient } from '@/lib/supabase/server';
+import { getPlanConfig, type PlanSlug } from '@/lib/constants';
 
 async function createSpreadsheet(accessToken: string, results: Array<{
   business_name: string;
@@ -193,35 +194,55 @@ async function createSpreadsheet(accessToken: string, results: Array<{
   return `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
 }
 
-// Appelé après le callback OAuth avec l'access token
+// Appelé après le callback OAuth. L'access token n'est plus passé en query
+// string (fuite dans logs/historique) : on le regénère depuis le refresh
+// token que le callback vient de stocker dans le profil.
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const exportId = searchParams.get('exportId');
-  const accessToken = searchParams.get('access_token');
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-  if (!exportId || !accessToken) {
+  if (!exportId) {
     return NextResponse.redirect(`${appUrl}/recherche?export_error=params_missing`);
   }
 
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    console.log('[Sheets GET] user:', user?.id ?? 'NOT FOUND');
+    if (!user) {
+      return NextResponse.redirect(`${appUrl}/login`);
+    }
 
-    const { data: exportJob, error: jobError } = await supabase
+    // Ownership : uniquement un job appartenant a l'utilisateur connecte
+    const { data: exportJob } = await supabase
       .from('export_jobs')
       .select('*')
       .eq('id', exportId)
+      .eq('user_id', user.id)
       .single();
-
-    console.log('[Sheets GET] exportJob:', exportJob ? 'found' : 'not found', '| error:', jobError?.message);
 
     if (!exportJob) {
       return NextResponse.redirect(`${appUrl}/recherche?export_error=expired`);
     }
 
-    const sheetUrl = await createSpreadsheet(accessToken, exportJob.results, exportJob.query);
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('google_sheets_refresh_token')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.google_sheets_refresh_token) {
+      return NextResponse.redirect(`${appUrl}/recherche?export_error=google_auth_failed`);
+    }
+
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET
+    );
+    oauth2Client.setCredentials({ refresh_token: profile.google_sheets_refresh_token });
+    const { credentials } = await oauth2Client.refreshAccessToken();
+
+    const sheetUrl = await createSpreadsheet(credentials.access_token!, exportJob.results, exportJob.query);
     await supabase.from('export_jobs').delete().eq('id', exportId);
 
     return NextResponse.redirect(`${appUrl}/recherche?sheets_url=${encodeURIComponent(sheetUrl)}`);
@@ -241,7 +262,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
   }
 
-  const { results, query } = await request.json();
+  const { results, query } = await request.json().catch(() => ({}));
 
   if (!results || !Array.isArray(results)) {
     return NextResponse.json({ error: 'Résultats requis' }, { status: 400 });
@@ -249,9 +270,24 @@ export async function POST(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('google_sheets_refresh_token')
+    .select('google_sheets_refresh_token, plan')
     .eq('id', user.id)
     .single();
+
+  // Gating serveur : les exports sont une feature payante (PLANS.free.canExport = false)
+  const planConfig = getPlanConfig((profile?.plan ?? 'free') as PlanSlug);
+  if (!planConfig.canExportGoogleSheets) {
+    return NextResponse.json(
+      { error: 'Les exports sont réservés aux plans payants. Passez à Premium pour les débloquer.', upgradeRequired: true },
+      { status: 403 }
+    );
+  }
+
+  // Ne jamais exporter les lignes masquées du floutage
+  const exportableResults = results.filter((r: { is_blurred?: boolean }) => !r?.is_blurred);
+  if (exportableResults.length === 0) {
+    return NextResponse.json({ error: 'Aucun résultat à exporter' }, { status: 400 });
+  }
 
   if (profile?.google_sheets_refresh_token) {
     try {
@@ -261,7 +297,7 @@ export async function POST(request: NextRequest) {
       );
       oauth2Client.setCredentials({ refresh_token: profile.google_sheets_refresh_token });
       const { credentials } = await oauth2Client.refreshAccessToken();
-      const sheetUrl = await createSpreadsheet(credentials.access_token!, results, query || '');
+      const sheetUrl = await createSpreadsheet(credentials.access_token!, exportableResults, query || '');
       return NextResponse.json({ sheetUrl, needsAuth: false });
     } catch {
       // Token expiré → refaire l'OAuth
@@ -270,7 +306,7 @@ export async function POST(request: NextRequest) {
 
   const { data: job, error } = await supabase
     .from('export_jobs')
-    .insert({ user_id: user.id, results, query: query || '' })
+    .insert({ user_id: user.id, results: exportableResults, query: query || '' })
     .select('id')
     .single();
 

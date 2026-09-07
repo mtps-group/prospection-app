@@ -59,7 +59,7 @@ export default function ExportsPage() {
           <Sparkles className="h-4 w-4 text-white" />
         </div>
         <div>
-          <p className="text-sm font-bold text-text mb-0.5">Exports disponibles pour tous les plans</p>
+          <p className="text-sm font-bold text-text mb-0.5">Exports inclus dans les plans Premium, Ultra et Agence</p>
           <p className="text-sm text-text-secondary">
             Faites une recherche depuis la page <Link href="/recherche" className="text-primary font-semibold hover:underline">Recherche</Link> puis cliquez sur le bouton d&apos;export souhaité.
           </p>

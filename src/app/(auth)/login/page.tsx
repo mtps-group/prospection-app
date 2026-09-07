@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -17,6 +17,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  // Affiche l'erreur renvoyée par /callback (?error=auth) — avant ce fix,
+  // un échec OAuth ramenait sur un formulaire vierge sans explication.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'auth') {
+      setError('La connexion a échoué. Réessayez, ou utilisez votre email et mot de passe.');
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +62,7 @@ export default function LoginPage() {
     <Card>
       <h1 className="text-2xl font-bold text-text mb-2">{fr.auth.connexion}</h1>
       <p className="text-sm text-text-secondary mb-6">
-        Connectez-vous pour acceder a votre espace de prospection
+        Connectez-vous pour accéder à votre espace de prospection
       </p>
 
       <form onSubmit={handleLogin} className="space-y-4">

@@ -43,15 +43,17 @@ export default function CrmStatsPage() {
   useEffect(() => {
     setLoading(true);
     fetch(`/api/prospects/stats?period=${period}`)
-      .then(r => r.json())
-      .then(data => {
-        setStats(data);
-        setLoading(false);
-      });
+      .then(async r => {
+        if (!r.ok) throw new Error('stats_failed');
+        return r.json();
+      })
+      .then(data => setStats(data))
+      .catch(() => setStats(null))
+      .finally(() => setLoading(false));
   }, [period]);
 
-  const maxFunnelCount = stats?.funnel.reduce((max, s) => Math.max(max, s.count), 0) || 1;
-  const maxMonthlyRevenue = stats?.monthlySignatures.reduce((max, m) => Math.max(max, m.revenue), 0) || 1;
+  const maxFunnelCount = stats?.funnel?.reduce((max, s) => Math.max(max, s.count), 0) || 1;
+  const maxMonthlyRevenue = stats?.monthlySignatures?.reduce((max, m) => Math.max(max, m.revenue), 0) || 1;
 
   return (
     <div className="space-y-6">

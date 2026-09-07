@@ -439,6 +439,16 @@ export default function AppelsPage() {
     }
   };
 
+  // Le profil arrive en asynchrone : sans ce garde, un client Agence voyait
+  // flasher le paywall a chaque chargement de la page.
+  if (!profile) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 px-4 text-center text-text-muted">
+        Chargement...
+      </div>
+    );
+  }
+
   // Paywall
   if (!isAgence) {
     return (

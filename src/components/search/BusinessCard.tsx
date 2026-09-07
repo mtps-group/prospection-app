@@ -68,7 +68,7 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspe
           <div className="flex items-start justify-between">
             <div>
               <h3 className="font-semibold text-text">Entreprise Premium</h3>
-              <p className="text-sm text-text-muted">Type d&apos;activite</p>
+              <p className="text-sm text-text-muted">Type d&apos;activité</p>
             </div>
             <Badge variant="error">{fr.results.pasDeSiteWeb}</Badge>
           </div>
