@@ -839,31 +839,9 @@ export function BusinessDetailPanel({
                           </div>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          {!metaAdsLoading && !metaAds && !metaAdsError && (
-                            <button
-                              onClick={checkMetaAdsRun}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-500 to-indigo-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:shadow-md hover:shadow-sky-500/30 transition-all"
-                            >
-                              <Search className="h-3 w-3" />
-                              Vérifier
-                            </button>
-                          )}
-                          {(metaAdsError || (metaAds && !metaAds.hasEverAdvertised)) && (
-                            <button onClick={() => { setMetaAds(null); setMetaAdsError(null); checkMetaAdsRun(); }} className="inline-flex items-center gap-1 rounded-lg border border-sky-200 text-sky-600 px-2.5 py-1.5 text-xs font-semibold hover:bg-sky-50">
-                              Réessayer
-                            </button>
-                          )}
-                          {metaAds && metaAds.hasEverAdvertised && metaAds.ads[0]?.url && (
-                            <a
-                              href={metaAds.ads[0].url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-1.5 text-xs font-semibold hover:bg-sky-100"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                              Voir
-                            </a>
-                          )}
+                          <span className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 text-text-muted px-3 py-1.5 text-xs font-bold cursor-default">
+                            Bientôt disponible
+                          </span>
                         </div>
                       </div>
                       {/* Plateformes detaillees + bibliotheque Meta */}
