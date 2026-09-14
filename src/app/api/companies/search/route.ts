@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { searchPappersWithCity, type PappersSearchResult } from '@/lib/pappers/search';
 import { extractSocialLinks } from '@/lib/social-scraper';
+import { isRealWebsite, socialProfilesFromUrl } from '@/lib/website-classifier';
 import type { SearchResultClient, SocialProfiles } from '@/types';
 
 // Alias type pour minimiser les changements dans le reste du fichier
@@ -71,9 +72,10 @@ async function enrichWithGooglePlaces(company: CompanyResult): Promise<PlaceEnri
       return EMPTY_ENRICHMENT;
     }
 
-    // Scrape social links si site web present
-    let socials: SocialProfiles | null = null;
-    if (place.websiteUri) {
+    // Scrape social links si vrai site web present. Si le "site" est deja un
+    // profil social, on le reprend directement sans scraper.
+    let socials: SocialProfiles | null = socialProfilesFromUrl(place.websiteUri);
+    if (!socials && isRealWebsite(place.websiteUri)) {
       try {
         socials = await extractSocialLinks(place.websiteUri);
       } catch {}
@@ -239,7 +241,7 @@ export async function POST(request: NextRequest) {
         formatted_address: c.address ? `${c.address}, ${c.postalCode || ''} ${c.city || ''}`.trim() : null,
         phone_national: enrichment.phone,
         phone_international: null,
-        has_website: !!enrichment.website,
+        has_website: isRealWebsite(enrichment.website),
         website_url: enrichment.website,
         google_maps_uri: enrichment.googleMapsUri,
         latitude: c.latitude,

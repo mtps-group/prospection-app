@@ -13,6 +13,7 @@ import { ReminderBadge } from '@/components/crm/ReminderBadge';
 import { KanbanView } from '@/components/crm/KanbanView';
 import { BusinessDetailPanel } from '@/components/search/BusinessDetailPanel';
 import type { SearchResultClient } from '@/types';
+import { isRealWebsite } from '@/lib/website-classifier';
 
 type ViewMode = 'list' | 'kanban';
 
@@ -57,7 +58,7 @@ export default function CrmProspectsPage() {
       placeId: prospect.google_place_id,
       businessName: prospect.business_name,
       city,
-      hasWebsite: !!prospect.website_url,
+      hasWebsite: isRealWebsite(prospect.website_url),
       websiteUrl: prospect.website_url || undefined,
       result,
     });

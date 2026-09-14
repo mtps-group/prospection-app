@@ -5,6 +5,7 @@ import { SocialBadges } from './SocialBadges';
 import { fr } from '@/i18n/fr';
 import type { SearchResultClient } from '@/types';
 import { computeScore } from '@/lib/scoring';
+import { classifyWebsite } from '@/lib/website-classifier';
 import {
   Phone,
   MapPin,
@@ -87,6 +88,12 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspe
   const isValidPlaceId = !!result.google_place_id && !/^\d+$/.test(result.google_place_id);
   const isClickable = !!onViewDetail && isValidPlaceId;
 
+  // Google donne parfois une page Facebook / Instagram / annuaire comme
+  // "site web" : l'entreprise reste un prospect, on le signale explicitement.
+  const onlyPlatform = !result.has_website && result.website_url
+    ? classifyWebsite(result.website_url).platform
+    : null;
+
   return (
     <div
       className={`rounded-xl border border-border bg-surface p-5 transition-all ${
@@ -144,6 +151,12 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspe
             <span className="opacity-60">· {score.total}/100</span>
           </div>
         )}
+        {onlyPlatform && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-500/10 px-2.5 py-1 text-xs font-bold text-sky-700 dark:text-sky-300">
+            <Globe className="h-3 w-3" />
+            {onlyPlatform} uniquement
+          </span>
+        )}
         {(() => {
           const c = getCreationLabel(result.creation_date);
           if (!c) return null;
@@ -190,14 +203,14 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspe
           </div>
         )}
 
-        {showWebsiteUrl && result.website_url && (
+        {(showWebsiteUrl || onlyPlatform) && result.website_url && (
           <div className="flex items-center gap-2 text-sm">
             <Globe className="h-4 w-4 flex-shrink-0 text-text-muted" />
             <a
               href={result.website_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary font-medium truncate hover:underline"
+              className={`font-medium truncate hover:underline ${onlyPlatform ? 'text-sky-600 dark:text-sky-300' : 'text-primary'}`}
               onClick={(e) => e.stopPropagation()}
             >
               {result.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}

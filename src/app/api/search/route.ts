@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { searchPlaces, filterNoWebsite, getPrimaryType } from '@/lib/google-places/client';
 import { extractSocialLinks } from '@/lib/social-scraper';
+import { isRealWebsite, socialProfilesFromUrl } from '@/lib/website-classifier';
 import { getPlanConfig } from '@/lib/constants';
 import { blurResults } from '@/lib/search-response';
 import type { PlanSlug } from '@/lib/constants';
@@ -82,8 +83,15 @@ export async function POST(request: NextRequest) {
     const socialsByPlaceId = new Map<string, SocialProfiles>();
 
     if (isUltraPlus) {
+      // Quand le "site web" est deja un profil social, on le prend tel quel :
+      // pas la peine de scraper facebook.com pour y trouver un lien Facebook.
+      for (const place of allPlaces) {
+        const direct = socialProfilesFromUrl(place.websiteUri);
+        if (direct) socialsByPlaceId.set(place.id, direct);
+      }
+
       const enrichmentPromises = allPlaces
-        .filter((p) => !!p.websiteUri)
+        .filter((p) => isRealWebsite(p.websiteUri))
         .map(async (place) => {
           const socials = await extractSocialLinks(place.websiteUri);
           return { id: place.id, socials };
@@ -126,7 +134,9 @@ export async function POST(request: NextRequest) {
       formatted_address: place.formattedAddress || null,
       phone_national: place.nationalPhoneNumber || null,
       phone_international: place.internationalPhoneNumber || null,
-      has_website: !!place.websiteUri,
+      // Un lien vers un reseau social ne vaut pas un site web : l'entreprise
+      // reste classee "sans site web". On conserve l'URL pour l'afficher.
+      has_website: isRealWebsite(place.websiteUri),
       website_url: place.websiteUri || null,
       google_maps_uri: place.googleMapsUri || null,
       latitude: place.location?.latitude || null,

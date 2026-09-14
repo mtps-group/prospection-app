@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fr } from '@/i18n/fr';
+import { classifyWebsite } from '@/lib/website-classifier';
 import {
   X,
   Phone,
@@ -363,6 +364,11 @@ export function BusinessDetailPanel({
     }
   };
 
+  // Le "site web" renvoye par Google est parfois juste une page Facebook /
+  // Instagram / annuaire : on l'affiche alors sous son vrai nom.
+  const websiteLink = websiteUrl || detail?.websiteUri;
+  const websitePlatform = classifyWebsite(websiteLink).platform;
+
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
@@ -476,25 +482,35 @@ export function BusinessDetailPanel({
                     </div>
                   )}
 
-                  {/* Site web */}
-                  {(websiteUrl || detail?.websiteUri) && (
+                  {/* Site web (ou page sociale / annuaire quand ce n'en est pas un) */}
+                  {websiteLink && (
                     <a
-                      href={websiteUrl || detail?.websiteUri}
+                      href={websiteLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 hover:border-green-200 hover:shadow-md hover:shadow-green-500/5 transition-all"
+                      className={`group flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3 transition-all ${
+                        websitePlatform
+                          ? 'hover:border-sky-200 hover:shadow-md hover:shadow-sky-500/5'
+                          : 'hover:border-green-200 hover:shadow-md hover:shadow-green-500/5'
+                      }`}
                     >
-                      <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <div className={`h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm bg-gradient-to-br ${
+                        websitePlatform ? 'from-sky-500 to-indigo-500' : 'from-green-500 to-emerald-500'
+                      }`}>
                         <Globe className="h-4 w-4 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] uppercase tracking-wide font-bold text-text-muted">Site web — clic pour ouvrir</p>
-                        <p className="text-sm font-bold text-green-600 truncate">
-                          {(websiteUrl || detail?.websiteUri)?.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                        <p className="text-[10px] uppercase tracking-wide font-bold text-text-muted">
+                          {websitePlatform
+                            ? `${websitePlatform} — pas de site web — clic pour ouvrir`
+                            : 'Site web — clic pour ouvrir'}
+                        </p>
+                        <p className={`text-sm font-bold truncate ${websitePlatform ? 'text-sky-600' : 'text-green-600'}`}>
+                          {websiteLink.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                         </p>
                       </div>
                       <button
-                        onClick={(e) => { e.preventDefault(); copyToClipboard((websiteUrl || detail?.websiteUri)!, 'website'); }}
+                        onClick={(e) => { e.preventDefault(); copyToClipboard(websiteLink, 'website'); }}
                         className="flex-shrink-0 rounded-lg p-1.5 text-text-muted hover:text-green-600 hover:bg-green-50 transition-colors"
                         title="Copier"
                       >

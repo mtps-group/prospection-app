@@ -1,4 +1,5 @@
 import { GOOGLE_PLACES_FIELD_MASK, GOOGLE_PLACES_FIELD_MASK_DETAILED } from '@/lib/constants';
+import { isRealWebsite } from '@/lib/website-classifier';
 import type { GooglePlace, TextSearchResponse } from '@/types';
 
 const GOOGLE_PLACES_API_URL = 'https://places.googleapis.com/v1/places:searchText';
@@ -51,8 +52,13 @@ export async function searchPlaces(options: SearchOptions): Promise<GooglePlace[
   return allPlaces;
 }
 
+/**
+ * Entreprises sans vrai site web. Un `websiteUri` qui pointe vers une page
+ * Facebook/Instagram/Linktree/annuaire ne compte pas comme un site :
+ * ces entreprises restent des prospects.
+ */
 export function filterNoWebsite(places: GooglePlace[]): GooglePlace[] {
-  return places.filter((place) => !place.websiteUri);
+  return places.filter((place) => !isRealWebsite(place.websiteUri));
 }
 
 export function getPrimaryType(types: string[] | undefined): string | null {
