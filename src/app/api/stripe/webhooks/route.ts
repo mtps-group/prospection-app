@@ -14,6 +14,9 @@ const PRICE_TO_PLAN: Record<string, 'premium' | 'ultra' | 'agence'> = {
   [STRIPE_PLANS.premium.priceId]: 'premium',
   [STRIPE_PLANS.ultra.priceId]: 'ultra',
   [STRIPE_PLANS.agence.priceId]: 'agence',
+  [STRIPE_PLANS.premium.priceIdYearly]: 'premium',
+  [STRIPE_PLANS.ultra.priceIdYearly]: 'ultra',
+  [STRIPE_PLANS.agence.priceIdYearly]: 'agence',
   // Anciens tarifs (39,99 € et 59 €) : abonnements souscrits avant la hausse
   price_1TAViSHDs8WJU7EjvR0QSe5X: 'premium',
   price_1TAVlGHDs8WJU7EjO2KSxbOK: 'ultra',

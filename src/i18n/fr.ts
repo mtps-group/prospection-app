@@ -59,8 +59,8 @@ export const fr = {
   },
   blur: {
     titre: 'Voir tous les résultats',
-    description: 'Passez à Premium pour accéder à tous les résultats et débloquer les exports.',
-    cta: 'Passer à Premium',
+    description: 'Essayez Premium gratuitement pendant 7 jours pour accéder à tous les résultats et débloquer les exports.',
+    cta: 'Essayer Premium 7 jours gratuitement',
     resultatsFlous: 'résultats supplémentaires masqués',
   },
   history: {

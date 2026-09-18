@@ -12,7 +12,7 @@ import type { SearchResponse } from '@/types';
 import type { PlanSlug } from '@/lib/constants';
 import { Search, Sparkles, ExternalLink, AlertCircle, ArrowRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import Link from 'next/link';
+import { StartTrialButton } from '@/components/billing/StartTrialButton';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { SearchModePicker, type SearchMode } from '@/components/search/SearchModePicker';
 import { CompanySearchForm, type CompanySearchValues } from '@/components/search/CompanySearchForm';
@@ -369,9 +369,7 @@ export default function RecherchePage() {
           {isLimitReached ? (
             <span>
               Vous avez utilisé toutes vos recherches gratuites.{' '}
-              <Link href="/abonnement" className="font-bold underline inline-flex items-center gap-1">
-                Passer à Premium <ArrowRight className="h-3 w-3" />
-              </Link>
+              <StartTrialButton variant="link" />
             </span>
           ) : (
             <span>

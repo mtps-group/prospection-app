@@ -11,6 +11,7 @@ import { useSupabase } from '@/providers/SupabaseProvider';
 import { useToast } from '@/providers/ToastProvider';
 import { computeScore } from '@/lib/scoring';
 import Link from 'next/link';
+import { StartTrialButton } from '@/components/billing/StartTrialButton';
 import {
   Download,
   AlertCircle,
@@ -446,12 +447,7 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
           <p className="text-sm text-text-secondary mb-4 max-w-md mx-auto">
             {fr.blur.description}
           </p>
-          <Link href="/abonnement">
-            <Button size="lg" className="animate-pulse-glow">
-              <Crown className="h-4 w-4" />
-              {fr.blur.cta}
-            </Button>
-          </Link>
+          <StartTrialButton />
         </div>
       )}
     </div>

@@ -4,15 +4,51 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card3D } from '@/components/ui/Card3D';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useToast } from '@/providers/ToastProvider';
-import { STRIPE_PLANS } from '@/lib/stripe/config';
+import { STRIPE_PLANS, PREMIUM_TRIAL_DAYS, type BillingInterval } from '@/lib/stripe/config';
+import { useTrialEligible } from '@/hooks/useTrialEligible';
 import { CheckCircle, Crown, Loader2, Mic, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const GAP = 24;
 const CARD_NAMES = ['Gratuit', 'Premium', 'Ultra', 'Agence'];
 
+type PaidPlan = 'premium' | 'ultra' | 'agence';
+
+// Formatage déterministe (identique serveur/navigateur, pas de toLocaleString
+// dont le séparateur de milliers varie selon la version d'ICU) : 1590 -> "1 590".
+function fmtEuro(n: number): string {
+  const [int, dec] = n.toFixed(2).split('.');
+  const intFmt = int.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return dec === '00' ? intFmt : `${intFmt},${dec}`;
+}
+
+function PriceBlock({ plan, billing, mutedClass, note }: {
+  plan: PaidPlan;
+  billing: BillingInterval;
+  mutedClass: string;
+  note?: string;
+}) {
+  const p = STRIPE_PLANS[plan];
+  const yearly = billing === 'year';
+  return (
+    <>
+      <div className="relative mb-2">
+        <span className="text-5xl font-black text-white">{fmtEuro(yearly ? p.priceYearly : p.priceMonthly)}€</span>
+        <span className={`${mutedClass} ml-1 text-sm`}>{yearly ? '/ an' : '/ mois'}</span>
+      </div>
+      <p className={`relative text-xs ${mutedClass} mb-6`}>
+        {note ?? (yearly
+          ? `Soit ${fmtEuro(Math.round((p.priceYearly / 12) * 100) / 100)} €/mois · 2 mois offerts`
+          : 'Sans engagement · Résiliez à tout moment')}
+      </p>
+    </>
+  );
+}
+
 export function PricingCards() {
   const { profile } = useSupabase();
   const { addToast } = useToast();
+  const trialEligible = useTrialEligible();
+  const [billing, setBilling] = useState<BillingInterval>('month');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(1); // 1 = Premium visible en premier
   const [visibleCount, setVisibleCount] = useState(3);
@@ -49,7 +85,9 @@ export function PricingCards() {
       const response = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId: stripePlan.priceId }),
+        body: JSON.stringify({
+          priceId: billing === 'year' ? stripePlan.priceIdYearly : stripePlan.priceId,
+        }),
       });
       const data = await response.json();
       if (data.url) window.location.href = data.url;
@@ -82,6 +120,33 @@ export function PricingCards() {
 
   return (
     <div className="relative mx-0 sm:mx-8">
+
+      {/* ── Mensuel / Annuel ── */}
+      <div className="flex justify-center mb-2">
+        <div className="inline-flex items-center gap-1 rounded-xl bg-gray-100 dark:bg-white/5 p-1">
+          <button
+            type="button"
+            onClick={() => setBilling('month')}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+              billing === 'month' ? 'bg-white dark:bg-white/10 text-primary shadow-sm' : 'text-text-muted hover:text-text'
+            }`}
+          >
+            Mensuel
+          </button>
+          <button
+            type="button"
+            onClick={() => setBilling('year')}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all inline-flex items-center gap-2 ${
+              billing === 'year' ? 'bg-white dark:bg-white/10 text-primary shadow-sm' : 'text-text-muted hover:text-text'
+            }`}
+          >
+            Annuel
+            <span className="rounded-full bg-green-100 dark:bg-green-500/15 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:text-green-300">
+              2 mois offerts
+            </span>
+          </button>
+        </div>
+      </div>
 
       {/* ── Flèche gauche ── */}
       <button
@@ -151,11 +216,16 @@ export function PricingCards() {
                   <h3 className="text-xl font-bold text-white mb-1">Premium</h3>
                   <p className="text-sm text-white/70">Pour les créateurs actifs</p>
                 </div>
-                <div className="relative mb-2">
-                  <span className="text-5xl font-black text-white">49€</span>
-                  <span className="text-white/70 ml-1 text-sm">/ mois</span>
-                </div>
-                <p className="relative text-xs text-white/50 mb-6">Sans engagement · Résiliez à tout moment</p>
+                <PriceBlock
+                  plan="premium"
+                  billing={billing}
+                  mutedClass="text-white/60"
+                  note={trialEligible
+                    ? `${PREMIUM_TRIAL_DAYS} jours d'essai gratuit, puis ${billing === 'year'
+                        ? `${fmtEuro(STRIPE_PLANS.premium.priceYearly)} €/an (2 mois offerts)`
+                        : `${STRIPE_PLANS.premium.priceMonthly} €/mois`}`
+                    : undefined}
+                />
                 <ul className="relative space-y-4 mb-8 flex-1">
                   {['Recherches illimitées', '60 résultats par recherche', 'Coordonnées complètes', 'Export CSV, Google Sheets, Notion', 'Historique illimité & cliquable', 'Score de priorité des prospects', 'Mini-CRM intégré (suivi prospects)', 'Onglet entreprises avec site web'].map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm text-white/90">
@@ -169,7 +239,9 @@ export function PricingCards() {
                     : isPaidHigher('premium')
                     ? <div className="block text-center rounded-xl bg-white/10 py-3.5 font-semibold text-white/50 text-sm">Plan inférieur</div>
                     : <button onClick={() => handleSubscribe('premium')} disabled={loadingPlan === 'premium'} className="block w-full text-center rounded-xl bg-white py-3.5 font-bold text-primary hover:bg-gray-50 transition-all text-base disabled:opacity-70 shadow-lg shadow-black/10">
-                        {loadingPlan === 'premium' ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Chargement...</span> : 'Passer à Premium →'}
+                        {loadingPlan === 'premium'
+                          ? <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Chargement...</span>
+                          : trialEligible ? `Essayer ${PREMIUM_TRIAL_DAYS} jours gratuitement →` : 'Passer à Premium →'}
                       </button>
                   }
                 </div>
@@ -192,10 +264,7 @@ export function PricingCards() {
                 <h3 className="text-xl font-bold text-white mb-1">Ultra</h3>
                 <p className="text-sm text-white/50">Pour les agences &amp; freelances pro</p>
               </div>
-              <div className="relative mb-6">
-                <span className="text-5xl font-black text-white">79€</span>
-                <span className="text-white/50 ml-1 text-sm">/ mois</span>
-              </div>
+              <PriceBlock plan="ultra" billing={billing} mutedClass="text-white/50" />
               <ul className="relative space-y-4 mb-8 flex-1">
                 {['Tout le plan Premium', 'Photos, avis & horaires détaillés', "Fiche de présentation de l'entreprise", 'Recherche email automatique', 'Recherche du dirigeant', 'Email de prospection personnalisé', 'Support prioritaire'].map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">
@@ -231,10 +300,7 @@ export function PricingCards() {
                 <h3 className="text-xl font-bold text-white mb-1">Agence</h3>
                 <p className="text-sm text-white/50">Pour les commerciaux &amp; agences</p>
               </div>
-              <div className="relative mb-6">
-                <span className="text-5xl font-black text-white">159€</span>
-                <span className="text-white/50 ml-1 text-sm">/ mois</span>
-              </div>
+              <PriceBlock plan="agence" billing={billing} mutedClass="text-white/50" />
               <ul className="relative space-y-4 mb-8 flex-1">
                 {['Tout le plan Ultra', 'Analyse IA de vos appels', 'Score appel & prospect /10', 'Transcription complète', 'Objections & signaux détectés', 'Style de communication analysé', 'Email de suivi auto-rédigé'].map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-white/80">

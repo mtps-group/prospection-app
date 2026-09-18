@@ -1,8 +1,17 @@
+// Essai gratuit proposé sur Premium uniquement, une seule fois par client
+// (vérifié côté serveur dans create-checkout).
+export const PREMIUM_TRIAL_DAYS = 7;
+
+export type BillingInterval = 'month' | 'year';
+
 export const STRIPE_PLANS = {
   premium: {
     name: 'Premium',
     priceId: 'price_1TRxJSHDs8WJU7Ej4z4HW7bl',
     priceMonthly: 49,
+    // Annuel = 2 mois offerts
+    priceIdYearly: 'price_1UGvi2HDs8WJU7EjSIMMkQKG',
+    priceYearly: 490,
     features: [
       'Recherches illimitees',
       'Jusqu\'a 60 resultats par recherche',
@@ -14,6 +23,8 @@ export const STRIPE_PLANS = {
     name: 'Ultra',
     priceId: 'price_1TRweJHDs8WJU7EjzlfLQX9W',
     priceMonthly: 79,
+    priceIdYearly: 'price_1UGvi3HDs8WJU7EjHqsJUxGX',
+    priceYearly: 790,
     features: [
       'Tout Premium inclus',
       'Fiche entreprise detaillee',
@@ -26,6 +37,8 @@ export const STRIPE_PLANS = {
     // Créer ce produit dans Stripe Dashboard puis remplacer cet ID
     priceId: process.env.STRIPE_AGENCE_PRICE_ID || 'price_1TRwdHHDs8WJU7Ejol83tg4s',
     priceMonthly: 159,
+    priceIdYearly: 'price_1UGvi3HDs8WJU7EjADo4TYEq',
+    priceYearly: 1590,
     features: [
       'Tout Ultra inclus',
       'Analyse IA des appels de prospection',

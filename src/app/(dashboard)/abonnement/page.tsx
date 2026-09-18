@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { PricingCards } from '@/components/billing/PricingCards';
+import { PREMIUM_TRIAL_DAYS } from '@/lib/stripe/config';
 import { useToast } from '@/providers/ToastProvider';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { fr } from '@/i18n/fr';
@@ -15,8 +16,18 @@ export default function AbonnementPage() {
 
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
-      addToast('Abonnement activé avec succès !', 'success');
+      if (searchParams.get('trial') === 'true') {
+        const firstCharge = new Date(Date.now() + PREMIUM_TRIAL_DAYS * 24 * 60 * 60 * 1000)
+          .toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+        addToast(`Votre essai Premium de ${PREMIUM_TRIAL_DAYS} jours a commencé ! Aucun prélèvement avant le ${firstCharge}.`, 'success');
+      } else {
+        addToast('Abonnement activé avec succès !', 'success');
+      }
+      // Le webhook Stripe peut arriver une ou deux secondes après la
+      // redirection : on relit le profil une seconde fois pour afficher
+      // le bon plan sans que l'utilisateur ait à recharger la page.
       refreshProfile();
+      setTimeout(() => refreshProfile(), 3000);
     }
     if (searchParams.get('canceled') === 'true') {
       addToast('Paiement annulé', 'info');

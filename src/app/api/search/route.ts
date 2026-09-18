@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Limite de recherches atteinte',
-          message: `Vous avez utilisé vos ${plan.maxSearchesLifetime} recherches gratuites. Passez à Premium pour des recherches illimitées.`,
+          message: `Vous avez utilisé vos ${plan.maxSearchesLifetime} recherches gratuites. Essayez Premium gratuitement pendant 7 jours pour des recherches illimitées.`,
           upgradeRequired: true,
         },
         { status: 429 }

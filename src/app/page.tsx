@@ -129,7 +129,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
                 <span className="text-5xl font-black text-white">49€</span>
                 <span className="text-white/70 ml-1 text-sm">/ mois</span>
               </div>
-              <p className="relative text-xs text-white/50 mb-6">= 1,63€/jour · Sans engagement</p>
+              <p className="relative text-xs text-white/60 mb-6">7 jours d&apos;essai gratuit · ou 490€/an (2 mois offerts)</p>
               <ul className="relative space-y-3 mb-8 flex-1">
                 {['Recherches illimitées', '60 résultats par recherche', 'Coordonnées complètes', 'Export CSV, Google Sheets, Notion', 'Historique illimité & cliquable', 'Score de priorité des prospects', 'Mini-CRM intégré', 'Onglet "avec site web"'].map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm text-white/90">
@@ -595,7 +595,7 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-4">
               Un investissement qui se rembourse<br />dès le premier client
             </h2>
-            <p className="text-text-secondary">Sans engagement · Annulez à tout moment · Paiement sécurisé</p>
+            <p className="text-text-secondary">Essai Premium 7 jours offert · Sans engagement · 2 mois offerts en annuel</p>
           </div>
 
           <LandingPricingSlider isLoggedIn={isLoggedIn} />
