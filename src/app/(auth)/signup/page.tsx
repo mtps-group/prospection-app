@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { fr } from '@/i18n/fr';
+import { readAttribution } from '@/lib/attribution';
 import { Mail, Lock, User } from 'lucide-react';
 
 export default function SignupPage() {
@@ -43,6 +44,10 @@ export default function SignupPage() {
       options: {
         data: {
           full_name: fullName,
+          // Canal d'acquisition (utm_*, ref, domaine referent) transmis par
+          // la landing dans l'URL. Stocke dans les metadonnees du compte
+          // pour mesurer quel canal amene des clients payants.
+          attribution: readAttribution(window.location.search),
         },
         emailRedirectTo: `${window.location.origin}/callback`,
       },

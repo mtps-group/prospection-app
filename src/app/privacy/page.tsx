@@ -26,6 +26,8 @@ export default function PrivacyPage() {
             <li>Données de paiement (gérées par Stripe, nous ne stockons pas vos données bancaires)</li>
             <li>Token d&apos;accès Google Sheets (si vous autorisez l&apos;intégration)</li>
             <li>Token d&apos;intégration Notion (si vous le renseignez manuellement)</li>
+            <li>La provenance de votre inscription (campagne ou site d&apos;origine, si présents dans le lien suivi), rattachée à votre compte</li>
+            <li>Des statistiques de fréquentation anonymes via Vercel Web Analytics, sans cookie et sans identification des visiteurs</li>
           </ul>
         </section>
 

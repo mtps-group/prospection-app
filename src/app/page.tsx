@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card3D } from '@/components/ui/Card3D';
 import { useSupabase } from '@/providers/SupabaseProvider';
+import { useSignupHref } from '@/hooks/useSignupHref';
 import {
   Globe,
   Search,
@@ -34,7 +35,7 @@ const GAP = 24;
 
 const CARD_NAMES = ['Gratuit', 'Premium', 'Ultra', 'Agence'];
 
-function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
+function LandingPricingSlider({ isLoggedIn, signupHref }: { isLoggedIn: boolean; signupHref: string }) {
   const [currentIndex, setCurrentIndex] = useState(1); // 1 = Premium visible en premier
   const [visibleCount, setVisibleCount] = useState(3);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -106,7 +107,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
                   </li>
                 ))}
               </ul>
-              <Link href={isLoggedIn ? '/recherche' : '/signup'} className="relative block text-center rounded-xl border-2 border-gray-200 py-3.5 font-bold text-text hover:bg-gray-50 transition-colors text-base">
+              <Link href={isLoggedIn ? '/recherche' : signupHref} className="relative block text-center rounded-xl border-2 border-gray-200 py-3.5 font-bold text-text hover:bg-gray-50 transition-colors text-base">
                 {isLoggedIn ? 'Mon espace' : 'Essayer gratuitement'}
               </Link>
             </Card3D>
@@ -137,7 +138,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
                   </li>
                 ))}
               </ul>
-              <Link href={isLoggedIn ? '/abonnement' : '/signup'} className="relative block text-center rounded-xl bg-white py-4 font-bold text-primary hover:bg-gray-50 transition-colors text-base shadow-lg">
+              <Link href={isLoggedIn ? '/abonnement' : signupHref} className="relative block text-center rounded-xl bg-white py-4 font-bold text-primary hover:bg-gray-50 transition-colors text-base shadow-lg">
                 {isLoggedIn ? 'Passer à Premium →' : 'Commencer avec Premium →'}
               </Link>
             </Card3D>
@@ -168,7 +169,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
                   </li>
                 ))}
               </ul>
-              <Link href={isLoggedIn ? '/abonnement' : '/signup'} className="relative block text-center rounded-xl py-3.5 font-bold text-gray-900 hover:opacity-90 transition-all shadow-lg shadow-amber-400/20 text-base" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%)' }}>
+              <Link href={isLoggedIn ? '/abonnement' : signupHref} className="relative block text-center rounded-xl py-3.5 font-bold text-gray-900 hover:opacity-90 transition-all shadow-lg shadow-amber-400/20 text-base" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%)' }}>
                 {isLoggedIn ? 'Passer à Ultra' : 'Commencer avec Ultra'}
               </Link>
             </Card3D>
@@ -199,7 +200,7 @@ function LandingPricingSlider({ isLoggedIn }: { isLoggedIn: boolean }) {
                   </li>
                 ))}
               </ul>
-              <Link href={isLoggedIn ? '/abonnement' : '/signup'} className="relative block text-center rounded-xl py-3.5 font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-violet-500/30 text-base" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)' }}>
+              <Link href={isLoggedIn ? '/abonnement' : signupHref} className="relative block text-center rounded-xl py-3.5 font-bold text-white hover:opacity-90 transition-all shadow-lg shadow-violet-500/30 text-base" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)' }}>
                 {isLoggedIn ? 'Passer à Agence' : 'Commencer avec Agence'}
               </Link>
             </Card3D>
@@ -295,6 +296,7 @@ const faqJsonLd = {
 export default function LandingPage() {
   const { profile } = useSupabase();
   const isLoggedIn = !!profile;
+  const signupHref = useSignupHref();
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
@@ -335,7 +337,7 @@ export default function LandingPage() {
                   Connexion
                 </Link>
                 <Link
-                  href="/signup"
+                  href={signupHref}
                   className="rounded-xl bg-gradient-to-r from-primary to-purple-500 px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/25"
                 >
                   Essayer gratuitement
@@ -372,7 +374,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <Link
-              href={isLoggedIn ? '/recherche' : '/signup'}
+              href={isLoggedIn ? '/recherche' : signupHref}
               className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-primary to-purple-500 px-10 py-5 text-lg font-bold text-white hover:opacity-90 transition-all shadow-2xl shadow-primary/30 hover:-translate-y-1 hover:shadow-primary/40"
             >
               {isLoggedIn ? 'Accéder à mon espace' : 'Commencer gratuitement'}
@@ -598,7 +600,7 @@ export default function LandingPage() {
             <p className="text-text-secondary">Essai Premium 7 jours offert · Sans engagement · 2 mois offerts en annuel</p>
           </div>
 
-          <LandingPricingSlider isLoggedIn={isLoggedIn} />
+          <LandingPricingSlider isLoggedIn={isLoggedIn} signupHref={signupHref} />
 
 
           {/* Garantie */}
@@ -738,7 +740,7 @@ export default function LandingPage() {
                 Rejoignez les créateurs web qui trouvent de nouveaux clients chaque semaine avec ProspectWeb.
               </p>
               <Link
-                href="/signup"
+                href={signupHref}
                 className="group inline-flex items-center gap-3 rounded-2xl bg-white px-10 py-5 text-lg font-bold text-primary hover:bg-gray-50 transition-all shadow-xl hover:-translate-y-1"
               >
                 <Zap className="h-5 w-5" />

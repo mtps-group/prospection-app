@@ -4,6 +4,7 @@ import './globals.css';
 import { SupabaseProvider } from '@/providers/SupabaseProvider';
 import { ToastProvider } from '@/providers/ToastProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import { Analytics } from '@vercel/analytics/next';
 
 // Force dynamic rendering - Supabase client needs env vars at runtime
 export const dynamic = 'force-dynamic';
@@ -141,6 +142,8 @@ export default function RootLayout({
             </ToastProvider>
           </SupabaseProvider>
         </ThemeProvider>
+        {/* Mesure d'audience Vercel : sans cookie, donc sans bandeau de consentement */}
+        <Analytics />
       </body>
     </html>
   );
