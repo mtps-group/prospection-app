@@ -69,7 +69,7 @@ function LandingPricingSlider({ isLoggedIn, signupHref }: { isLoggedIn: boolean;
       {/* Flèche gauche */}
       <button
         onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
-        className={`absolute left-2 sm:-left-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full p-2 sm:pl-2 sm:pr-3 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-primary hover:border-primary/30 hover:shadow-xl transition-all duration-200 ${!canPrev ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`max-md:hidden absolute left-2 sm:-left-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full p-2 sm:pl-2 sm:pr-3 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-primary hover:border-primary/30 hover:shadow-xl transition-all duration-200 ${!canPrev ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <ChevronLeft className="h-4 w-4" />
         <span className="hidden sm:inline">{CARD_NAMES[currentIndex - 1]}</span>
@@ -78,7 +78,7 @@ function LandingPricingSlider({ isLoggedIn, signupHref }: { isLoggedIn: boolean;
       {/* Flèche droite */}
       <button
         onClick={() => setCurrentIndex(i => Math.min(totalPositions - 1, i + 1))}
-        className={`absolute right-2 sm:-right-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full p-2 sm:pl-3 sm:pr-2 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-violet-600 hover:border-violet-200 hover:shadow-xl transition-all duration-200 ${!canNext ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`max-md:hidden absolute right-2 sm:-right-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1 bg-white rounded-full p-2 sm:pl-3 sm:pr-2 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-violet-600 hover:border-violet-200 hover:shadow-xl transition-all duration-200 ${!canNext ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <span className="hidden sm:inline">{canNext ? CARD_NAMES[currentIndex + visibleCount] : ''}</span>
         <ChevronRight className="h-4 w-4" />
@@ -86,12 +86,12 @@ function LandingPricingSlider({ isLoggedIn, signupHref }: { isLoggedIn: boolean;
 
       <div ref={trackRef} className="overflow-hidden pt-8">
         <div
-          className="flex transition-transform duration-500 ease-in-out"
+          className="flex transition-transform duration-500 ease-in-out max-md:flex-col max-md:transform-none!"
           style={{ gap: GAP, transform: `translateX(-${translateX}px)` }}
         >
           {/* Gratuit */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col">
-            <Card3D intensity={6} className="relative rounded-2xl bg-white border border-gray-200 p-8 flex flex-col overflow-hidden h-full" style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)', minHeight: 680 }}>
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="max-md:w-full! max-md:min-w-0! flex flex-col">
+            <Card3D intensity={6} className="max-md:min-h-0! relative rounded-2xl bg-white border border-gray-200 p-8 flex flex-col overflow-hidden h-full" style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)', minHeight: 680 }}>
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-gray-100 opacity-60" />
               <div className="relative mb-5">
                 <h3 className="text-xl font-bold text-text mb-1">Gratuit</h3>
@@ -114,11 +114,11 @@ function LandingPricingSlider({ isLoggedIn, signupHref }: { isLoggedIn: boolean;
           </div>
 
           {/* Premium */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="relative flex flex-col">
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="max-md:w-full! max-md:min-w-0! relative flex flex-col">
             <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
               ⭐ LE PLUS POPULAIRE
             </div>
-            <Card3D intensity={8} className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-8 flex flex-col overflow-hidden flex-1" style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)', minHeight: 680 }}>
+            <Card3D intensity={8} className="max-md:min-h-0! relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-8 flex flex-col overflow-hidden flex-1" style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)', minHeight: 680 }}>
               <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/5" />
               <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
@@ -145,8 +145,8 @@ function LandingPricingSlider({ isLoggedIn, signupHref }: { isLoggedIn: boolean;
           </div>
 
           {/* Ultra */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col">
-            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)', minHeight: 680 }}>
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="max-md:w-full! max-md:min-w-0! flex flex-col">
+            <Card3D intensity={6} className="max-md:min-h-0! relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)', minHeight: 680 }}>
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #f59e0b, transparent)' }} />
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
               <div className="absolute top-5 right-5 z-10">
@@ -176,8 +176,8 @@ function LandingPricingSlider({ isLoggedIn, signupHref }: { isLoggedIn: boolean;
           </div>
 
           {/* Agence */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="flex flex-col">
-            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)', minHeight: 680 }}>
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="max-md:w-full! max-md:min-w-0! flex flex-col">
+            <Card3D intensity={6} className="max-md:min-h-0! relative rounded-2xl p-8 flex flex-col overflow-hidden h-full" style={{ background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)', minHeight: 680 }}>
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #a855f7, transparent)' }} />
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/60 to-transparent" />
               <div className="absolute top-5 right-5 z-10">
@@ -209,7 +209,7 @@ function LandingPricingSlider({ isLoggedIn, signupHref }: { isLoggedIn: boolean;
       </div>
 
       {/* Dots */}
-      <div className="flex justify-center gap-2 mt-6">
+      <div className="flex justify-center gap-2 mt-6 max-md:hidden">
         {Array.from({ length: totalPositions }, (_, i) => (
           <button
             key={i}
@@ -312,7 +312,7 @@ export default function LandingPage() {
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
               <Globe className="h-4.5 w-4.5 text-white" />
             </div>
-            <span className="text-xl font-bold text-text">
+            <span className="text-xl max-md:text-lg font-bold text-text">
               Prospect<span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Web</span>
             </span>
           </Link>
@@ -333,14 +333,14 @@ export default function LandingPage() {
               </Link>
             ) : (
               <>
-                <Link href="/login" className="text-sm font-medium text-text-secondary hover:text-text transition-colors">
+                <Link href="/login" className="text-sm max-md:text-[13px] font-medium text-text-secondary hover:text-text transition-colors">
                   Connexion
                 </Link>
                 <Link
                   href={signupHref}
-                  className="rounded-xl bg-gradient-to-r from-primary to-purple-500 px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/25"
+                  className="rounded-xl bg-gradient-to-r from-primary to-purple-500 px-5 py-2.5 max-md:px-3.5 max-md:py-2 text-sm font-semibold text-white hover:opacity-90 transition-all shadow-lg shadow-primary/25 max-md:whitespace-nowrap"
                 >
-                  Essayer gratuitement
+                  Essayer<span className="max-md:hidden"> gratuitement</span>
                 </Link>
               </>
             )}
@@ -423,7 +423,7 @@ export default function LandingPage() {
             </div>
 
             {/* Résultats */}
-            <div className="p-5 grid gap-3 sm:grid-cols-2">
+            <div className="p-5 grid max-sm:grid-cols-1 gap-3 sm:grid-cols-2">
               {[
                 { name: 'Le Bistrot du Vieux Lyon', address: '12 Rue Mercière, Lyon', phone: '04 78 37 XX XX', score: 92, label: '🔥 Priorité haute' },
                 { name: 'Brasserie des Quais', address: '5 Quai Saint-Antoine, Lyon', phone: '04 78 42 XX XX', score: 87, label: '🔥 Priorité haute' },
@@ -485,7 +485,7 @@ export default function LandingPage() {
             <p className="text-text-secondary max-w-lg mx-auto">ProspectWeb n&apos;est pas un simple annuaire. C&apos;est une vraie machine à prospects.</p>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid max-md:grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 icon: Search, color: 'from-blue-500 to-cyan-500',
@@ -538,7 +538,7 @@ export default function LandingPage() {
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text">3 étapes pour trouver des clients</h2>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid max-md:grid-cols-1 gap-8 md:grid-cols-3">
             {[
               {
                 number: '01',
@@ -643,7 +643,7 @@ export default function LandingPage() {
             <p className="text-sm font-bold uppercase tracking-[0.15em] bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent mb-3">Témoignages</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text">Ils utilisent ProspectWeb au quotidien</h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid max-md:grid-cols-1 gap-6 md:grid-cols-3">
             {[
               {
                 name: 'Thomas M.', role: 'Freelance web · Lyon', stars: 5,

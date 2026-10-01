@@ -151,7 +151,7 @@ export function PricingCards() {
       {/* ── Flèche gauche ── */}
       <button
         onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
-        className={`absolute left-2 sm:-left-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1.5 bg-white rounded-full p-2 sm:pl-2 sm:pr-3 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-primary hover:border-primary/30 transition-all duration-200 ${!canPrev ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`max-md:hidden absolute left-2 sm:-left-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1.5 bg-white rounded-full p-2 sm:pl-2 sm:pr-3 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-primary hover:border-primary/30 transition-all duration-200 ${!canPrev ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <ChevronLeft className="h-4 w-4" />
         <span className="hidden sm:inline">{CARD_NAMES[currentIndex - 1]}</span>
@@ -160,7 +160,7 @@ export function PricingCards() {
       {/* ── Flèche droite ── */}
       <button
         onClick={() => setCurrentIndex(i => Math.min(totalPositions - 1, i + 1))}
-        className={`absolute right-2 sm:-right-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1.5 bg-white rounded-full p-2 sm:pl-3 sm:pr-2 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-violet-600 hover:border-violet-200 transition-all duration-200 ${!canNext ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`max-md:hidden absolute right-2 sm:-right-8 top-1/2 -translate-y-1/2 z-30 flex items-center gap-1.5 bg-white rounded-full p-2 sm:pl-3 sm:pr-2 sm:py-2.5 shadow-lg border border-gray-200 text-xs font-semibold text-text-secondary hover:text-violet-600 hover:border-violet-200 transition-all duration-200 ${!canNext ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <span className="hidden sm:inline">{canNext ? CARD_NAMES[currentIndex + visibleCount] : ''}</span>
         <ChevronRight className="h-4 w-4" />
@@ -169,13 +169,13 @@ export function PricingCards() {
       {/* ── Track (mesuré ici pour avoir la vraie largeur visible) ── */}
       <div ref={trackRef} className="overflow-hidden pt-8">
         <div
-          className="flex transition-transform duration-500 ease-in-out"
+          className="flex transition-transform duration-500 ease-in-out max-md:flex-col max-md:transform-none!"
           style={{ gap: GAP, transform: `translateX(-${translateX}px)` }}
         >
 
           {/* ── GRATUIT ── */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }}>
-            <Card3D intensity={6} className="relative rounded-2xl bg-white border border-gray-200 p-8 flex flex-col overflow-hidden" style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)', minHeight: 680 }}>
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="max-md:w-full! max-md:min-w-0!">
+            <Card3D intensity={6} className="max-md:min-h-0! relative rounded-2xl bg-white border border-gray-200 p-8 flex flex-col overflow-hidden" style={{ boxShadow: '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 30px -5px rgba(0,0,0,0.1)', minHeight: 680 }}>
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-gray-100 opacity-60" />
               <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-gray-50 opacity-80" />
               <div className="relative mb-6">
@@ -203,12 +203,12 @@ export function PricingCards() {
           </div>
 
           {/* ── PREMIUM ── */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }}>
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="max-md:w-full! max-md:min-w-0!">
             <div className="relative">
               <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20 rounded-full bg-amber-400 px-5 py-1.5 text-xs font-bold text-gray-900 whitespace-nowrap shadow-lg shadow-amber-400/30 pointer-events-none">
                 ⭐ LE PLUS POPULAIRE
               </div>
-              <Card3D intensity={8} className="relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-8 flex flex-col overflow-hidden" style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)', minHeight: 680 }}>
+              <Card3D intensity={8} className="max-md:min-h-0! relative rounded-2xl bg-gradient-to-br from-primary via-indigo-600 to-purple-600 p-8 flex flex-col overflow-hidden" style={{ boxShadow: '0 8px 16px -2px rgba(99,102,241,0.35), 0 20px 50px -8px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.15)', minHeight: 680 }}>
                 <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/5" />
                 <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
@@ -250,8 +250,8 @@ export function PricingCards() {
           </div>
 
           {/* ── ULTRA ── */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }}>
-            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden" style={{ background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)', minHeight: 680 }}>
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="max-md:w-full! max-md:min-w-0!">
+            <Card3D intensity={6} className="max-md:min-h-0! relative rounded-2xl p-8 flex flex-col overflow-hidden" style={{ background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 0 1px rgba(251,191,36,0.15)', minHeight: 680 }}>
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #f59e0b, transparent)' }} />
               <div className="absolute -bottom-8 -left-6 h-24 w-24 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #a855f7, transparent)' }} />
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
@@ -286,8 +286,8 @@ export function PricingCards() {
           </div>
 
           {/* ── AGENCE ── */}
-          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }}>
-            <Card3D intensity={6} className="relative rounded-2xl p-8 flex flex-col overflow-hidden" style={{ background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)', minHeight: 680 }}>
+          <div style={{ width: cw, minWidth: cw, flexShrink: 0 }} className="max-md:w-full! max-md:min-w-0!">
+            <Card3D intensity={6} className="max-md:min-h-0! relative rounded-2xl p-8 flex flex-col overflow-hidden" style={{ background: 'linear-gradient(145deg, #0d0015 0%, #1a0030 50%, #0d001a 100%)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 30px -5px rgba(0,0,0,0.5), 0 0 0 1px rgba(167,139,250,0.2)', minHeight: 680 }}>
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #a855f7, transparent)' }} />
               <div className="absolute -bottom-8 -left-6 h-24 w-24 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #7c3aed, transparent)' }} />
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400/60 to-transparent" />
@@ -323,7 +323,7 @@ export function PricingCards() {
       </div>
 
       {/* ── Dots ── */}
-      <div className="flex justify-center gap-2 mt-6">
+      <div className="flex justify-center gap-2 mt-6 max-md:hidden">
         {Array.from({ length: totalPositions }, (_, i) => (
           <button
             key={i}

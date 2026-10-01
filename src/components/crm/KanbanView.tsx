@@ -48,7 +48,7 @@ export function KanbanView({ prospects, onStatusChange, onProspectClick }: Kanba
   };
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4">
+    <div className="flex gap-3 overflow-x-auto pb-4 max-md:snap-x max-md:snap-mandatory">
       {PROSPECT_STATUSES.map(status => {
         const items = prospects.filter(p => p.status === status.key);
         const isOver = overColumn === status.key;
@@ -59,7 +59,7 @@ export function KanbanView({ prospects, onStatusChange, onProspectClick }: Kanba
             onDragOver={(e) => handleDragOver(e, status.key)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, status.key)}
-            className={`flex-shrink-0 w-72 rounded-2xl border-2 p-3 transition-colors ${
+            className={`flex-shrink-0 w-72 rounded-2xl border-2 p-3 transition-colors max-md:snap-start ${
               isOver
                 ? 'border-primary bg-primary/5'
                 : 'border-gray-100 bg-gray-50/50'
@@ -152,6 +152,19 @@ export function KanbanView({ prospects, onStatusChange, onProspectClick }: Kanba
                         <Globe className="h-3 w-3" />
                       </a>
                     )}
+                    {/* Le glisser-deposer ne marche pas au doigt : sur mobile,
+                        le statut se change avec ce selecteur natif. */}
+                    <select
+                      value={p.status}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => onStatusChange(p.id, e.target.value as ProspectStatusKey)}
+                      aria-label="Changer le statut"
+                      className="md:hidden ml-auto rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs font-semibold text-text-secondary"
+                    >
+                      {PROSPECT_STATUSES.map(s => (
+                        <option key={s.key} value={s.key}>{s.emoji} {s.label}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               ))}

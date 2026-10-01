@@ -409,7 +409,7 @@ export function SearchResults({ data, query, onExportCSV }: SearchResultsProps) 
           <p className="text-text-secondary text-sm">Aucun résultat dans cet onglet.</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid max-md:grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {activeResults.map((result) => (
             <BusinessCard
               key={result.id}

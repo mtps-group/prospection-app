@@ -27,7 +27,7 @@ export function SearchForm({ onSearch, loading, disabled, initialBusinessType = 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid max-sm:grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
           label={fr.search.typeActivite}
           placeholder={fr.search.typeActivitePlaceholder}

@@ -132,7 +132,7 @@ function AnalysisDisplay({ analysis, prospectName, prospectCompany }: {
       </div>
 
       {/* Bien / Pas bien */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid max-md:grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-green-100 bg-green-50 p-5">
           <h3 className="font-bold text-green-800 mb-3 flex items-center gap-2 text-sm">
             <TrendingUp className="h-4 w-4" /> Ce qui s'est bien passé
@@ -162,7 +162,7 @@ function AnalysisDisplay({ analysis, prospectName, prospectCompany }: {
       </div>
 
       {/* Objections + Signaux */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid max-md:grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <h3 className="font-bold text-text mb-3 flex items-center gap-2 text-sm">
             <MessageSquare className="h-4 w-4 text-orange-500" /> Objections détectées
@@ -202,7 +202,7 @@ function AnalysisDisplay({ analysis, prospectName, prospectCompany }: {
       </div>
 
       {/* BANT + Sentiment */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid max-md:grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
           <h3 className="font-bold text-text mb-3 text-sm flex items-center gap-2">
             <Target className="h-4 w-4 text-indigo-500" /> Qualification BANT
@@ -263,7 +263,7 @@ function AnalysisDisplay({ analysis, prospectName, prospectCompany }: {
             {analysis.model_reformulations.map((ref, i) => (
               <div key={i} className="rounded-xl bg-gray-50 p-4">
                 {ref.context && <p className="text-xs text-text-muted mb-2 font-medium">{ref.context}</p>}
-                <div className="grid md:grid-cols-2 gap-3">
+                <div className="grid max-md:grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-red-500 font-semibold mb-1 uppercase tracking-wide">Ce que tu as dit</p>
                     <p className="text-sm text-text-secondary italic bg-red-50 rounded-lg p-2">"{ref.original}"</p>
@@ -456,7 +456,7 @@ export default function AppelsPage() {
         <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-violet-500/30">
           <Mic className="h-10 w-10 text-white" />
         </div>
-        <h1 className="text-3xl font-black text-text mb-3">Analyse d'appels IA</h1>
+        <h1 className="text-3xl max-md:text-2xl font-black text-text mb-3">Analyse d'appels IA</h1>
         <p className="text-text-secondary mb-8 leading-relaxed max-w-md mx-auto">
           Uploadez l'enregistrement de vos appels de prospection et obtenez une analyse complète : score, objections, signaux d'intérêt, style de communication et email de suivi automatique.
         </p>
@@ -538,7 +538,7 @@ export default function AppelsPage() {
         </div>
 
         {/* Infos optionnelles */}
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid max-md:grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-1.5">Nom du prospect (optionnel)</label>
             <input

@@ -31,7 +31,7 @@ export function ThemeToggle({ variant = 'pill' }: ThemeToggleProps) {
   }
 
   return (
-    <div className="inline-flex items-center gap-0.5 rounded-xl border border-border bg-surface p-1">
+    <div className="inline-flex items-center gap-0.5 rounded-xl border border-border bg-surface p-1 max-md:flex max-md:w-full">
       {OPTIONS.map((opt) => {
         const Icon = opt.icon;
         const active = theme === opt.value;
@@ -39,7 +39,7 @@ export function ThemeToggle({ variant = 'pill' }: ThemeToggleProps) {
           <button
             key={opt.value}
             onClick={() => setTheme(opt.value)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all max-md:flex-1 max-md:justify-center max-md:py-2 ${
               active
                 ? 'bg-gradient-to-r from-primary to-purple-500 text-white shadow-sm'
                 : 'text-text-muted hover:text-text-secondary'

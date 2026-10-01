@@ -108,19 +108,22 @@ export function BusinessCard({ result, showWebsiteUrl, onViewDetail, onAddProspe
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-text truncate">{result.business_name}</h3>
+          <h3 className="font-semibold text-text truncate max-md:whitespace-normal max-md:line-clamp-2">{result.business_name}</h3>
           {result.business_type && (
             <p className="text-sm text-text-muted mt-0.5">{result.business_type}</p>
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Sur mobile le badge est masque : il repete le nom de l'onglet
+              ("Sans site web" / "Avec site web") et ecrasait le nom de
+              l'entreprise sur les petits ecrans. */}
           {showWebsiteUrl ? (
-            <Badge variant="success">
+            <Badge variant="success" className="max-md:hidden">
               <Globe className="h-3 w-3 mr-1" />
               Site web
             </Badge>
           ) : (
-            <Badge variant="error">
+            <Badge variant="error" className="max-md:hidden">
               <Globe className="h-3 w-3 mr-1" />
               {fr.results.pasDeSiteWeb}
             </Badge>

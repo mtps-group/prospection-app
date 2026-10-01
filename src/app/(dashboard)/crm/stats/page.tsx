@@ -160,7 +160,7 @@ export default function CrmStatsPage() {
           </div>
 
           {/* Activité + Vélocité */}
-          <div className="grid lg:grid-cols-2 gap-4">
+          <div className="grid max-md:grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-gray-100 bg-white p-6 space-y-4">
               <div>
                 <h3 className="font-bold text-text">Activité dans la période</h3>

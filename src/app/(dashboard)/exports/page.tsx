@@ -44,7 +44,7 @@ export default function ExportsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-extrabold text-text flex items-center gap-3">
+        <h1 className="text-3xl max-md:text-2xl font-extrabold text-text flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/20">
             <Download className="h-5 w-5 text-white" />
           </div>
@@ -67,7 +67,7 @@ export default function ExportsPage() {
       </div>
 
       {/* Export cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid max-md:grid-cols-1 gap-4 md:grid-cols-3">
         {exports.map((exp) => (
           <div key={exp.name} className="group rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-xl hover:border-gray-200 hover:-translate-y-1 transition-all duration-300">
             <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${exp.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>

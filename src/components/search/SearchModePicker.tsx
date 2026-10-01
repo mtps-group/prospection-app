@@ -19,7 +19,7 @@ export function SearchModePicker({ onSelect }: SearchModePickerProps) {
   const isUltraPlus = (loading || !profile) || profile?.plan === 'ultra' || profile?.plan === 'agence';
 
   return (
-    <div className="grid md:grid-cols-2 gap-4">
+    <div className="grid max-md:grid-cols-1 md:grid-cols-2 gap-4">
       {/* Mode 1 : Recherche standard Google Places */}
       <button
         onClick={() => onSelect('places')}

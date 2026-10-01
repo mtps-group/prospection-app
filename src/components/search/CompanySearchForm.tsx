@@ -67,7 +67,7 @@ export function CompanySearchForm({ onSearch, loading }: CompanySearchFormProps)
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Champs principaux */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid max-sm:grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
           label="Type d'activité (optionnel)"
           placeholder="boulangerie, restaurant, plombier..."
@@ -124,7 +124,7 @@ export function CompanySearchForm({ onSearch, loading }: CompanySearchFormProps)
           {showAdvanced ? '▼' : '▶'} Filtres avancés (forme juridique, recherche par nom)
         </button>
         {showAdvanced && (
-          <div className="grid gap-4 sm:grid-cols-2 mt-3 p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-violet-500/15">
+          <div className="grid max-sm:grid-cols-1 gap-4 sm:grid-cols-2 mt-3 p-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-violet-500/15">
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">Forme juridique</label>
               <select

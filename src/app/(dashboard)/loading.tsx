@@ -9,7 +9,7 @@ export default function DashboardLoading() {
       </div>
       <div className="space-y-4">
         <Skeleton className="h-40 rounded-xl" />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid max-md:grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           <Skeleton className="h-48 rounded-xl" />
           <Skeleton className="h-48 rounded-xl" />
           <Skeleton className="h-48 rounded-xl" />
